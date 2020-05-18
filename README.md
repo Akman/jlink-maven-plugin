@@ -1,8 +1,5 @@
 # Apache Maven JLink Plugin
 
-[![Build Status](https://travis-ci.org/akman/jlink-maven-plugin.svg?branch=master)](https://travis-ci.org/akman/jlink-maven-plugin)
-[![Code Coverage](https://codecov.io/gh/akman/jlink-maven-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/akman/jlink-maven-plugin)
-[![Latest Release](https://img.shields.io/github/downloads/akman/jlink-maven-plugin/latest/total.svg)](https://github.com/akman/jlink-maven-plugin/releases/latest)
 [![License](https://img.shields.io/github/license/akman/jlink-maven-plugin.svg)](https://github.com/akman/jlink-maven-plugin/blob/master/LICENSE)
 
 The maven jlink plugin used to link a set of modules,
@@ -28,7 +25,7 @@ observable modules:
 
 - modular JAR files
 - JMOD files
-- exploded modules
+- exploded modules (directories)
 
 If this option is not specified, then the default module path
 is $JAVA_HOME/jmods. This directory contains the java.base module and
@@ -56,7 +53,7 @@ modules specified in the ***--add-modules*** option.
 
 Link service provider modules and their dependencies.
 
-**--launcher command=module[/main]**
+**--launcher command=main-module[/main-class]**
 
 Specifies the launcher command name for the module or the command name for
 the module and main class (the module and the main class names are
@@ -103,7 +100,7 @@ The following is an example of an options file for the jlink command:
 
 Disables the specified plug-in.
 
-### JLink tool plugins
+## JLink tool plugins
 
 For a complete list of all available plug-ins, run the command
 
@@ -111,13 +108,13 @@ For a complete list of all available plug-ins, run the command
 jlink --list-plugins
 ```
 
-For plug-in options that require a <pattern-list>, the value is
+For plug-in options that require a pattern-list, the value is
 a comma-separated list of elements, with each element using one
 the following forms:
 
-- <glob-pattern>
-- glob:<glob-pattern>
-- regex:<regex-pattern>
+- glob-pattern
+- glob:glob-pattern
+- regex:regex-pattern
 - @filename
 
 filename is the name of a file that contains patterns to be used,
@@ -208,7 +205,7 @@ Specify a file listing the java.lang.invoke classes to pre-generate.
 By default, this plugin may use a builtin list of classes to pre-generate.
 If this plugin runs on a different runtime version than the image being
 created then code generation will be disabled by default to guarantee
-correctness - add ignore-version=true to override this.
+correctness add ignore-version=true to override this.
 
 **--release-info=file|add:key1=value1:key2=value2:...|del:key-list**
 
