@@ -38,14 +38,14 @@
         <artifactId>@project.artifactId@</artifactId>
         <version>@project.version@</version>
         <configuration>
-          <outputDirectory>${project.build.directory}/data</outputDirectory>
+          <output>${project.build.directory}/jlinkImage</output>
         </configuration>
         <executions>
           <execution>
-            <id>touch</id>
+            <id>jlink</id>
             <phase>validate</phase>
             <goals>
-              <goal>touch</goal>
+              <goal>jlink</goal>
             </goals>
           </execution>
         </executions>

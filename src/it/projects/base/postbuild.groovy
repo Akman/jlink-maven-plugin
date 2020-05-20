@@ -14,6 +14,6 @@
   limitations under the License.
 */
 
-File touchFile = new File(basedir, "target/data/touch.txt")
+File output = new File(basedir, "target/jlinkImage")
 
-assert touchFile.isFile()
+assert output.isDirectory()

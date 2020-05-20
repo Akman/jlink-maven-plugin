@@ -2,10 +2,15 @@
 
 [![License](https://img.shields.io/github/license/akman/jlink-maven-plugin.svg)](https://github.com/akman/jlink-maven-plugin/blob/master/LICENSE)
 
-The maven jlink plugin used to link a set of modules,
-along with their transitive dependences, to create a custom runtime image.
+The maven jlink plugin lets you create a custom runtime image with
+the jlink tool introduced in Java 9. It used to link a set of modules,
+along with their transitive dependences.
+
+The main idea is to enable the creation of the runtime image without
+mandatory binding to project artifacts.
 
 [The jlink tool official description][jlink]
+[JEP 220: Modular Run-Time Images][jep220]
 
 [The source for this project is available here][src]
 
@@ -18,7 +23,7 @@ jlink [options] --module-path modulepath --add-modules module [, module...]
 jlink @filename
 ```
 
-**--module-path modulepath**
+**--module-path path**
 
 Specifies the module path. The path where the jlink tool discovers
 observable modules:
@@ -43,11 +48,14 @@ Their transitive dependencies will add too.
 
 Specifies the location of the generated runtime image.
 
-**--limit-modules mod [, mod...]**
+**--limit-modules module [, module...]**
 
 Limits the universe of observable modules to those in the transitive closure
 of the named modules, mod, plus the main module, if any, plus any further
 modules specified in the ***--add-modules*** option.
+
+It used to limit resolve any services other than the selected services in
+the ***--bind-services*** uses.
 
 **--bind-services**
 
@@ -226,3 +234,4 @@ Select the HotSpot VM in the output image. Default is all.
 [src]: https://github.com/akman/jlink-maven-plugin
 [release]: https://github.com/akman/jlink-maven-plugin/releases/latest
 [jlink]: https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html
+[jep220]: http://openjdk.java.net/jeps/220

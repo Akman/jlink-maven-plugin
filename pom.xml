@@ -91,6 +91,11 @@
       <artifactId>logback-classic</artifactId>
       <version>${logback.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-java</artifactId>
+      <version>1.0.5</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -145,6 +150,7 @@
         <executions>
           <execution>
             <id>mojo-descriptor</id>
+            <phase>process-classes</phase>
             <goals>
               <goal>descriptor</goal>
             </goals>

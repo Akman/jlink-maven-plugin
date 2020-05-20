@@ -43,7 +43,7 @@ public class JlinkMojoTest {
       assertTrue(pom.exists());
       project = readMavenProject(pom);
       assertNotNull(project);
-      mojo = (JlinkMojo) lookupConfiguredMojo(pom, "touch");
+      mojo = (JlinkMojo) lookupConfiguredMojo(pom, "jlink");
       assertNotNull(mojo);
     }
 
@@ -65,12 +65,9 @@ public class JlinkMojoTest {
   @Test
   public void testMojoCreateOutput() throws Exception {
     mojo.execute();
-    File outputDirectory = (File) rule.getVariableValueFromObject(mojo,
-        "outputDirectory");
-    assertNotNull(outputDirectory);
-    assertTrue(outputDirectory.exists());
-    File touch = new File(outputDirectory, "touch.txt");
-    assertTrue(touch.exists());
+    File output = (File) rule.getVariableValueFromObject(mojo, "output");
+    assertNotNull(output);
+    assertTrue(output.exists());
   }
 
 }
