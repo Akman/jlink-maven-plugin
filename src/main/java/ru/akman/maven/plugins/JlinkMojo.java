@@ -18,7 +18,6 @@ package ru.akman.maven.plugins;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Component;
@@ -32,41 +31,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
-
-// TODO: Parameters (object)
-// =========================
-// TODO: [ ] modulepaths
-// TODO: [ ] patternlist
-// TODO: [ ] launcher
-// TODO: [ ] compress
-// TODO: [ ] releaseinfo
-
-/**
- * Byte order.
- */
-enum Endian {
-  NATIVE,
-  LITTLE,
-  BIG
-}
-
-/**
- * JMOD Section
- */
-enum Section {
-  MAN,
-  HEADERS
-}
-
-/**
- * HotSpot VM
- */
-enum HotSpotVM {
-  CLIENT,
-  SERVER,
-  MINIMAL,
-  ALL
-}
 
 /**
  * The `jlink` goal lets you create a custom runtime image with
@@ -121,7 +85,7 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--modulepath path</code>
    */
   @Parameter
-  private List<File> modulepaths; // TODO: filesets
+  private List<File> modulepaths;
 
   /**
    * Specifies the modules names (names of root modules) to add to
@@ -199,8 +163,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--launcher command=main-module[/main-class]</code>
    */
-  @Parameter
-  private Map launcher; // TODO: object
+  private Launcher launcher;
 
   /**
    * Excludes header files.
@@ -229,7 +192,7 @@ public class JlinkMojo extends AbstractMojo {
   private boolean nomanpages;
 
   /**
-   * Specifies the byte order of the generated image: {NATIVE|LITTLE|BIG}.
+   * Specifies the byte order of the generated image: { NATIVE | LITTLE | BIG }.
    *
    * Default value: NATIVE (the format of your system's architecture).
    *
@@ -277,34 +240,36 @@ public class JlinkMojo extends AbstractMojo {
     For plug-in options that require a pattern-list, the value is
     a comma-separated list of elements, with each element using one
     the following forms:
-    
+
       - glob-pattern
       - glob:glob-pattern
       - regex:regex-pattern
-      
-    Example: *&#42;/module-info.class,glob:/java.base/java/lang/**
+      - @file
+
+    Example: *&#42;/module-info.class,glob:/java.base/java/lang/**,@file
   */
 
   /**
-   * Compresses all resources in the output image. Use 0 for
-   * no compression, 1 for constant string sharing, 2 for ZIP.
+   * Compresses all resources in the output image. Specify compression
+   * level { NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }.
    * An optional pattern-list filter can be specified to list
    * the pattern of files to include.
    *
    * <pre>
    * &lt;compress&gt;
-   *   &lt;value&gt;2&lt;/value&gt;
-   *   &lt;patternlist&gt;
-   *     &lt;glob&gt;*&#42;/module-info.class&lt;/glob&gt;
-   *     &lt;glob&gt;/java.base/java/lang/**&lt;/glob&gt;
-   *   &lt;/patternlist&gt;
+   *   &lt;value&gt;ZIP&lt;/value&gt;
+   *   &lt;filters&gt;
+   *     &lt;filter type="glob"&gt;*&#42;/module-info.class&lt;/filter&gt;
+   *     &lt;filter type="regex"&gt;/java[a-z]+$&lt;/filter&gt;
+   *     &lt;filter type="file"&gt;file&lt;/filter&gt;
+   *   &lt;/filters&gt;
    * &lt;/compress&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--compress={0|1|2}[:filter=pattern-list]</code>
    */
   @Parameter
-  private Map compress; // TODO: object
+  private Compression compress;
   
   /**
    * Includes the list of locales where langtag is
@@ -330,34 +295,32 @@ public class JlinkMojo extends AbstractMojo {
    *
    * <pre>
    * &lt;orderresources&gt;
-   *   &lt;patternlist&gt;
-   *     &lt;glob&gt;*&#42;/module-info.class&lt;/glob&gt;
-   *     &lt;glob&gt;/java.base/java/lang/**&lt;/glob&gt;
-   *   &lt;/patternlist&gt;
+   *   &lt;orderresource type="glob"&gt;*&#42;/module-info.class&lt;/orderresource&gt;
+   *   &lt;orderresource type="regex"&gt;/java[a-z]+$&lt;/orderresource&gt;
+   *   &lt;orderresource type="file"&gt;file&lt;/orderresource&gt;
    * &lt;/orderresources&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--order-resources=pattern-list</code>
    */
   @Parameter
-  private Map orderresources; // TODO: object
+  private List<String> orderresources;
 
   /**
    * Specify resources to exclude.
    *
    * <pre>
    * &lt;excluderesources&gt;
-   *   &lt;patternlist&gt;
-   *     &lt;glob&gt;**.jcov&lt;/glob&gt;
-   *     &lt;glob&gt;*&#42;/META-INF/&#42;*&lt;/glob&gt;
-   *   &lt;/patternlist&gt;
+   *   &lt;excluderesource type="glob"&gt;*&#42;/module-info.class&lt;/excluderesource&gt;
+   *   &lt;excluderesource type="regex"&gt;/java[a-z]+$&lt;/excluderesource&gt;
+   *   &lt;excluderesource type="file"&gt;file&lt;/excluderesource&gt;
    * &lt;/excluderesources&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--order-resources=pattern-list</code>
    */
   @Parameter
-  private Map excluderesources; // TODO: object
+  private List<String> excluderesources;
 
   /**
    * Strips debug information from the output image.
@@ -418,22 +381,21 @@ public class JlinkMojo extends AbstractMojo {
    *
    * <pre>
    * &lt;excludefiles&gt;
-   *   &lt;patternlist&gt;
-   *     &lt;glob&gt;**.java&lt;/glob&gt;
-   *     &lt;glob&gt;/java.base/lib/client/&#42;*&lt;/glob&gt;
-   *   &lt;/patternlist&gt;
+   *   &lt;excludefile type="glob"&gt;*&#42;/module-info.class&lt;/excludefile&gt;
+   *   &lt;excludefile type="regex"&gt;/java[a-z]+$&lt;/excludefile&gt;
+   *   &lt;excludefile type="file"&gt;file&lt;/excludefile&gt;
    * &lt;/excludefiles&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--exclude-files=pattern-list</code>
    */
   @Parameter
-  private Map excludefiles; // TODO: object
+  private List<String> excludefiles;
 
   /**
-   * Specify a JMOD section to exclude {MAN|HEADERS}.
+   * Specify a JMOD section to exclude { MAN | HEADERS }.
    *
-   * The jlink CLI is: <code>--exclude-jmod-section={MAN|HEADERS}</code>
+   * The jlink CLI is: <code>--exclude-jmod-section={man|headers}</code>
    */
   @Parameter(
     property = "jlink.excludejmodsection",
@@ -458,28 +420,28 @@ public class JlinkMojo extends AbstractMojo {
 
   /**
    * Load release properties from the supplied option file.
-   * - add: is to add properties to the release file.
-   * - del: is to delete the list of keys in release file.
+   * - adds: is to add properties to the release file.
+   * - dels: is to delete the list of keys in release file.
    * - Any number of key=value pairs can be passed.
    *
    * <pre>
    * &lt;releaseinfo&gt;
-   *   &lt;optionfile&gt;file&lt;/optionfile&gt;
-   *   &lt;add&gt;
+   *   &lt;file&gt;file&lt;/file&gt;
+   *   &lt;adds&gt;
    *     &lt;key1&gt;value1&lt;/key1&gt;
    *     &lt;key2&gt;value2&lt;/key2&gt;
-   *   &lt;/add&gt;
-   *   &lt;dell&gt;
+   *   &lt;/adds&gt;
+   *   &lt;dells&gt;
    *     &lt;key1 /&gt;
    *     &lt;key2 /&gt;
-   *   &lt;/dell&gt;
+   *   &lt;/dells&gt;
    * &lt;/releaseinfo&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--release-info=file|add:key1=value1:key2=value2:...|del:key-list</code>
    */
   @Parameter
-  private Map releaseinfo; // TODO: object
+  private ReleaseInfo releaseinfo;
 
   /**
    * Fast loading of module descriptors (always enabled).
@@ -497,7 +459,7 @@ public class JlinkMojo extends AbstractMojo {
 
   /**
    * Select the HotSpot VM in
-   * the output image: {CLIENT|SERVER|MINIMAL|ALL}
+   * the output image: { CLIENT | SERVER | MINIMAL | ALL }
    *
    * Default is ALL.
    *
@@ -510,7 +472,7 @@ public class JlinkMojo extends AbstractMojo {
   private HotSpotVM vm;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
-    getLog().info("Hello, world.");
+    getLog().debug("Started jlink-maven-plugin");
     if (!output.exists() || !output.isDirectory()) {
       output.mkdirs();
       getLog().debug("Created output directory: " + output);

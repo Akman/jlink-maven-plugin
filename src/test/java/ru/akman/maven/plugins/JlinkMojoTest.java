@@ -16,15 +16,20 @@
 
 package ru.akman.maven.plugins;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
+
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.WithoutMojo;
 import org.apache.maven.project.MavenProject;
-import java.util.Properties;
-
 import org.junit.Rule;
-import static org.junit.Assert.*;
 import org.junit.Test;
-import java.io.File;
 
 public class JlinkMojoTest {
 
@@ -57,7 +62,8 @@ public class JlinkMojoTest {
   public void testProjectHasProperties() throws Exception {
     Properties props = project.getProperties();
     assertNotNull(props);
-    String sourceEncoding = props.getProperty("project.build.sourceEncoding");
+    String sourceEncoding =
+        props.getProperty("project.build.sourceEncoding");
     assertNotNull(sourceEncoding);
     assertTrue("UTF-8".equalsIgnoreCase(sourceEncoding));
   }
@@ -65,9 +71,45 @@ public class JlinkMojoTest {
   @Test
   public void testMojoCreateOutput() throws Exception {
     mojo.execute();
-    File output = (File) rule.getVariableValueFromObject(mojo, "output");
+    File output =
+        (File) rule.getVariableValueFromObject(mojo, "output");
     assertNotNull(output);
     assertTrue(output.exists());
+  }
+
+
+
+
+  @Test
+  public void testMojoHasLauncher() throws Exception {
+    mojo.execute();
+    Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertNotNull(launcher);
+    assertTrue("myLauncher".equals(launcher.getCommand()));
+    assertTrue("mainModule".equals(launcher.getMainModule()));
+    assertTrue("mainClass".equals(launcher.getMainClass()));
+  }
+
+  @Test
+  public void testMojoHasReleaseInfo() throws Exception {
+    File file = new File(PROJECT_DIR, "file");
+    mojo.execute();
+    ReleaseInfo releaseinfo =
+        (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
+    assertNotNull(releaseinfo);
+    assertTrue(file.getCanonicalPath().equals(
+        releaseinfo.getFile().getCanonicalPath()));
+    Map<String, String> adds = releaseinfo.getAdds();
+    Map<String, String> dels = releaseinfo.getDels();
+    List<String> allAdds = new ArrayList();
+    adds.forEach((k,v) -> allAdds.add(k + "=" + v));
+    assertTrue("key1=value1:key2=value2".equals(
+        allAdds.stream().collect(Collectors.joining(":"))));
+    List<String> allDels = new ArrayList();
+    dels.forEach((k,v) -> allDels.add(k));
+    assertTrue("key1:key2".equals(
+        allDels.stream().collect(Collectors.joining(":"))));
   }
 
 }

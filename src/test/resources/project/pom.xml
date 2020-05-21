@@ -91,7 +91,7 @@
             the main class names are separated by a slash).
           -->
           <launcher>
-            <command>mylauncher</command>
+            <command>myLauncher</command>
             <mainmodule>mainModule</mainmodule>
             <mainclass>mainClass</mainclass>
           </launcher>
@@ -106,8 +106,9 @@
           -->
           <nomanpages>false</nomanpages>
           <!--
-            Specifies the byte order of the generated image: {native|little|big}.
-            Default value: native (the format of your system's architecture).
+            Specifies the byte order of the generated
+            image { NATIVE | LITTLE | BIG }.
+            Default value: NATIVE (the format of your system's architecture).
           -->
           <endian>NATIVE</endian>
           <!--
@@ -141,18 +142,18 @@
           -->
 
           <!--
-            Compresses all resources in the output image. Use 0 for
-            no compression, 1 for constant string sharing, 2 for ZIP.
+            Compresses all resources in the output image. Specify compression
+            level { NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }.
             An optional pattern-list filter can be specified to list
             the pattern of files to include.
           -->
           <compress>
-            <value>2</value>
-            <patternlist>
-              <glob>**/module-info.class</glob>
-              <glob>/java.base/java/lang/**</glob>
-              <regex></regex>
-            </patternlist>
+            <value>ZIP</value>
+            <filters>
+              <filter type="glob">**/module-info.class</filter>
+              <filter type="regex">/java[a-z]+$</filter>
+              <filter type="file">filename</filter>
+            </filters>
           </compress>
           <!--
             Includes the list of locales where langtag is
@@ -169,21 +170,17 @@
             Orders the specified paths in priority order.
           -->
           <orderresources>
-            <patternlist>
-              <glob>**/module-info.class</glob>
-              <glob>/java.base/java/lang/**</glob>
-              <regex></regex>
-            </patternlist>
+            <orderresource type="glob">**/module-info.class</orderresource>
+            <orderresource type="regex">/java[a-z]+$</orderresource>
+            <orderresource type="file">filename</orderresource>
           </orderresources>
           <!--
             Specify resources to exclude.
           -->
           <excluderesources>
-            <patternlist>
-              <glob>**.jcov</glob>
-              <glob>**/META-INF/**</glob>
-              <regex></regex>
-            </patternlist>
+            <excluderesource type="glob">**/META-INF/**</excluderesource>
+            <excluderesource type="regex">/java[a-z]+$</excluderesource>
+            <excluderesource type="file">filename</excluderesource>
           </excluderesources>
           <!--
             Strips debug information from the output image.
@@ -211,14 +208,12 @@
             Specify files to exclude.
           -->
           <excludefiles>
-            <patternlist>
-              <glob>**.java</glob>
-              <glob>/java.base/lib/client/**</glob>
-              <regex></regex>
-            </patternlist>
+            <excludefile type="glob">**/META-INF/**</excludefile>
+            <excludefile type="regex">/java[a-z]+$</excludefile>
+            <excludefile type="file">filename</excludefile>
           </excludefiles>
           <!--
-            Specify a JMOD section to exclude {MAN|HEADERS}.
+            Specify a JMOD section to exclude { MAN | HEADERS }.
           -->
           <excludejmodsection>MAN</excludejmodsection>
           <!--
@@ -232,20 +227,20 @@
           <generatejliclasses>${project.basedir}/jli-classes</generatejliclasses>
           <!--
             Load release properties from the supplied option file.
-            - add: is to add properties to the release file.
-            - del: is to delete the list of keys in release file.
+            - adds: is to add properties to the release file.
+            - dels: is to delete the list of keys in release file.
             - Any number of key=value pairs can be passed.
           -->
           <releaseinfo>
-            <optionfile>optionfile</optionfile>
-            <add>
+            <file>file</file>
+            <adds>
               <key1>value1</key1>
               <key2>value2</key2>
-            </add>
-            <del>
+            </adds>
+            <dels>
               <key1 />
               <key2 />
-            </del>
+            </dels>
           </releaseinfo>
           <!--
             Fast loading of module descriptors (always enabled).
@@ -254,7 +249,7 @@
           <systemmodules>true</systemmodules>
           <!--
             Select the HotSpot VM in
-            the output image: {CLIENT|SERVER|MINIMAL|ALL}
+            the output image: { CLIENT | SERVER | MINIMAL | ALL }
             Default is all.
           -->
           <vm>ALL</vm>
