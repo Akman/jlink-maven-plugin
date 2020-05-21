@@ -25,7 +25,9 @@ import java.util.Map;
 public class ReleaseInfo {
 
   private File file = null;
+
   private Map<String, String> adds = null;
+
   private Map<String, String> dels = null;
 
   public File getFile() {

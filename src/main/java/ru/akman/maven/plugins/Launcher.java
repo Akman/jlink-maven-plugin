@@ -22,7 +22,9 @@ package ru.akman.maven.plugins;
 public class Launcher {
 
   private String command = "";
+
   private String mainmodule = "";
+
   private String mainclass = "";
   
   public String getCommand() {

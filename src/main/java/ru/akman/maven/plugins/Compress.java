@@ -16,11 +16,31 @@
 
 package ru.akman.maven.plugins;
 
+import java.util.List;
+
 /**
  * Compress
  */
-public enum Compress {
-  NO_COMPRESSION,
-  CONSTANT_STRING_SHARING,
-  ZIP
+public class Compress {
+
+  private Compression compression = Compression.NO_COMPRESSION;
+
+  private List<String> filters = null;
+  
+  public Compression getCompression() {
+    return this.compression;
+  }
+
+  public void setCompression(Compression compression) {
+    this.compression = compression;
+  }
+
+  public List<String> getFilters() {
+    return this.filters;
+  }
+
+  public void setFilters(List<String> filters) {
+    this.filters = filters;
+  }
+
 }

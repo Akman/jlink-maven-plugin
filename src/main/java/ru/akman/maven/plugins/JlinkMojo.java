@@ -244,24 +244,25 @@ public class JlinkMojo extends AbstractMojo {
       - glob-pattern
       - glob:glob-pattern
       - regex:regex-pattern
-      - @file
+      - @filename
 
     Example: *&#42;/module-info.class,glob:/java.base/java/lang/**,@file
   */
 
   /**
-   * Compresses all resources in the output image. Specify compression
-   * level { NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }.
+   * Compresses all resources in the output image. Specify
+   * compression { NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }.
    * An optional pattern-list filter can be specified to list
    * the pattern of files to include.
    *
    * <pre>
    * &lt;compress&gt;
-   *   &lt;value&gt;ZIP&lt;/value&gt;
+   *   &lt;compression&gt;ZIP&lt;/compression&gt;
    *   &lt;filters&gt;
-   *     &lt;filter type="glob"&gt;*&#42;/module-info.class&lt;/filter&gt;
-   *     &lt;filter type="regex"&gt;/java[a-z]+$&lt;/filter&gt;
-   *     &lt;filter type="file"&gt;file&lt;/filter&gt;
+   *     &lt;filter&gt;*&#42;/*-info.class&lt;/filter&gt;
+   *     &lt;filter&gt;glob:*&#42;/module-info.class&lt;/filter&gt;
+   *     &lt;filter&gt;regex:/java[a-z]+$&lt;/filter&gt;
+   *     &lt;filter&gt;@filename&lt;/filter&gt;
    *   &lt;/filters&gt;
    * &lt;/compress&gt;
    * </pre>
@@ -269,7 +270,7 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--compress={0|1|2}[:filter=pattern-list]</code>
    */
   @Parameter
-  private Compression compress;
+  private Compress compress;
   
   /**
    * Includes the list of locales where langtag is
@@ -295,9 +296,10 @@ public class JlinkMojo extends AbstractMojo {
    *
    * <pre>
    * &lt;orderresources&gt;
-   *   &lt;orderresource type="glob"&gt;*&#42;/module-info.class&lt;/orderresource&gt;
-   *   &lt;orderresource type="regex"&gt;/java[a-z]+$&lt;/orderresource&gt;
-   *   &lt;orderresource type="file"&gt;file&lt;/orderresource&gt;
+   *   &lt;orderresource&gt;*&#42;/*-info.class&lt;/orderresource&gt;
+   *   &lt;orderresource&gt;glob:*&#42;/module-info.class&lt;/orderresource&gt;
+   *   &lt;orderresource&gt;regex:/java[a-z]+$&lt;/orderresource&gt;
+   *   &lt;orderresource&gt;@filename&lt;/orderresource&gt;
    * &lt;/orderresources&gt;
    * </pre>
    *
@@ -311,9 +313,10 @@ public class JlinkMojo extends AbstractMojo {
    *
    * <pre>
    * &lt;excluderesources&gt;
-   *   &lt;excluderesource type="glob"&gt;*&#42;/module-info.class&lt;/excluderesource&gt;
-   *   &lt;excluderesource type="regex"&gt;/java[a-z]+$&lt;/excluderesource&gt;
-   *   &lt;excluderesource type="file"&gt;file&lt;/excluderesource&gt;
+   *   &lt;excluderesource&gt;*&#42;/*-info.class&lt;/excluderesource&gt;
+   *   &lt;excluderesource&gt;glob:*&#42;/module-info.class&lt;/excluderesource&gt;
+   *   &lt;excluderesource&gt;regex:/java[a-z]+$&lt;/excluderesource&gt;
+   *   &lt;excluderesource&gt;@filename&lt;/excluderesource&gt;
    * &lt;/excluderesources&gt;
    * </pre>
    *
@@ -381,9 +384,10 @@ public class JlinkMojo extends AbstractMojo {
    *
    * <pre>
    * &lt;excludefiles&gt;
-   *   &lt;excludefile type="glob"&gt;*&#42;/module-info.class&lt;/excludefile&gt;
-   *   &lt;excludefile type="regex"&gt;/java[a-z]+$&lt;/excludefile&gt;
-   *   &lt;excludefile type="file"&gt;file&lt;/excludefile&gt;
+   *   &lt;excludefile&gt;*&#42;/*-info.class&lt;/excludefile&gt;
+   *   &lt;excludefile&gt;glob:*&#42;/module-info.class&lt;/excludefile&gt;
+   *   &lt;excludefile&gt;regex:/java[a-z]+$&lt;/excludefile&gt;
+   *   &lt;excludefile&gt;@filename&lt;/excludefile&gt;
    * &lt;/excludefiles&gt;
    * </pre>
    *
@@ -472,10 +476,10 @@ public class JlinkMojo extends AbstractMojo {
   private HotSpotVM vm;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
-    getLog().debug("Started jlink-maven-plugin");
+    // getLog().debug("Started jlink-maven-plugin");
     if (!output.exists() || !output.isDirectory()) {
       output.mkdirs();
-      getLog().debug("Created output directory: " + output);
+      // getLog().debug("Created output directory: " + output);
     }
   }
 
