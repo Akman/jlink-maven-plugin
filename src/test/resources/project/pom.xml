@@ -49,11 +49,48 @@
             but the java.base module cannot be resolved from it, then
             the jlink command appends $JAVA_HOME/jmods to the module path.
           -->
-          <modulepaths>
-            <modulepath>jar</modulepath>
-            <modulepath>jmod</modulepath>
-            <modulepath>dir</modulepath>
-          </modulepaths>
+          <modulepath>
+            <pathelements>
+              <pathelement>mod.jar</pathelement>
+              <pathelement>mod.jmod</pathelement>
+              <pathelement>mods/exploded/mod</pathelement>
+            </pathelements>
+            <filesets>
+              <fileset>
+                <directory>target</directory>
+                <includes>
+                  <include>**/*</include>
+                </includes>
+                <excludes>
+                  <exclude>**/*Empty.jar</exclude>
+                </excludes>
+                <followSymlinks>false</followSymlinks>
+              </fileset>
+            </filesets>
+            <dirsets>
+              <dirset>
+                <directory>some/relative/dirset/path</directory>
+                <includes>
+                  <include>**/*</include>
+                </includes>
+                <excludes>
+                  <exclude>**/*Test</exclude>
+                </excludes>
+                <followSymlinks>true</followSymlinks>
+              </dirset>
+            </dirsets>
+            <dependencysets>
+              <dependencyset>
+                <type>RUNTIME</type>
+                <includes>
+                  <include>**/*.jar</include>
+                </includes>
+                <excludes>
+                  <exclude>**/*Empty.jar</exclude>
+                </excludes>
+              </dependencyset>
+            </dependencysets>
+          </modulepath>
           <!--
             Specifies the modules names (names of root modules) to add to
             the runtime image. Their transitive dependencies will add too.

@@ -18,7 +18,6 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ import static org.junit.Assert.*;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.WithoutMojo;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.model.fileset.FileSet;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -54,25 +54,37 @@ public class JlinkMojoTest {
   }
 
   private String buildPathFromFiles(List<File> files) {
+    return buildPathFromFiles(files, File.pathSeparator);
+  }
+
+  private String buildPathFromFiles(List<File> files, String separator) {
     return files
       .stream()
       .map(this::getCanonicalPath)
-      .collect(Collectors.joining(File.pathSeparator));
+      .collect(Collectors.joining(separator));
   }
 
-  private String buildPathFromNames(List<String> names) {
+  private String buildPathFromNames(String base, List<String> names) {
+    return buildPathFromNames(base, names, File.pathSeparator);
+  }
+
+  private String buildPathFromNames(String base, List<String> names, String separator) {
     return names
       .stream()
       .map(name -> {
-        return getCanonicalPath(new File(PROJECT_DIR, name));
+        return getCanonicalPath(new File(base, name));
       })
-      .collect(Collectors.joining(File.pathSeparator));
+      .collect(Collectors.joining(separator));
   }
 
   private String buildStringFromNames(List<String> names) {
+    return buildStringFromNames(names, System.lineSeparator());
+  }
+
+  private String buildStringFromNames(List<String> names, String separator) {
     return names
       .stream()
-      .collect(Collectors.joining(System.lineSeparator()));
+      .collect(Collectors.joining(separator));
   }
 
   @Rule
@@ -102,14 +114,70 @@ public class JlinkMojoTest {
   }
 
   @Test
-  public void testMojoHasModulePaths() throws Exception {
+  public void testMojoHasModulePath() throws Exception {
     mojo.execute();
-    List<File> modulepaths =
-        (List) rule.getVariableValueFromObject(mojo, "modulepaths");
-    assertNotNull(modulepaths);
+    ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    assertNotNull(modulepath);
+    List<File> pathelements = modulepath.getPathElements();
+    assertNotNull(pathelements);
     assertEquals(
-      buildPathFromFiles(modulepaths),
-      buildPathFromNames(Arrays.asList("jar", "jmod", "dir"))
+      buildPathFromFiles(pathelements),
+      buildPathFromNames(PROJECT_DIR, Arrays.asList(
+        "mod.jar",
+        "mod.jmod",
+        "mods/exploded/mod"
+      ))
+    );
+    // filesets
+    List<FileSet> filesets = modulepath.getFileSets();
+    assertNotNull(filesets);
+    assertEquals(filesets.size(), 1);
+    FileSet fileset = filesets.get(0);
+    assertEquals(
+      getCanonicalPath(new File(PROJECT_DIR, fileset.getDirectory())),
+      getCanonicalPath(new File(PROJECT_DIR, "target"))
+    );
+    assertFalse(fileset.isFollowSymlinks());
+    assertEquals(
+      buildStringFromNames(fileset.getIncludes()),
+      buildStringFromNames(Arrays.asList("**/*"))
+    );
+    assertEquals(
+      buildStringFromNames(fileset.getExcludes()),
+      buildStringFromNames(Arrays.asList("**/*Empty.jar"))
+    );
+    // dirsets
+    List<FileSet> dirsets = modulepath.getDirSets();
+    assertNotNull(dirsets);
+    assertEquals(dirsets.size(), 1);
+    FileSet dirset = dirsets.get(0);
+    assertEquals(
+      getCanonicalPath(new File(PROJECT_DIR, dirset.getDirectory())),
+      getCanonicalPath(new File(PROJECT_DIR, "some/relative/dirset/path"))
+    );
+    assertTrue(dirset.isFollowSymlinks());
+    assertEquals(
+      buildStringFromNames(dirset.getIncludes()),
+      buildStringFromNames(Arrays.asList("**/*"))
+    );
+    assertEquals(
+      buildStringFromNames(dirset.getExcludes()),
+      buildStringFromNames(Arrays.asList("**/*Test"))
+    );
+    // dependencysets
+    List<DependencySet> dependencysets = modulepath.getDependencySets();
+    assertNotNull(dependencysets);
+    assertEquals(dependencysets.size(), 1);
+    DependencySet depset = dependencysets.get(0);
+    assertEquals(depset.getType(), DependencySetType.RUNTIME);
+    assertEquals(
+      buildStringFromNames(depset.getIncludes()),
+      buildStringFromNames(Arrays.asList("**/*.jar"))
+    );
+    assertEquals(
+      buildStringFromNames(depset.getExcludes()),
+      buildStringFromNames(Arrays.asList("**/*Empty.jar"))
     );
   }
 
@@ -215,7 +283,6 @@ public class JlinkMojoTest {
 
   @Test
   public void testMojoHasCompress() throws Exception {
-    File file = new File(PROJECT_DIR, "file");
     mojo.execute();
     Compress compress =
         (Compress) rule.getVariableValueFromObject(mojo, "compress");
@@ -249,7 +316,6 @@ public class JlinkMojoTest {
 
   @Test
   public void testMojoHasOrderResources() throws Exception {
-    File file = new File(PROJECT_DIR, "file");
     mojo.execute();
     List<String> orderresources =
         (List) rule.getVariableValueFromObject(mojo, "orderresources");
@@ -267,7 +333,6 @@ public class JlinkMojoTest {
 
   @Test
   public void testMojoHasExcludeResources() throws Exception {
-    File file = new File(PROJECT_DIR, "file");
     mojo.execute();
     List<String> excluderesources =
         (List) rule.getVariableValueFromObject(mojo, "excluderesources");
@@ -318,7 +383,6 @@ public class JlinkMojoTest {
 
   @Test
   public void testMojoHasExcludeFiles() throws Exception {
-    File file = new File(PROJECT_DIR, "file");
     mojo.execute();
     List<String> excludefiles =
         (List) rule.getVariableValueFromObject(mojo, "excludefiles");
@@ -355,7 +419,6 @@ public class JlinkMojoTest {
 
   @Test
   public void testMojoHasReleaseInfo() throws Exception {
-    File file = new File(PROJECT_DIR, "file");
     mojo.execute();
     ReleaseInfo releaseinfo =
         (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
@@ -363,22 +426,22 @@ public class JlinkMojoTest {
     File releaseinfofile = releaseinfo.getFile();
     assertNotNull(releaseinfofile);
     assertEquals(
-      getCanonicalPath(file),
-      getCanonicalPath(releaseinfofile)
+      getCanonicalPath(releaseinfofile),
+      getCanonicalPath(new File(PROJECT_DIR, "file"))
     );
     Map<String, String> adds = releaseinfo.getAdds();
     assertNotNull(adds);
     assertEquals(
-      "key1=value1:key2=value2",
       adds.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-          .collect(Collectors.joining(":"))
+          .collect(Collectors.joining(":")),
+      "key1=value1:key2=value2"
     );
     Map<String, String> dels = releaseinfo.getDels();
     assertNotNull(dels);
     assertEquals(
-      "key1:key2",
       dels.entrySet().stream().map(e -> e.getKey())
-          .collect(Collectors.joining(":"))
+          .collect(Collectors.joining(":")),
+      "key1:key2"
     );
   }
 

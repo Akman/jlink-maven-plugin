@@ -16,8 +16,11 @@
 
 package ru.akman.maven.plugins;
 
+import java.io.IOException;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Component;
@@ -29,6 +32,8 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
 
@@ -74,18 +79,60 @@ public class JlinkMojo extends AbstractMojo {
    * but the java.base module cannot be resolved from it, then
    * the jlink command appends $JAVA_HOME/jmods to the module path.
    *
+   * pathelements - passed to jlink as is
+   * filesets - sets of files (without directories)
+   * dirsets - sets of directories (without files)
+   * dependencysets - sets of dependencies with specified type
+   *
    * <pre>
-   * &lt;modulepaths&gt;
-   *   &lt;modulepath&gt;mymodule.jar;/modulepath&gt;
-   *   &lt;modulepath&gt;mymodule.jmod&lt;/modulepath&gt;
-   *   &lt;modulepath&gt;mymodulesdir&lt;/modulepath&gt;
-   * &lt;/modulepaths&gt;
+   * &lt;modulepath&gt;
+   *   &lt;pathelements&gt;
+   *     &lt;pathelement&gt;mod.jar&lt;/pathelement&gt;
+   *     &lt;pathelement&gt;mod.jmod&lt;/pathelement&gt;
+   *     &lt;pathelement&gt;mods/exploded/mod&lt;/pathelement&gt;
+   *   &lt;/pathelements&gt;
+   *   &lt;filesets&gt;
+   *     &lt;fileset&gt;
+   *       &lt;directory&gt;target&lt;/directory&gt;
+   *       &lt;includes&gt;
+   *         &lt;include&gt;*&#42;/*&lt;/include&gt;
+   *       &lt;/includes&gt;
+   *       &lt;excludes&gt;
+   *         &lt;exclude&gt;*&#42;/*Empty.jar&lt;/exclude&gt;
+   *       &lt;/excludes&gt;
+   *       &lt;followSymlinks&gt;false&lt;/followSymlinks&gt;
+   *     &lt;/fileset&gt;
+   *   &lt;/filesets&gt;
+   *   &lt;dirsets&gt;
+   *     &lt;dirset&gt;
+   *       &lt;directory&gt;some/relative/dirset/path&lt;/directory&gt;
+   *       &lt;includes&gt;
+   *         &lt;include&gt;*&#42;/*&lt;/include&gt;
+   *       &lt;/includes&gt;
+   *       &lt;excludes&gt;
+   *         &lt;exclude&gt;*&#42;/*Test&lt;/exclude&gt;
+   *       &lt;/excludes&gt;
+   *       &lt;followSymlinks&gt;true&lt;/followSymlinks&gt;
+   *     &lt;/dirset&gt;
+   *   &lt;/dirsets&gt;
+   *   &lt;dependencysets&gt;
+   *     &lt;dependencyset&gt;
+   *       &lt;type&gt;runtime&lt;/type&gt;
+   *       &lt;includes&gt;
+   *         &lt;include&gt;*&#42;/*.jar&lt;/include&gt;
+   *       &lt;/includes&gt;
+   *       &lt;excludes&gt;
+   *         &lt;exclude&gt;*&#42;/*Empty.jar&lt;/exclude&gt;
+   *       &lt;/excludes&gt;
+   *     &lt;/dependencyset&gt;
+   *   &lt;/dependencysets&gt;
+   * &lt;/modulepath&gt;
    * </pre>
    *
    * The jlink CLI is: <code>--modulepath path</code>
    */
   @Parameter
-  private List<File> modulepaths;
+  private ModulePath modulepath;
 
   /**
    * Specifies the modules names (names of root modules) to add to
@@ -475,12 +522,74 @@ public class JlinkMojo extends AbstractMojo {
   )
   private HotSpotVM vm;
 
+  private String getCanonicalPath(File file) {
+    String path = null;
+    try {
+      path = file.getCanonicalPath();
+    } catch (IOException ex) {
+      getLog().error(ex);
+    }
+    return path;
+  }
+
+  private String buildPathFromNames(String base, List<String> names) {
+    return buildPathFromNames(base, names, File.pathSeparator);
+  }
+
+  private String buildPathFromNames(String base, List<String> names, String separator) {
+    return names
+      .stream()
+      .map(name -> {
+        return getCanonicalPath(new File(base, name));
+      })
+      .collect(Collectors.joining(separator));
+  }
+
   public void execute() throws MojoExecutionException, MojoFailureException {
     // getLog().debug("Started jlink-maven-plugin");
     if (!output.exists() || !output.isDirectory()) {
       output.mkdirs();
       // getLog().debug("Created output directory: " + output);
     }
+    
+    FileSetManager fileSetManager = new FileSetManager();
+
+    // Map<String,String> mapIncludedFiles
+
+    FileSet fileset = modulepath.getFileSets().get(0);
+    getLog().debug(
+      "INCLUDED DIRS:\n" +
+      buildPathFromNames(
+        "",
+        Arrays.asList(fileSetManager.getIncludedDirectories(fileset)),
+        System.lineSeparator()
+      )
+    );
+    getLog().debug(
+      "INCLUDED FILES:\n" +
+      buildPathFromNames(
+        "",
+        Arrays.asList(fileSetManager.getIncludedFiles(fileset)),
+        System.lineSeparator()
+      )
+    );
+    getLog().debug(
+      "EXCLUDED DIRS:\n" +
+      buildPathFromNames(
+        "",
+        Arrays.asList(fileSetManager.getExcludedDirectories(fileset)),
+        System.lineSeparator()
+      )
+    );
+    getLog().debug(
+      "EXCLUDED FILES:\n" +
+      buildPathFromNames(
+        "",
+        Arrays.asList(fileSetManager.getExcludedFiles(fileset)),
+        System.lineSeparator()
+      )
+    );
+    
   }
 
 }
