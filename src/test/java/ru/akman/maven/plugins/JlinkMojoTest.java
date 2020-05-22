@@ -30,6 +30,7 @@ import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.WithoutMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -48,7 +49,11 @@ public class JlinkMojoTest {
     try {
       path = file.getCanonicalPath();
     } catch (IOException ex) {
-      fail(ex.toString());
+      fail(
+        "File: '" + file.getPath() + "'" +
+        System.lineSeparator() +
+        ex.toString()
+      );
     }
     return path;
   }
@@ -129,15 +134,12 @@ public class JlinkMojoTest {
         "mods/exploded/mod"
       ))
     );
+    FileSetManager fileSetManager = new FileSetManager();
     // filesets
     List<FileSet> filesets = modulepath.getFileSets();
     assertNotNull(filesets);
     assertEquals(filesets.size(), 1);
     FileSet fileset = filesets.get(0);
-    assertEquals(
-      getCanonicalPath(new File(PROJECT_DIR, fileset.getDirectory())),
-      getCanonicalPath(new File(PROJECT_DIR, "target"))
-    );
     assertFalse(fileset.isFollowSymlinks());
     assertEquals(
       buildStringFromNames(fileset.getIncludes()),
@@ -147,15 +149,26 @@ public class JlinkMojoTest {
       buildStringFromNames(fileset.getExcludes()),
       buildStringFromNames(Arrays.asList("**/*Empty.jar"))
     );
+    try {
+      Utils.normalizeFileSetBaseDir(project.getBasedir(), fileset);
+    } catch (IOException ex) {
+      fail(ex.toString());
+    }
+    assertEquals(
+      getCanonicalPath(new File(fileset.getDirectory())),
+      getCanonicalPath(new File(project.getBuild().getDirectory()))
+    );
+    assertEquals(
+      Arrays.asList(fileSetManager.getIncludedFiles(fileset))
+          .stream()
+          .collect(Collectors.joining(System.lineSeparator())),
+      ""
+    );
     // dirsets
     List<FileSet> dirsets = modulepath.getDirSets();
     assertNotNull(dirsets);
     assertEquals(dirsets.size(), 1);
     FileSet dirset = dirsets.get(0);
-    assertEquals(
-      getCanonicalPath(new File(PROJECT_DIR, dirset.getDirectory())),
-      getCanonicalPath(new File(PROJECT_DIR, "some/relative/dirset/path"))
-    );
     assertTrue(dirset.isFollowSymlinks());
     assertEquals(
       buildStringFromNames(dirset.getIncludes()),
@@ -164,6 +177,21 @@ public class JlinkMojoTest {
     assertEquals(
       buildStringFromNames(dirset.getExcludes()),
       buildStringFromNames(Arrays.asList("**/*Test"))
+    );
+    try {
+      Utils.normalizeFileSetBaseDir(project.getBasedir(), dirset);
+    } catch (IOException ex) {
+      fail(ex.toString());
+    }
+    assertEquals(
+      getCanonicalPath(new File(dirset.getDirectory())),
+      getCanonicalPath(new File(project.getBuild().getDirectory()))
+    );
+    assertEquals(
+      Arrays.asList(fileSetManager.getIncludedDirectories(dirset))
+          .stream()
+          .collect(Collectors.joining(System.lineSeparator())),
+      "runtime"
     );
     // dependencysets
     List<DependencySet> dependencysets = modulepath.getDependencySets();
@@ -179,6 +207,7 @@ public class JlinkMojoTest {
       buildStringFromNames(depset.getExcludes()),
       buildStringFromNames(Arrays.asList("**/*Empty.jar"))
     );
+    // TODO: dependencies
   }
 
   @Test
