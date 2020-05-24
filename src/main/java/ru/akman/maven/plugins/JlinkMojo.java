@@ -18,10 +18,15 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
+import org.apache.commons.exec.OS;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Component;
@@ -35,8 +40,12 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
-
+import org.apache.maven.toolchain.ToolchainManager;
+import org.apache.maven.toolchain.Toolchain;
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
+import org.codehaus.plexus.util.cli.Commandline;
+import org.codehaus.plexus.util.cli.CommandLineException;
+import org.codehaus.plexus.util.cli.CommandLineUtils;
 
 /**
  * The `jlink` goal lets you create a custom runtime image with
@@ -48,7 +57,7 @@ import org.codehaus.plexus.languages.java.jpms.LocationManager;
  */
 @Mojo(
   name = "jlink",
-  defaultPhase = LifecyclePhase.PROCESS_CLASSES,
+  defaultPhase = LifecyclePhase.PACKAGE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
   // requiresProject = true
   // aggregator = <false|true>, 
@@ -62,11 +71,27 @@ import org.codehaus.plexus.languages.java.jpms.LocationManager;
   // threadSafe = <false|true>
 )
 @Execute(
-  phase = LifecyclePhase.PROCESS_CLASSES
+  phase = LifecyclePhase.PACKAGE
   // goal = "<goal-name>",
   // lifecycle = "<lifecycle-id>"
 )
 public class JlinkMojo extends AbstractMojo {
+
+  private static final String TOOL_NAME = "jlink";
+
+  private static final String PLUGIN_NAME = "jlink-maven-plugin";
+
+  private static final String JDK = "jdk";
+  private static final String JAVA_HOME = "JAVA_HOME";
+  private static final String JAVA_HOME_BIN = "bin";
+  private static final String PATH = "PATH";
+  private static final String PATHEXT = "PATHEXT";
+
+  /**
+   * Toolchain manager.
+   */
+  @Component
+  private ToolchainManager toolchainManager;
 
   /**
    * Location manager.
@@ -546,23 +571,245 @@ public class JlinkMojo extends AbstractMojo {
   )
   private HotSpotVM vm;
 
+  /**
+   * Get tool executable path.
+   *
+   * @return tool executable path from the registered toolchain or system path
+   */
+  private Path getToolExecutable() {
+    String toolExecutable = null;
+    // Select all jdk toolchains available in user settings
+    // independently from maven-toolchains-plugin
+    List<Toolchain>	toolchains = toolchainManager.getToolchains(
+        session, JDK, null);
+    toolchains.forEach(tc -> {
+      if (getLog().isInfoEnabled()) {
+        getLog().info("Found toolchain: " + tc);
+      }
+    });
+    // Retrieve jdk toolchain from build context,
+    // i.e. the toolchain selected by maven-toolchains-plugin
+    Toolchain toolchain =
+        toolchainManager.getToolchainFromBuildContext(JDK, session);
+    if (toolchain != null) {
+      if (getLog().isInfoEnabled()) {
+        getLog().info("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
+      }
+      toolExecutable = toolchain.findTool(TOOL_NAME);
+      if (toolExecutable != null) {
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Found executable for [" + TOOL_NAME + "] "
+              + toolExecutable);
+        }
+      } else {
+        if (getLog().isWarnEnabled()) {
+          getLog().warn("Executable for [" + TOOL_NAME + "] not found");
+        }
+      }
+    } else {
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("Toolchain in [" + PLUGIN_NAME + "] not specified");
+      }
+    }
+    // If toolchain is not specified/used try get tool executable
+    // from the system
+    return toolExecutable == null ?
+        findToolExecutable() : Paths.get(toolExecutable);
+  }
+
+  /**
+   * Get path from the system environment variable JAVA_HOME.
+   *
+   * @return path from the system environment variable JAVA_HOME
+   */
+  private Path getJavaHome() {
+    Path path = null;
+    String javaHome = System.getenv(JAVA_HOME);
+    if (javaHome != null) {
+      javaHome = javaHome.trim();
+      if (javaHome.isEmpty()) {
+        javaHome = null;
+      }
+    }
+    if (javaHome != null) {
+      path = Paths.get(javaHome);
+    }
+    return path;
+  }
+
+  /**
+   * Get list of the paths registered in the system environment variable PATH.
+   *
+   * @return list of the paths registered in the system
+   *         environment variable PATH.
+   */
+  private List<Path> getSystemPath() {
+    String systemPath = System.getenv(PATH);
+    if (systemPath != null) {
+      systemPath = systemPath.trim();
+      if (systemPath.isEmpty()) {
+        systemPath = null;
+      }
+    }
+    if (systemPath != null) {
+      return Arrays.asList(systemPath.split(File.pathSeparator))
+          .stream().filter(s -> !s.trim().isEmpty())
+          .map(s -> Paths.get(s))
+          .collect(Collectors.toList());
+    }
+    return new ArrayList<Path>();
+  }
+
+  /**
+   * Get list of the registered path extensions from
+   * the system environment variable PATHEXT.
+   *
+   * @return list of the registered path extensions from the system
+   *         environment variable PATHEXT
+   */
+  private List<String> getPathExt() {
+    if (OS.isFamilyWindows()) {
+      String systemPathExt = System.getenv(PATHEXT);
+      if (systemPathExt != null) {
+        systemPathExt = systemPathExt.trim();
+        if (systemPathExt.isEmpty()) {
+          systemPathExt = null;
+        }
+      }
+      if (systemPathExt != null) {
+        return Arrays.asList(systemPathExt.split(File.pathSeparator))
+            .stream().filter(s -> !s.trim().isEmpty())
+            .collect(Collectors.toList());
+      }
+    }
+    return new ArrayList<String>();
+  }
+
+  /**
+   * Find tool executable path under JAVA_HOME or/and system path.
+   *
+   * @return tool executable path or null if it not found
+   */
+  private Path findToolExecutable() {
+    List<String> exts = getPathExt();
+    List<Path> paths = getSystemPath();
+    Path javaHome = getJavaHome();
+    if (javaHome != null) {
+      paths.add(0, javaHome.resolve(JAVA_HOME_BIN));
+    }
+    for (Path path : paths) {
+      if (!OS.isFamilyWindows()) {
+        Path tool = path.resolve(TOOL_NAME);
+        if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
+          return tool;
+        }
+      }
+      for (String ext : exts) {
+        Path tool = path.resolve(TOOL_NAME.concat(ext));
+        if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
+          return tool;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Execute command line.
+   *
+   * @param cmdLine command line
+   * @return exit code
+   *
+   * @throws CommandLineException
+   */
+  private int execCmdLine(Commandline cmdLine) throws CommandLineException {
+    // TODO: uncomment
+    // if (getLog().isDebugEnabled()) {
+      getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
+    // }
+    CommandLineUtils.StringStreamConsumer err =
+        new CommandLineUtils.StringStreamConsumer();
+    CommandLineUtils.StringStreamConsumer out =
+        new CommandLineUtils.StringStreamConsumer();
+    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
+    String stdout = out.getOutput().trim();
+    String stderr = err.getOutput().trim();
+    if (exitCode == 0) {
+      if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
+        getLog().info(stdout);
+      }
+      if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
+        getLog().info(stderr);
+      }
+    } else {
+      if (getLog().isErrorEnabled()) {
+        if (!stdout.isEmpty()) {
+          getLog().error("Exit code: " + exitCode
+              + System.lineSeparator() + stdout);
+        }
+        if (!stderr.isEmpty()) {
+          getLog().error("Exit code: " + exitCode
+              + System.lineSeparator() + stderr);
+        }
+        getLog().error("Command line was: "
+            + CommandLineUtils.toString(cmdLine.getCommandline()));
+      }
+    }
+    return exitCode;
+  }
+
+  /**
+   * Execute goal.
+   *
+   * @throws MojoExecutionException
+   * @throws MojoFailureException
+   */
   public void execute() throws MojoExecutionException, MojoFailureException {
+
+    if (project == null) {
+      throw new MojoExecutionException(
+          "Error: The predefined variable ${project} is not defined");
+    }
+
+    if (session == null) {
+      throw new MojoExecutionException(
+          "Error: The predefined variable ${session} is not defined");
+    }
 
     // The directory containing the pom.xml file
     File basedir = project.getBasedir();
-
     if (basedir == null) {
       throw new MojoExecutionException(
-          "The predefined variable ${project.basedir} is not defined.");
+          "Error: The predefined variable ${project.basedir} is not defined");
     }
 
     // The directory where all files generated by the build are placed.
     // See <a href="https://maven.apache.org/ref/current/maven-model-builder/super-pom.html">Super POM</a>.
     File builddir = new File(project.getBuild().getDirectory());
 
-    // Create output directory if not exists
-    if (!output.exists() || !output.isDirectory()) {
-      output.mkdirs();
+    Path toolExecutable = getToolExecutable();
+    if (toolExecutable == null) {
+      throw new MojoExecutionException(
+          "Error: Executable for [" + TOOL_NAME + "] not found");
+    }
+    try {
+      toolExecutable = toolExecutable.toRealPath();
+    } catch (IOException ex) {
+      throw new MojoExecutionException(
+          "Error: Executable for [" + TOOL_NAME + "] not found", ex);
+    }
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Found executable for [" + TOOL_NAME + "]: "
+          + toolExecutable);
+    }
+
+    // Create output directory if it does not exist
+    Path outputPath = output.toPath();
+    try {
+      Files.createDirectories(outputPath);
+    } catch (IOException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to create output directory: [" + outputPath + "]", ex);
     }
 
     // fileset
@@ -583,9 +830,25 @@ public class JlinkMojo extends AbstractMojo {
     // );
 
     // project.getDependencies() ... dependency.getSystemPath()
-    
-    
 
+    Commandline cmdLine = new Commandline();
+    cmdLine.setExecutable(toolExecutable.toString());
+    
+    cmdLine.createArg().setValue("--version");
+    
+    int exitCode = 0;
+    try {
+      exitCode = execCmdLine(cmdLine);
+    } catch (CommandLineException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to execute [" + TOOL_NAME + "] tool", ex);
+    }
+    if (exitCode != 0) {
+      throw new MojoExecutionException(
+          "Error: Tool execution failed [" + TOOL_NAME + "] with exit code: "
+          + exitCode);
+    }
+    
   }
 
 }

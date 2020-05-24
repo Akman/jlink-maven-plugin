@@ -14,6 +14,6 @@
   limitations under the License.
 */
 
-File output = new File(basedir, "target/jlinkImage")
+File output = new File(basedir, "target/runtime")
 
 assert output.isDirectory()

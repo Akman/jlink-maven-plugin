@@ -40,6 +40,7 @@
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.version>3.6.0</maven.version>
+    <jdk.toolchain>jdk13</jdk.toolchain>
     <logback.version>1.2.3</logback.version>
   </properties>
 
@@ -101,12 +102,21 @@
       <artifactId>plexus-java</artifactId>
       <version>1.0.5</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>1.3</version>
+    </dependency>
   </dependencies>
 
   <build>
 
     <pluginManagement>
       <plugins>
+        <plugin>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>
@@ -147,6 +157,23 @@
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <toolchains>
+            <jdk>
+              <id>${jdk.toolchain}</id>
+            </jdk>
+          </toolchains>
+        </configuration>
+      </plugin>      
       <plugin>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
