@@ -20,7 +20,19 @@ package ru.akman.maven.plugins;
  * Compression
  */
 public enum Compression {
-  NO_COMPRESSION,
-  CONSTANT_STRING_SHARING,
-  ZIP
+
+  NO_COMPRESSION(0),
+  CONSTANT_STRING_SHARING(1),
+  ZIP(2);
+  
+  private final int value;
+  
+  Compression(int value) {
+    this.value = value;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
 }

@@ -273,6 +273,30 @@
             <limitmodule>org.example.limitmodule</limitmodule>
           </limitmodules>
           <!--
+            Suggest providers that implement the given service types
+            from the module path.
+          -->
+          <suggestproviders>
+            <suggestprovider>provider.name</suggestprovider>
+          </suggestproviders>
+          <!--
+            Save jlink options in the given file.
+          -->
+          <saveopts>${project.build.directory}/jlink-opts</saveopts>
+          <!--
+            The last plugin allowed to sort resources.
+          -->
+          <resourceslastsorter>resource-sorter-name</resourceslastsorter>
+          <!--
+            Post process an existing image.
+          -->
+          <postprocesspath>${project.build.directory}/imagefile</postprocesspath>
+          <!--
+            Enable verbose tracing.
+            Default value: false.
+          -->
+          <verbose>true</verbose>
+          <!--
             Link service provider modules and their dependencies.
             Default value: false.
           -->

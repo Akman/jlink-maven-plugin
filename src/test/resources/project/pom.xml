@@ -124,10 +124,34 @@
             <limitmodule>org.example.limitmodule</limitmodule>
           </limitmodules>
           <!--
+            Suggest providers that implement the given service types
+            from the module path.
+          -->
+          <suggestproviders>
+            <suggestprovider>provider.name</suggestprovider>
+          </suggestproviders>
+          <!--
+            Save jlink options in the given file.
+          -->
+          <saveopts>${project.build.directory}/jlink-opts</saveopts>
+          <!--
+            The last plugin allowed to sort resources.
+          -->
+          <resourceslastsorter>resource-sorter-name</resourceslastsorter>
+          <!--
+            Post process an existing image.
+          -->
+          <postprocesspath>${project.build.directory}/imagefile</postprocesspath>
+          <!--
+            Enable verbose tracing.
+            Default value: false.
+          -->
+          <verbose>true</verbose>
+          <!--
             Link service provider modules and their dependencies.
             Default value: false.
           -->
-          <bindservices>false</bindservices>
+          <bindservices>true</bindservices>
           <!--
             Specifies the launcher command name for the module or
             the command name for the module and main class (the module and
@@ -142,25 +166,25 @@
             Excludes header files.
             Default value: false.
           -->
-          <noheaderfiles>false</noheaderfiles>
+          <noheaderfiles>true</noheaderfiles>
           <!--
             Excludes man pages.
             Default value: false.
           -->
-          <nomanpages>false</nomanpages>
+          <nomanpages>true</nomanpages>
           <!--
             Specifies the byte order of the generated
             image { NATIVE | LITTLE | BIG }.
             Default value: NATIVE (the format of your system's architecture).
           -->
-          <endian>NATIVE</endian>
+          <endian>LITTLE</endian>
           <!--
             Suppresses a fatal error when signed modular JARs are linked
             in the runtime image. The signature-related files of the signed
             modular JARs aren't copied to the runtime image.
             Default value: false.
           -->
-          <ignoresigninginformation>false</ignoresigninginformation>
+          <ignoresigninginformation>true</ignoresigninginformation>
           <!--
             Disables the specified plug-ins.
             For a complete list of all available plug-ins,
@@ -234,24 +258,24 @@
             Strips debug information from the output image.
             Default value: false.
           -->
-          <stripdebug>false</stripdebug>
+          <stripdebug>true</stripdebug>
           <!--
             Strip Java debug attributes from classes in the output image.
             Default value: false.
           -->
-          <stripjavadebugattributes>false</stripjavadebugattributes>
+          <stripjavadebugattributes>true</stripjavadebugattributes>
           <!--
             Exclude native commands (such as java/java.exe) from the image.
             Default value: false.
           -->
-          <stripnativecommands>false</stripnativecommands>
+          <stripnativecommands>true</stripnativecommands>
           <!--
             De-duplicate all legal notices. If true is specified then
             it will be an error if two files of the same filename
             are different.
             Default value: false.
           -->
-          <deduplegalnotices>false</deduplegalnotices>
+          <deduplegalnotices>true</deduplegalnotices>
           <!--
             Specify files to exclude.
           -->
@@ -302,7 +326,7 @@
             the output image: { CLIENT | SERVER | MINIMAL | ALL }
             Default value: ALL.
           -->
-          <vm>ALL</vm>
+          <vm>SERVER</vm>
         </configuration>
       </plugin>
     </plugins>

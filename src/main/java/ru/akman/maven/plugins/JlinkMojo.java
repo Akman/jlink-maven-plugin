@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.commons.exec.OS;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Component;
@@ -86,6 +86,16 @@ public class JlinkMojo extends AbstractMojo {
   private static final String JAVA_HOME_BIN = "bin";
   private static final String PATH = "PATH";
   private static final String PATHEXT = "PATHEXT";
+
+  /**
+   * Project base directory that containing the pom.xml file
+   */
+  private File baseDir;
+
+  /**
+   * Fileset manager.
+   */
+  private FileSetManager fileSetManager;
 
   /**
    * Toolchain manager.
@@ -232,6 +242,64 @@ public class JlinkMojo extends AbstractMojo {
    */
   @Parameter
   private List<String> limitmodules;
+
+  /**
+   * Suggest providers that implement the given service types
+   * from the module path.
+   * 
+   * <pre>
+   * &lt;suggestproviders&gt;
+   *   &lt;suggestprovider&gt;provider.name&lt;/suggestprovider&gt;
+   * &lt;/suggestproviders&gt;
+   * </pre>
+   * 
+   * The jlink CLI is: <code>--suggest-providers [name, ...]</code>
+   */
+  @Parameter
+  private List<String> suggestproviders;
+
+  /**
+   * Save jlink options in the given file.
+   *
+   * The jlink CLI is: <code>--save-opts filename</code>
+   */
+  @Parameter(
+    property = "jlink.saveopts"
+  )
+  private File saveopts;
+
+  /**
+   * The last plugin allowed to sort resources.
+   *
+   * The jlink CLI is: <code>--resources-last-sorter name</code>
+   */
+  @Parameter(
+    property = "jlink.resourceslastsorter"
+  )
+  private String resourceslastsorter;
+
+  /**
+   * Post process an existing image.
+   *
+   * The jlink CLI is: <code>--post-process-path imagefile</code>
+   */
+  @Parameter(
+    property = "jlink.postprocesspath"
+  )
+  private File postprocesspath;
+
+  /**
+   * Enable verbose tracing.
+   *
+   * Default value: false.
+   *
+   * The jlink CLI is: <code>--verbose</code>
+   */
+  @Parameter(
+    property = "jlink.verbose",
+    defaultValue = "false"
+  )
+  private boolean verbose;
 
   /**
    * Link service provider modules and their dependencies.
@@ -498,8 +566,7 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--exclude-jmod-section={man|headers}</code>
    */
   @Parameter(
-    property = "jlink.excludejmodsection",
-    defaultValue = "NATIVE"
+    property = "jlink.excludejmodsection"
   )
   private Section excludejmodsection;
 
@@ -566,8 +633,7 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--vm={client|server|minimal|all}</code>
    */
   @Parameter(
-    property = "jlink.vm",
-    defaultValue = "ALL"
+    property = "jlink.vm"
   )
   private HotSpotVM vm;
 
@@ -668,7 +734,7 @@ public class JlinkMojo extends AbstractMojo {
    *         environment variable PATHEXT
    */
   private List<String> getPathExt() {
-    if (OS.isFamilyWindows()) {
+    if (SystemUtils.IS_OS_WINDOWS) {
       String systemPathExt = System.getenv(PATHEXT);
       if (systemPathExt != null) {
         systemPathExt = systemPathExt.trim();
@@ -698,7 +764,7 @@ public class JlinkMojo extends AbstractMojo {
       paths.add(0, javaHome.resolve(JAVA_HOME_BIN));
     }
     for (Path path : paths) {
-      if (!OS.isFamilyWindows()) {
+      if (!SystemUtils.IS_OS_WINDOWS) {
         Path tool = path.resolve(TOOL_NAME);
         if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
           return tool;
@@ -727,35 +793,390 @@ public class JlinkMojo extends AbstractMojo {
     // if (getLog().isDebugEnabled()) {
       getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
     // }
-    CommandLineUtils.StringStreamConsumer err =
-        new CommandLineUtils.StringStreamConsumer();
-    CommandLineUtils.StringStreamConsumer out =
-        new CommandLineUtils.StringStreamConsumer();
-    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
-    String stdout = out.getOutput().trim();
-    String stderr = err.getOutput().trim();
-    if (exitCode == 0) {
-      if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
-        getLog().info(stdout);
+    return 0;
+    // CommandLineUtils.StringStreamConsumer err =
+    //     new CommandLineUtils.StringStreamConsumer();
+    // CommandLineUtils.StringStreamConsumer out =
+    //     new CommandLineUtils.StringStreamConsumer();
+    // int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
+    // String stdout = out.getOutput().trim();
+    // String stderr = err.getOutput().trim();
+    // if (exitCode == 0) {
+    //   if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
+    //     getLog().info(stdout);
+    //   }
+    //   if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
+    //     getLog().info(stderr);
+    //   }
+    // } else {
+    //   if (getLog().isErrorEnabled()) {
+    //     if (!stdout.isEmpty()) {
+    //       getLog().error("Exit code: " + exitCode
+    //           + System.lineSeparator() + stdout);
+    //     }
+    //     if (!stderr.isEmpty()) {
+    //       getLog().error("Exit code: " + exitCode
+    //           + System.lineSeparator() + stderr);
+    //     }
+    //     getLog().error("Command line was: "
+    //         + CommandLineUtils.toString(cmdLine.getCommandline()));
+    //   }
+    // }
+    // return exitCode;
+  }
+
+  /**
+   * Process modules.
+   *
+   * @param cmdLine command line
+   *
+   * @throws MojoExecutionException
+   */
+  private void processModules(Commandline cmdLine)
+      throws MojoExecutionException {
+    if (modulepath != null) {
+      List<File> pathelements = modulepath.getPathElements();
+      if (pathelements != null && !pathelements.isEmpty()) {
+        //if (getLog().isDebugEnabled()) {
+          // TODO: path in quotes
+          getLog().debug(
+            "PATHELEMENTS:" +
+            System.lineSeparator() +
+            pathelements.stream()
+                .map(file -> file.toString())
+                .collect(Collectors.joining(File.pathSeparator, "\"", "\""))
+          );
+        //}
       }
-      if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
-        getLog().info(stderr);
+      List<FileSet> filesets = modulepath.getFileSets();
+      if (filesets != null && !filesets.isEmpty()) {
+        for (FileSet fileSet : filesets) {
+          try {
+            Utils.normalizeFileSetBaseDir(baseDir, fileSet);
+          } catch (IOException ex) {
+            if (getLog().isErrorEnabled()) {
+              getLog().error(ex);
+            }
+            throw new MojoExecutionException(
+                "Error: Unable to resolve fileset", ex);
+          }
+          //if (getLog().isDebugEnabled()) {
+            getLog().debug(
+              "FILESET:"
+              + System.lineSeparator()
+              + "directory: " + fileSet.getDirectory()
+              + System.lineSeparator()
+              + "followSymlinks: " + fileSet.isFollowSymlinks()
+              + System.lineSeparator()
+              + "includes:"
+              + fileSet.getIncludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "excludes:" 
+              + fileSet.getExcludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "======="
+              + System.lineSeparator()
+              + Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
+                  .stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+            );
+          //}
+        }
       }
-    } else {
-      if (getLog().isErrorEnabled()) {
-        if (!stdout.isEmpty()) {
-          getLog().error("Exit code: " + exitCode
-              + System.lineSeparator() + stdout);
+      List<FileSet> dirsets = modulepath.getDirSets();
+      if (dirsets != null && !dirsets.isEmpty()) {
+        for (FileSet dirSet : dirsets) {
+          try {
+            Utils.normalizeFileSetBaseDir(baseDir, dirSet);
+          } catch (IOException ex) {
+            if (getLog().isErrorEnabled()) {
+              getLog().error(ex);
+            }
+            throw new MojoExecutionException(
+              "Error: Unable to resolve dirset", ex);
+          }
+          //if (getLog().isDebugEnabled()) {
+            getLog().debug(
+              "DIRSET:"
+              + System.lineSeparator()
+              + "directory: " + dirSet.getDirectory()
+              + System.lineSeparator()
+              + "followSymlinks: " + dirSet.isFollowSymlinks()
+              + System.lineSeparator()
+              + "includes:"
+              + dirSet.getIncludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "excludes:" 
+              + dirSet.getExcludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "======"
+              + System.lineSeparator()
+              + Arrays.asList(fileSetManager.getIncludedDirectories(dirSet))
+                  .stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+            );
+          //}
         }
-        if (!stderr.isEmpty()) {
-          getLog().error("Exit code: " + exitCode
-              + System.lineSeparator() + stderr);
-        }
-        getLog().error("Command line was: "
-            + CommandLineUtils.toString(cmdLine.getCommandline()));
+      }
+      List<DependencySet> dependencysets = modulepath.getDependencySets();
+      if (dependencysets != null && !dependencysets.isEmpty()) {
+        dependencysets.forEach(dependencyset -> {
+          //if (getLog().isDebugEnabled()) {
+            getLog().debug(
+              "DEPENDENCYSET:"
+              + System.lineSeparator()
+              + "type: " + dependencyset.getType()
+              + System.lineSeparator()
+              + "includes:"
+              + dependencyset.getIncludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "excludes:" 
+              + dependencyset.getExcludes().stream()
+                  .collect(Collectors.joining(System.lineSeparator()))
+              + System.lineSeparator()
+              + "============="
+            );
+          //}
+        });
       }
     }
-    return exitCode;
+  }
+
+  /**
+   * Process options.
+   *
+   * @param cmdLine command line
+   */
+  private void processOptions(Commandline cmdLine) {
+    // TODO: filename in quotes
+    // output
+    cmdLine.createArg().setValue("--output");
+    cmdLine.createArg().setValue(output.toString());
+    // saveopts
+    if (saveopts != null) {
+      cmdLine.createArg().setValue("--save-opts");
+      cmdLine.createArg().setValue(saveopts.toString());
+    }
+    // TODO: --post-process-path imagefil
+    // postprocesspath
+    if (postprocesspath != null) {
+      cmdLine.createArg().setValue("--post-process-path");
+      cmdLine.createArg().setValue(postprocesspath.toString());
+    }
+    // TODO: --resources-last-sorter name
+    // resourceslastsorter
+    if (resourceslastsorter != null) {
+      resourceslastsorter = resourceslastsorter.trim();
+      if (!resourceslastsorter.isEmpty()) {
+        cmdLine.createArg().setValue("--resources-last-sorter");
+        cmdLine.createArg().setValue(resourceslastsorter);
+      }
+    }
+    // verbose
+    if (verbose) {
+      cmdLine.createArg().setValue("--verbose");
+    }
+    // bindservices
+    if (bindservices) {
+      cmdLine.createArg().setValue("--bind-services");
+    }
+    // noheaderfiles
+    if (noheaderfiles) {
+      cmdLine.createArg().setValue("--no-header-files");
+    }
+    // nomanpages
+    if (nomanpages) {
+      cmdLine.createArg().setValue("--no-man-pages");
+    }
+    // ignoresigninginformation
+    if (ignoresigninginformation) {
+      cmdLine.createArg().setValue("--ignore-signing-information");
+    }
+    // stripdebug
+    if (stripdebug) {
+      cmdLine.createArg().setValue("--strip-debug");
+    }
+    // stripjavadebugattributes
+    if (stripjavadebugattributes) {
+      cmdLine.createArg().setValue("--strip-java-debug-attributes");
+    }
+    // stripnativecommands
+    if (stripnativecommands) {
+      cmdLine.createArg().setValue("--strip-native-commands");
+    }
+    // TODO: --dedup-legal-notices=[error-if-not-same-content]
+    // deduplegalnotices
+    // if (deduplegalnotices) {
+    //   cmdLine.createArg().setValue("--dedup-legal-notices=[error-if-not-same-content]");
+    // }
+    // TODO: --system-modules=retainModuleTarget
+    // systemmodules
+    // if (systemmodules) {
+    //   cmdLine.createArg().setValue("--system-modules=retainModuleTarget");
+    // }
+    // addmodules
+    if (includelocales != null && !includelocales.isEmpty()) {
+      if (addmodules == null) {
+        addmodules = new ArrayList<String>();
+      }
+      addmodules.add("jdk.localedata");
+    }
+    if (addmodules != null && !addmodules.isEmpty()) {
+      cmdLine.createArg().setValue("--add-modules");
+      cmdLine.createArg().setValue(
+          addmodules.stream().collect(Collectors.joining(",")));
+    }
+    // limitmodules
+    if (limitmodules != null && !limitmodules.isEmpty()) {
+      cmdLine.createArg().setValue("--limit-modules");
+      cmdLine.createArg().setValue(
+          limitmodules.stream().collect(Collectors.joining(",")));
+    }
+    // suggestproviders
+    if (suggestproviders != null && !suggestproviders.isEmpty()) {
+      cmdLine.createArg().setValue("--suggest-providers");
+      cmdLine.createArg().setValue(
+          suggestproviders.stream().collect(Collectors.joining(",")));
+    }
+    // endian
+    if (endian != null && !endian.equals(Endian.NATIVE)) {
+      cmdLine.createArg().setValue("--endian");
+      cmdLine.createArg().setValue(endian.toString().toLowerCase());
+    }
+    // disableplugins
+    if (disableplugins != null) {
+      disableplugins.forEach(p -> {
+        cmdLine.createArg().setValue("--disable-plugin");
+        cmdLine.createArg().setValue(p);
+      });
+    }
+    // includelocales
+    if (includelocales != null && !includelocales.isEmpty()) {
+      cmdLine.createArg().setValue(
+          includelocales.stream()
+              .collect(Collectors.joining(",", "--include-locales=", "")));
+    }
+    // excludejmodsection
+    if (excludejmodsection != null) {
+      cmdLine.createArg().setValue("--exclude-jmod-section="
+          + excludejmodsection.toString().toLowerCase());
+    }
+    // TODO: filename in quotes
+    // generatejliclasses
+    if (generatejliclasses != null) {
+      cmdLine.createArg().setValue("--generate-jli-classes=@"
+          + generatejliclasses.toString());
+    }
+    // vm
+    if (vm != null) {
+      cmdLine.createArg().setValue("--vm=" + vm.toString().toLowerCase());
+    }
+    // launcher
+    if (launcher != null) {
+      String launcherCommand = launcher.getCommand();
+      if (launcherCommand != null) {
+        launcherCommand = launcherCommand.trim();
+        if (!launcherCommand.isEmpty()) {
+          String launcherModule = launcher.getMainModule();
+          if (launcherModule != null) {
+            launcherModule = launcherModule.trim();
+            if (!launcherModule.isEmpty()) {
+              cmdLine.createArg().setValue("--launcher");
+              String launcherClass = launcher.getMainClass();
+              if (launcherClass != null) {
+                launcherClass = launcherClass.trim();
+              }
+              if (launcherClass == null || launcherClass.isEmpty()) {
+                cmdLine.createArg().setValue(launcherCommand + "="
+                    + launcherModule);
+              } else {
+                cmdLine.createArg().setValue(launcherCommand + "="
+                    + launcherModule + "/" + launcherClass);
+              }
+            }
+          }
+        }
+      }
+    }
+    // TODO: pattern-list
+    // compress
+    if (compress != null) {
+      Compression compression = compress.getCompression();
+      List<String> filters = compress.getFilters();
+      if (compression != null) {
+        StringBuilder option = new StringBuilder("--compress=");
+        option.append(compression.getValue());
+        if (filters != null) {
+          option.append(filters.stream()
+              .collect(Collectors.joining(",", ":filter=", "")));
+        }
+        cmdLine.createArg().setValue(option.toString());
+      }
+    }
+    // TODO: pattern-list
+    // orderresources
+    if (orderresources != null && !orderresources.isEmpty()) {
+      cmdLine.createArg().setValue(orderresources.stream()
+          .collect(Collectors.joining(",", "--order-resources=", "")));
+    }
+    // TODO: pattern-list
+    // excluderesources
+    if (excluderesources != null && !excluderesources.isEmpty()) {
+      cmdLine.createArg().setValue(excluderesources.stream()
+          .collect(Collectors.joining(",", "--exclude-resources=", "")));
+    }
+    // TODO: pattern-list
+    // excludefiles
+    if (excludefiles != null && !excludefiles.isEmpty()) {
+      cmdLine.createArg().setValue(excludefiles.stream()
+          .collect(Collectors.joining(",", "--exclude-files=", "")));
+    }
+    // TODO: filename in quotes
+    // TODO: --release-info=file|add:key1=value1:key2=value2:...|del:key-list
+    // releaseinfo
+    if (releaseinfo != null) {
+      File releaseinfofile = releaseinfo.getFile();
+      if (releaseinfofile != null) {
+        StringBuilder option = new StringBuilder("--release-info=");
+        option.append(releaseinfofile.toString());
+        Map<String, String> adds = releaseinfo.getAdds();
+        if (adds != null) {
+          option.append(adds.entrySet().stream()
+              .filter(add -> !add.getKey().trim().isEmpty())
+              .map(add -> add.getKey() + "=" + add.getValue())
+              .collect(Collectors.joining(":", "|add:", "")));
+        }
+        Map<String, String> dels = releaseinfo.getDels();
+        if (dels != null) {
+          option.append(dels.entrySet().stream()
+              .filter(del -> !del.getKey().trim().isEmpty())
+              .map(del -> del.getKey())
+              .collect(Collectors.joining(":", "|del:", "")));
+        }
+        cmdLine.createArg().setValue(option.toString());
+      }
+    }
+  }
+
+  /**
+   * Build command line.
+   *
+   * @param executable path to command executable
+   * @return command line
+   * @throws MojoExecutionException
+   */
+  private Commandline buildCmdLine(Path executable)
+      throws MojoExecutionException {
+    Commandline cmdLine = new Commandline();
+    cmdLine.setExecutable(executable.toString());
+    processOptions(cmdLine);
+    processModules(cmdLine);
+    return cmdLine;
   }
 
   /**
@@ -776,17 +1197,31 @@ public class JlinkMojo extends AbstractMojo {
           "Error: The predefined variable ${session} is not defined");
     }
 
-    // The directory containing the pom.xml file
-    File basedir = project.getBasedir();
-    if (basedir == null) {
+    baseDir = project.getBasedir();
+    if (baseDir == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project.basedir} is not defined");
     }
 
-    // The directory where all files generated by the build are placed.
-    // See <a href="https://maven.apache.org/ref/current/maven-model-builder/super-pom.html">Super POM</a>.
-    File builddir = new File(project.getBuild().getDirectory());
+    fileSetManager = new FileSetManager(getLog(), true);
+    if (fileSetManager == null) {
+      throw new MojoExecutionException(
+          "Error: Unable to create file set manager");
+    }
 
+    // Create output directory if it does not exist
+    Path outputPath = output.toPath();
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Set output directory to: [" + outputPath + "]");
+    }
+    try {
+      Files.createDirectories(outputPath);
+    } catch (IOException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to create output directory: [" + outputPath + "]", ex);
+    }
+
+    // Get suitable executable
     Path toolExecutable = getToolExecutable();
     if (toolExecutable == null) {
       throw new MojoExecutionException(
@@ -802,40 +1237,11 @@ public class JlinkMojo extends AbstractMojo {
       getLog().info("Found executable for [" + TOOL_NAME + "]: "
           + toolExecutable);
     }
-
-    // Create output directory if it does not exist
-    Path outputPath = output.toPath();
-    try {
-      Files.createDirectories(outputPath);
-    } catch (IOException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to create output directory: [" + outputPath + "]", ex);
-    }
-
-    // fileset
-    // FileSet fileSet = modulepath.getFileSets().get(0);
-    // try {
-    //   Utils.normalizeFileSetBaseDir(basedir, fileSet);
-    // } catch (IOException ex) {
-    //   getLog().error(ex);
-    //   throw new MojoExecutionException(ex.toString());
-    // }
-    // FileSetManager fileSetManager = new FileSetManager(getLog(), true);
-    // getLog().debug(
-    //   "FILES:" +
-    //   System.lineSeparator() +
-    //   Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
-    //       .stream()
-    //       .collect(Collectors.joining(System.lineSeparator()))
-    // );
-
-    // project.getDependencies() ... dependency.getSystemPath()
-
-    Commandline cmdLine = new Commandline();
-    cmdLine.setExecutable(toolExecutable.toString());
     
-    cmdLine.createArg().setValue("--version");
+    // Build command line
+    Commandline cmdLine = buildCmdLine(toolExecutable);
     
+    // Execute command line
     int exitCode = 0;
     try {
       exitCode = execCmdLine(cmdLine);

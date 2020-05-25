@@ -108,6 +108,26 @@ The following is an example of an options file for the jlink command:
 
 Disables the specified plug-in.
 
+**--suggest-providers [name, ...]**
+
+Suggest providers that implement the given service types from the module path
+
+**--save-opts filename**
+
+Save jlink options in the given file
+
+**--resources-last-sorter name**
+
+The last plugin allowed to sort resources
+
+**--post-process-path imagefile**
+
+Post process an existing image
+
+**--verbose**
+
+Enable verbose tracing
+
 ## JLink tool plugins
 
 For a complete list of all available plug-ins, run the command
