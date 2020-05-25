@@ -25,7 +25,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Execute;
@@ -43,6 +45,7 @@ import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.Toolchain;
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
+import org.codehaus.plexus.util.cli.Arg;
 import org.codehaus.plexus.util.cli.Commandline;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -826,28 +829,43 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Process modules.
+   * Get pathelements from modulepath parameter.
    *
-   * @param cmdLine command line
-   *
-   * @throws MojoExecutionException
+   * @return path contains pathelements
    */
-  private void processModules(Commandline cmdLine)
-      throws MojoExecutionException {
+  private String getPathElements() {
+    String result = null;
     if (modulepath != null) {
       List<File> pathelements = modulepath.getPathElements();
       if (pathelements != null && !pathelements.isEmpty()) {
-        //if (getLog().isDebugEnabled()) {
-          // TODO: path in quotes
+        result = pathelements.stream()
+            .filter(Objects::nonNull)
+            // TODO: path in quotes
+            .map(file -> file.toString())
+            .collect(Collectors.joining(File.pathSeparator))
+            .trim();
+        if (getLog().isDebugEnabled()) {
           getLog().debug(
-            "PATHELEMENTS:" +
-            System.lineSeparator() +
-            pathelements.stream()
-                .map(file -> file.toString())
-                .collect(Collectors.joining(File.pathSeparator, "\"", "\""))
-          );
-        //}
+              System.lineSeparator()
+              + "PATHELEMENTS"
+              + System.lineSeparator()
+              + result);
+        }
       }
+    }
+    return result;
+  }
+
+  /**
+   * Get filesets from modulepath parameter.
+   *
+   * @return path contains filesets
+   *
+   * @throws MojoExecutionException
+   */
+  private String getFileSets() throws MojoExecutionException {
+    String result = null;
+    if (modulepath != null) {
       List<FileSet> filesets = modulepath.getFileSets();
       if (filesets != null && !filesets.isEmpty()) {
         for (FileSet fileSet : filesets) {
@@ -860,31 +878,32 @@ public class JlinkMojo extends AbstractMojo {
             throw new MojoExecutionException(
                 "Error: Unable to resolve fileset", ex);
           }
-          //if (getLog().isDebugEnabled()) {
-            getLog().debug(
-              "FILESET:"
-              + System.lineSeparator()
-              + "directory: " + fileSet.getDirectory()
-              + System.lineSeparator()
-              + "followSymlinks: " + fileSet.isFollowSymlinks()
-              + System.lineSeparator()
-              + "includes:"
-              + fileSet.getIncludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "excludes:" 
-              + fileSet.getExcludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "======="
-              + System.lineSeparator()
-              + Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
-                  .stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-            );
-          //}
+          result =
+              Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
+              .stream()
+              .filter(Objects::nonNull)
+              .collect(Collectors.joining(File.pathSeparator))
+              .trim();
+          if (getLog().isDebugEnabled()) {
+            getLog().debug(Utils.getFileSetDebugInfo(
+                "FILESET", fileSet, result));
+          }
         }
       }
+    }
+    return result;
+  }
+
+  /**
+   * Get dirsets from modulepath parameter.
+   *
+   * @return path contains dirsets
+   *
+   * @throws MojoExecutionException
+   */
+  private String getDirSets() throws MojoExecutionException {
+    String result = null;
+    if (modulepath != null) {
       List<FileSet> dirsets = modulepath.getDirSets();
       if (dirsets != null && !dirsets.isEmpty()) {
         for (FileSet dirSet : dirsets) {
@@ -897,53 +916,102 @@ public class JlinkMojo extends AbstractMojo {
             throw new MojoExecutionException(
               "Error: Unable to resolve dirset", ex);
           }
-          //if (getLog().isDebugEnabled()) {
-            getLog().debug(
-              "DIRSET:"
-              + System.lineSeparator()
-              + "directory: " + dirSet.getDirectory()
-              + System.lineSeparator()
-              + "followSymlinks: " + dirSet.isFollowSymlinks()
-              + System.lineSeparator()
-              + "includes:"
-              + dirSet.getIncludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "excludes:" 
-              + dirSet.getExcludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "======"
-              + System.lineSeparator()
-              + Arrays.asList(fileSetManager.getIncludedDirectories(dirSet))
-                  .stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-            );
-          //}
+          result =
+              Arrays.asList(fileSetManager.getIncludedDirectories(dirSet))
+              .stream()
+              .filter(Objects::nonNull)
+              .collect(Collectors.joining(File.pathSeparator))
+              .trim();
+          if (getLog().isDebugEnabled()) {
+            getLog().debug(Utils.getFileSetDebugInfo(
+                "DIRSET", dirSet, result));
+          }
         }
       }
+    }
+    return result;
+  }
+
+  /**
+   * Get dependencysets from modulepath parameter.
+   *
+   * @return path contains dependencysets
+   */
+  private String getDependencySets() {
+    String result = null;
+    if (modulepath != null) {
       List<DependencySet> dependencysets = modulepath.getDependencySets();
       if (dependencysets != null && !dependencysets.isEmpty()) {
-        dependencysets.forEach(dependencyset -> {
-          //if (getLog().isDebugEnabled()) {
-            getLog().debug(
-              "DEPENDENCYSET:"
-              + System.lineSeparator()
-              + "type: " + dependencyset.getType()
-              + System.lineSeparator()
-              + "includes:"
-              + dependencyset.getIncludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "excludes:" 
-              + dependencyset.getExcludes().stream()
-                  .collect(Collectors.joining(System.lineSeparator()))
-              + System.lineSeparator()
-              + "============="
-            );
-          //}
-        });
+        for (DependencySet dependencyset : dependencysets) {
+          // TODO: dependency set
+          result = "";
+          if (getLog().isDebugEnabled()) {
+            getLog().debug(Utils.getDependencySetDebugInfo(
+                "DEPENDENCYSET", dependencyset, result));
+          }
+        }
       }
+    }
+    return result;
+  }
+
+  /**
+   * Process modules.
+   *
+   * @param cmdLine command line
+   *
+   * @throws MojoExecutionException
+   */
+  private void processModules(Commandline cmdLine)
+      throws MojoExecutionException {
+    // modulepath
+    if (modulepath != null) {
+      StringBuilder options = new StringBuilder();
+      String pathElements = getPathElements();
+      if (pathElements != null && !pathElements.isEmpty()) {
+        options.append(pathElements);
+      }
+      String fileSets = getFileSets();
+      if (!fileSets.isEmpty()) {
+        if (options.length() != 0) {
+          options.append(File.pathSeparator);
+        }
+        options.append(fileSets);
+      }
+      String dirSets = getDirSets();
+      if (!dirSets.isEmpty()) {
+        if (options.length() != 0) {
+          options.append(File.pathSeparator);
+        }
+        options.append(dirSets);
+      }
+      String dependencySets = getDependencySets();
+      if (!dependencySets.isEmpty()) {
+        if (options.length() != 0) {
+          options.append(File.pathSeparator);
+        }
+        options.append(dependencySets);
+      }
+      if (options.length() != 0) {
+        // TODO: modulepath in quotes
+        options
+            .insert(0, '"')
+            .append('"');
+        cmdLine.createArg().setValue("--module-path");
+        cmdLine.createArg().setValue(options.toString());
+      }
+    }
+    // addmodules
+    if (includelocales != null && !includelocales.isEmpty()) {
+      if (addmodules == null) {
+        addmodules = new ArrayList<String>();
+      }
+      addmodules.add("jdk.localedata");
+    }
+    if (addmodules != null && !addmodules.isEmpty()) {
+      cmdLine.createArg().setValue("--add-modules");
+      cmdLine.createArg().setValue(
+          addmodules.stream().collect(Collectors.joining(",")));
     }
   }
 
@@ -953,22 +1021,19 @@ public class JlinkMojo extends AbstractMojo {
    * @param cmdLine command line
    */
   private void processOptions(Commandline cmdLine) {
-    // TODO: filename in quotes
     // output
     cmdLine.createArg().setValue("--output");
-    cmdLine.createArg().setValue(output.toString());
+    cmdLine.createArg().setFile(output);
     // saveopts
     if (saveopts != null) {
       cmdLine.createArg().setValue("--save-opts");
-      cmdLine.createArg().setValue(saveopts.toString());
+      cmdLine.createArg().setFile(saveopts);
     }
-    // TODO: --post-process-path imagefil
     // postprocesspath
     if (postprocesspath != null) {
       cmdLine.createArg().setValue("--post-process-path");
-      cmdLine.createArg().setValue(postprocesspath.toString());
+      cmdLine.createArg().setFile(postprocesspath);
     }
-    // TODO: --resources-last-sorter name
     // resourceslastsorter
     if (resourceslastsorter != null) {
       resourceslastsorter = resourceslastsorter.trim();
@@ -1003,7 +1068,15 @@ public class JlinkMojo extends AbstractMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      cmdLine.createArg().setValue("--strip-java-debug-attributes");
+      if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_13)) {
+        stripjavadebugattributes = false;
+        if (getLog().isWarnEnabled()) {
+          getLog().warn("Skiped, at least " + JavaVersion.JAVA_13
+              + " is required to use parameter [stripjavadebugattributes]");
+        }
+      } else {
+        cmdLine.createArg().setValue("--strip-java-debug-attributes");
+      }
     }
     // stripnativecommands
     if (stripnativecommands) {
@@ -1019,18 +1092,6 @@ public class JlinkMojo extends AbstractMojo {
     // if (systemmodules) {
     //   cmdLine.createArg().setValue("--system-modules=retainModuleTarget");
     // }
-    // addmodules
-    if (includelocales != null && !includelocales.isEmpty()) {
-      if (addmodules == null) {
-        addmodules = new ArrayList<String>();
-      }
-      addmodules.add("jdk.localedata");
-    }
-    if (addmodules != null && !addmodules.isEmpty()) {
-      cmdLine.createArg().setValue("--add-modules");
-      cmdLine.createArg().setValue(
-          addmodules.stream().collect(Collectors.joining(",")));
-    }
     // limitmodules
     if (limitmodules != null && !limitmodules.isEmpty()) {
       cmdLine.createArg().setValue("--limit-modules");
@@ -1222,6 +1283,11 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     // Get suitable executable
+    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
+      throw new MojoExecutionException(
+          "Error: At least " + JavaVersion.JAVA_9
+          + " is required to use [" + TOOL_NAME + "]");
+    }
     Path toolExecutable = getToolExecutable();
     if (toolExecutable == null) {
       throw new MojoExecutionException(

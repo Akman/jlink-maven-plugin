@@ -18,6 +18,7 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.stream.Collectors;
 import org.apache.maven.shared.model.fileset.FileSet;
 
 public final class Utils {
@@ -27,6 +28,13 @@ public final class Utils {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Fix base directory of the fileset by resolving it
+   * relative to the specified base directory
+   *
+   * @param baseDir base directory
+   * @param fileSet fileset
+   */
   public static void normalizeFileSetBaseDir(File baseDir, FileSet fileSet)
       throws IOException {
     String dir = fileSet.getDirectory();
@@ -38,6 +46,73 @@ public final class Utils {
       fileSetDir = new File(baseDir, dir);
     }
     fileSet.setDirectory(fileSetDir.getCanonicalPath());
+  }
+
+  /**
+   * Get debug info about a fileset.
+   *
+   * @param title title
+   * @param fileSet fileset
+   * @param String fileset data
+   * @return formatted string contains info about the fileset
+   */
+  public static String getFileSetDebugInfo(String title, FileSet fileSet,
+      String data) {
+    return new StringBuilder(System.lineSeparator())
+        .append(title)
+        .append(System.lineSeparator())
+        .append("directory: ")
+        .append(fileSet.getDirectory())
+        .append(System.lineSeparator())
+        .append("followSymlinks: ")
+        .append(fileSet.isFollowSymlinks())
+        .append(System.lineSeparator())
+        .append("includes:")
+        .append(System.lineSeparator())
+        .append(fileSet.getIncludes().stream()
+            .collect(Collectors.joining(System.lineSeparator())))
+        .append(System.lineSeparator())
+        .append("excludes:")
+        .append(System.lineSeparator())
+        .append(fileSet.getExcludes().stream()
+            .collect(Collectors.joining(System.lineSeparator())))
+        .append(System.lineSeparator())
+        .append("data:")
+        .append(System.lineSeparator())
+        .append(data)
+        .toString();
+  }
+
+  /**
+   * Get debug info about a dependencyset.
+   *
+   * @param title title
+   * @param depSet dependencyset
+   * @param String dependencyset data
+   * @return formatted string contains info about the dependencyset
+   */
+  public static String getDependencySetDebugInfo(String title,
+      DependencySet depSet, String data) {
+    return new StringBuilder(System.lineSeparator())
+        .append(title)
+        .append(System.lineSeparator())
+        .append("type: ")
+        .append(depSet.getType())
+        .append(System.lineSeparator())
+        .append("includes:")
+        .append(System.lineSeparator())
+        .append(depSet.getIncludes().stream()
+            .collect(Collectors.joining(System.lineSeparator())))
+        .append(System.lineSeparator())
+        .append("excludes:")
+        .append(System.lineSeparator())
+        .append(depSet.getExcludes().stream()
+            .collect(Collectors.joining(System.lineSeparator())))
+        .append(System.lineSeparator())
+        .append("data:")
+        .append(System.lineSeparator())
+        .append(data)
+        .toString();
   }
 
 }
