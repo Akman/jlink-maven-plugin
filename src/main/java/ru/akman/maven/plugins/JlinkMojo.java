@@ -18,6 +18,8 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
@@ -90,10 +93,22 @@ public class JlinkMojo extends AbstractMojo {
   private static final String PATH = "PATH";
   private static final String PATHEXT = "PATHEXT";
 
+  private static final String OPTS_FILE = TOOL_NAME + ".opts";
+
   /**
-   * Project base directory that containing the pom.xml file
+   * Project base directory (that containing the pom.xml file).
    */
   private File baseDir;
+
+  /**
+   * Project properties.
+   */
+  private Properties properties;
+
+  /**
+   * Default charset (value of project.build.sourceEncoding)
+   */
+  private Charset defaultCharset = StandardCharsets.UTF_8;
 
   /**
    * Fileset manager.
@@ -792,11 +807,11 @@ public class JlinkMojo extends AbstractMojo {
    * @throws CommandLineException
    */
   private int execCmdLine(Commandline cmdLine) throws CommandLineException {
-    // TODO: uncomment
-    // if (getLog().isDebugEnabled()) {
+    if (getLog().isDebugEnabled()) {
       getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
-    // }
+    }
     return 0;
+    // TODO: uncomment
     // CommandLineUtils.StringStreamConsumer err =
     //     new CommandLineUtils.StringStreamConsumer();
     // CommandLineUtils.StringStreamConsumer out =
@@ -945,10 +960,10 @@ public class JlinkMojo extends AbstractMojo {
         for (DependencySet dependencyset : dependencysets) {
           // TODO: dependency set
           result = "";
-          if (getLog().isDebugEnabled()) {
+          //if (getLog().isDebugEnabled()) {
             getLog().debug(Utils.getDependencySetDebugInfo(
                 "DEPENDENCYSET", dependencyset, result));
-          }
+          //}
         }
       }
     }
@@ -958,47 +973,45 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Process modules.
    *
-   * @param cmdLine command line
-   *
+   * @param cmdLine the command line builder
    * @throws MojoExecutionException
    */
-  private void processModules(Commandline cmdLine)
+  private void processModules(CommandLineBuilder cmdLine)
       throws MojoExecutionException {
+    CommandLineOption opt = null;
     // modulepath
     if (modulepath != null) {
-      StringBuilder options = new StringBuilder();
+      StringBuilder path = new StringBuilder();
       String pathElements = getPathElements();
       if (pathElements != null && !pathElements.isEmpty()) {
-        options.append(pathElements);
+        path.append(pathElements);
       }
       String fileSets = getFileSets();
       if (!fileSets.isEmpty()) {
-        if (options.length() != 0) {
-          options.append(File.pathSeparator);
+        if (path.length() != 0) {
+          path.append(File.pathSeparator);
         }
-        options.append(fileSets);
+        path.append(fileSets);
       }
       String dirSets = getDirSets();
       if (!dirSets.isEmpty()) {
-        if (options.length() != 0) {
-          options.append(File.pathSeparator);
+        if (path.length() != 0) {
+          path.append(File.pathSeparator);
         }
-        options.append(dirSets);
+        path.append(dirSets);
       }
       String dependencySets = getDependencySets();
       if (!dependencySets.isEmpty()) {
-        if (options.length() != 0) {
-          options.append(File.pathSeparator);
+        if (path.length() != 0) {
+          path.append(File.pathSeparator);
         }
-        options.append(dependencySets);
+        path.append(dependencySets);
       }
-      if (options.length() != 0) {
+      if (path.length() != 0) {
         // TODO: modulepath in quotes
-        options
-            .insert(0, '"')
-            .append('"');
-        cmdLine.createArg().setValue("--module-path");
-        cmdLine.createArg().setValue(options.toString());
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue("--module-path");
+        opt.createArg().setValue(path.toString());
       }
     }
     // addmodules
@@ -1009,8 +1022,9 @@ public class JlinkMojo extends AbstractMojo {
       addmodules.add("jdk.localedata");
     }
     if (addmodules != null && !addmodules.isEmpty()) {
-      cmdLine.createArg().setValue("--add-modules");
-      cmdLine.createArg().setValue(
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--add-modules");
+      opt.createArg().setValue(
           addmodules.stream().collect(Collectors.joining(",")));
     }
   }
@@ -1018,28 +1032,35 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Process options.
    *
-   * @param cmdLine command line
+   * @param cmdLine the command line builder
+   * @throws MojoExecutionException
    */
-  private void processOptions(Commandline cmdLine) {
+  private void processOptions(CommandLineBuilder cmdLine)
+      throws MojoExecutionException {
+    CommandLineOption opt = null;
     // output
-    cmdLine.createArg().setValue("--output");
-    cmdLine.createArg().setFile(output);
+    opt = cmdLine.createOpt();
+    opt.createArg().setValue("--output");
+    opt.createArg().setFile(output);
     // saveopts
     if (saveopts != null) {
-      cmdLine.createArg().setValue("--save-opts");
-      cmdLine.createArg().setFile(saveopts);
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--save-opts");
+      opt.createArg().setFile(saveopts);
     }
     // postprocesspath
     if (postprocesspath != null) {
-      cmdLine.createArg().setValue("--post-process-path");
-      cmdLine.createArg().setFile(postprocesspath);
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--post-process-path");
+      opt.createArg().setFile(postprocesspath);
     }
     // resourceslastsorter
     if (resourceslastsorter != null) {
       resourceslastsorter = resourceslastsorter.trim();
       if (!resourceslastsorter.isEmpty()) {
-        cmdLine.createArg().setValue("--resources-last-sorter");
-        cmdLine.createArg().setValue(resourceslastsorter);
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue("--resources-last-sorter");
+        opt.createArg().setValue(resourceslastsorter);
       }
     }
     // verbose
@@ -1094,27 +1115,31 @@ public class JlinkMojo extends AbstractMojo {
     // }
     // limitmodules
     if (limitmodules != null && !limitmodules.isEmpty()) {
-      cmdLine.createArg().setValue("--limit-modules");
-      cmdLine.createArg().setValue(
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--limit-modules");
+      opt.createArg().setValue(
           limitmodules.stream().collect(Collectors.joining(",")));
     }
     // suggestproviders
     if (suggestproviders != null && !suggestproviders.isEmpty()) {
-      cmdLine.createArg().setValue("--suggest-providers");
-      cmdLine.createArg().setValue(
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--suggest-providers");
+      opt.createArg().setValue(
           suggestproviders.stream().collect(Collectors.joining(",")));
     }
     // endian
     if (endian != null && !endian.equals(Endian.NATIVE)) {
-      cmdLine.createArg().setValue("--endian");
-      cmdLine.createArg().setValue(endian.toString().toLowerCase());
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--endian");
+      opt.createArg().setValue(endian.toString().toLowerCase());
     }
     // disableplugins
     if (disableplugins != null) {
-      disableplugins.forEach(p -> {
-        cmdLine.createArg().setValue("--disable-plugin");
-        cmdLine.createArg().setValue(p);
-      });
+      for (String plugin : disableplugins) {
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue("--disable-plugin");
+        opt.createArg().setValue(plugin);
+      }
     }
     // includelocales
     if (includelocales != null && !includelocales.isEmpty()) {
@@ -1147,16 +1172,17 @@ public class JlinkMojo extends AbstractMojo {
           if (launcherModule != null) {
             launcherModule = launcherModule.trim();
             if (!launcherModule.isEmpty()) {
-              cmdLine.createArg().setValue("--launcher");
+              opt = cmdLine.createOpt();
+              opt.createArg().setValue("--launcher");
               String launcherClass = launcher.getMainClass();
               if (launcherClass != null) {
                 launcherClass = launcherClass.trim();
               }
               if (launcherClass == null || launcherClass.isEmpty()) {
-                cmdLine.createArg().setValue(launcherCommand + "="
+                opt.createArg().setValue(launcherCommand + "="
                     + launcherModule);
               } else {
-                cmdLine.createArg().setValue(launcherCommand + "="
+                opt.createArg().setValue(launcherCommand + "="
                     + launcherModule + "/" + launcherClass);
               }
             }
@@ -1225,22 +1251,6 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Build command line.
-   *
-   * @param executable path to command executable
-   * @return command line
-   * @throws MojoExecutionException
-   */
-  private Commandline buildCmdLine(Path executable)
-      throws MojoExecutionException {
-    Commandline cmdLine = new Commandline();
-    cmdLine.setExecutable(executable.toString());
-    processOptions(cmdLine);
-    processModules(cmdLine);
-    return cmdLine;
-  }
-
-  /**
    * Execute goal.
    *
    * @throws MojoExecutionException
@@ -1264,10 +1274,28 @@ public class JlinkMojo extends AbstractMojo {
           "Error: The predefined variable ${project.basedir} is not defined");
     }
 
+    properties = project.getProperties();
+    if (properties == null) {
+      throw new MojoExecutionException(
+          "Error: Unable to read project properties");
+    }
+
     fileSetManager = new FileSetManager(getLog(), true);
     if (fileSetManager == null) {
       throw new MojoExecutionException(
           "Error: Unable to create file set manager");
+    }
+
+    try {
+      defaultCharset = Charset.forName(
+          properties.getProperty("project.build.sourceEncoding"));
+    } catch (Exception ex) {
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("Unable to read ${project.build.sourceEncoding}");
+      }
+    }
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Used encoding: [" + defaultCharset + "]");
     }
 
     // Create output directory if it does not exist
@@ -1279,7 +1307,8 @@ public class JlinkMojo extends AbstractMojo {
       Files.createDirectories(outputPath);
     } catch (IOException ex) {
       throw new MojoExecutionException(
-          "Error: Unable to create output directory: [" + outputPath + "]", ex);
+          "Error: Unable to create output directory: ["
+          + outputPath + "]", ex);
     }
 
     // Get suitable executable
@@ -1304,9 +1333,43 @@ public class JlinkMojo extends AbstractMojo {
           + toolExecutable);
     }
     
-    // Build command line
-    Commandline cmdLine = buildCmdLine(toolExecutable);
-    
+    // Build command line and populate the list of the command options
+    CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
+    cmdLineBuilder.setExecutable(toolExecutable.toString());
+    processOptions(cmdLineBuilder);
+    processModules(cmdLineBuilder);
+    List<String> optsLines = new ArrayList<String>();
+    optsLines.add("# " + TOOL_NAME);
+    optsLines.addAll(cmdLineBuilder.buildOptionList());
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(optsLines.stream()
+          .collect(Collectors.joining(System.lineSeparator(),
+              System.lineSeparator(), "")));
+    }
+
+    // Save the list of command options to the file
+    // will be used in the tool command line
+    Path cmdOptsPath = Paths.get(project.getBuild().getDirectory(), OPTS_FILE);
+    // TODO: uncomment
+    // cmdOptsPath.toFile().deleteOnExit();
+    try {
+      Files.write(cmdOptsPath, optsLines, defaultCharset);
+    } catch (Exception ex) {
+      if (getLog().isErrorEnabled()) {
+        getLog().error("Unable to write command options to file: ["
+            + cmdOptsPath + "]", ex);
+      }
+    }
+
+    // Prepare command line with command options specified in place
+    // Commandline cmdLine = cmdLineBuilder.buildCommandLine();
+
+    // Prepare command line with command options
+    // specified in the file created early
+    Commandline cmdLine = new Commandline();
+    cmdLine.setExecutable(toolExecutable.toString());
+    cmdLine.createArg().setValue("@" + cmdOptsPath.toString());
+
     // Execute command line
     int exitCode = 0;
     try {

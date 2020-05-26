@@ -69,6 +69,8 @@
                 </includes>
                 <excludes>
                   <exclude>**/*Empty.jar</exclude>
+                  <exclude>jlink.opts</exclude>
+                  <exclude>jlink-opts</exclude>
                 </excludes>
                 <followSymlinks>false</followSymlinks>
               </fileset>

@@ -133,7 +133,11 @@ public class JlinkMojoTest {
     assertEquals(
       "",
       buildStringFromNames(fileset.getExcludes()),
-      buildStringFromNames(Arrays.asList("**/*Empty.jar"))
+      buildStringFromNames(Arrays.asList(
+        "**/*Empty.jar",
+        "jlink.opts",
+        "jlink-opts"
+      ))
     );
     try {
       Utils.normalizeFileSetBaseDir(project.getBasedir(), fileset);
