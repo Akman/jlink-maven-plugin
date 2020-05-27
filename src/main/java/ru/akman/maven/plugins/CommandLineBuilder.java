@@ -32,7 +32,7 @@ public class CommandLineBuilder {
 
   public CommandLineBuilder() {
     cmdLine = new Commandline();
-    options = new ArrayList<CommandLineOption>();
+    options = new ArrayList<>();
   }
 
   public CommandLineBuilder setExecutable(String executable) {

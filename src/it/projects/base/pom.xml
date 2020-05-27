@@ -202,7 +202,9 @@
             pathelements - passed to jlink as is
             filesets - sets of files (without directories)
             dirsets - sets of directories (without files)
-            dependencysets - sets of dependencies with specified type
+            dependencysets - sets of dependencies with specified includes and
+                             excludes patterns (glob: or regex:) for file names
+                             and regex patterns only for module names
           -->
           <modulepath>
             <pathelements>
@@ -236,13 +238,19 @@
             </dirsets>
             <dependencysets>
               <dependencyset>
-                <type>RUNTIME</type>
                 <includes>
-                  <include>**/*.jar</include>
+                  <include>glob:**/*.jar</include>
+                  <include>regex:foo-(bar|baz)-.*?\.jar</include>
                 </includes>
+                <includenames>
+                  <includename>.*</includename>
+                </includenames>
                 <excludes>
-                  <exclude>**/*Empty.jar</exclude>
+                  <exclude>glob:**/javafx.*Empty</exclude>
                 </excludes>
+                <excludenames>
+                  <excludename>javafx\..+Empty</excludename>
+                </excludenames>
               </dependencyset>
             </dependencysets>
           </modulepath>

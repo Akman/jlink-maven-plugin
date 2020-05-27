@@ -24,19 +24,13 @@ import java.util.List;
  */
 public class DependencySet {
 
-  private DependencySetType type;
-
   private List<String> includes;
+
+  private List<String> includenames;
 
   private List<String> excludes;
 
-  public DependencySetType getType() {
-    return this.type;
-  }
-
-  public void setType(DependencySetType type) {
-    this.type = type;
-  }
+  private List<String> excludenames;
 
   public List<String> getIncludes() {
     return this.includes;
@@ -53,5 +47,21 @@ public class DependencySet {
   public void setExcludes(List<String> excludes) {
     this.excludes = excludes;
   }
-  
+
+  public List<String> getIncludeNames() {
+    return this.includenames;
+  }
+
+  public void setIncludeNames(List<String> includenames) {
+    this.includenames = includenames;
+  }
+
+  public List<String> getExcludeNames() {
+    return this.excludenames;
+  }
+
+  public void setExcludeNames(List<String> excludenames) {
+    this.excludenames = excludenames;
+  }
+
 }

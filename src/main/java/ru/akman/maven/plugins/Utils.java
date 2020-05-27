@@ -18,8 +18,10 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.maven.shared.model.fileset.FileSet;
+import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
 
 public final class Utils {
 
@@ -96,9 +98,6 @@ public final class Utils {
     return new StringBuilder(System.lineSeparator())
         .append(title)
         .append(System.lineSeparator())
-        .append("type: ")
-        .append(depSet.getType())
-        .append(System.lineSeparator())
         .append("includes:")
         .append(System.lineSeparator())
         .append(depSet.getIncludes().stream()
@@ -113,6 +112,71 @@ public final class Utils {
         .append(System.lineSeparator())
         .append(data)
         .toString();
+  }
+
+  /**
+   * Get debug info about a dependency.
+   *
+   * @param file the dependency file
+   * @param descriptor the dependency descriptor
+   * @param isIncluded will the dependency be included
+   * @return formatted string contains info about the dependency
+   */
+  public static String getDependencyDebugInfo(File file,
+      JavaModuleDescriptor descriptor, boolean isIncluded) {
+    StringBuilder result =
+      new StringBuilder()
+          .append(System.lineSeparator())
+          .append("included: " + isIncluded)
+          .append(System.lineSeparator())
+          .append("file: " + file.getName())
+          .append(System.lineSeparator())
+          .append("path: " + file.toString());
+    if (descriptor != null) {
+      result
+          .append(System.lineSeparator())
+          .append("name: " + descriptor.name())
+          .append(System.lineSeparator())
+          .append("automatic: " + descriptor.isAutomatic())
+          .append(System.lineSeparator())
+          .append("requires: ")
+          .append(System.lineSeparator())
+          .append(descriptor.requires().stream()
+              .filter(Objects::nonNull)
+              .map(requires -> requires.name() + " : "
+                  + requires.modifiers().stream()
+                      .filter(Objects::nonNull)
+                      .map(mod -> mod.toString())
+                      .collect(Collectors.joining(", ", "{ ", " }")))
+              .collect(Collectors.joining(System.lineSeparator())))
+          .append(System.lineSeparator())
+          .append("exports: ")
+          .append(System.lineSeparator())
+          .append(descriptor.exports().stream()
+              .filter(Objects::nonNull)
+              .map(exports -> exports.source() + " : "
+                  + (exports.targets() == null ? "{}" :
+                      exports.targets().stream()
+                          .filter(Objects::nonNull)
+                          .collect(Collectors.joining(", ", "{ ", " }"))))
+              .collect(Collectors.joining(System.lineSeparator())))
+          .append(System.lineSeparator())
+          .append("provides: ")
+          .append(System.lineSeparator())
+          .append(descriptor.provides().stream()
+              .filter(Objects::nonNull)
+              .map(provides -> provides.service() + " : "
+                  + provides.providers().stream()
+                      .filter(Objects::nonNull)
+                      .collect(Collectors.joining(", ", "{ ", " }")))
+              .collect(Collectors.joining(System.lineSeparator())))
+          .append(System.lineSeparator())
+          .append("uses: ")
+          .append(descriptor.uses().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(", ", "{ ", " }")));
+    }
+    return result.toString();
   }
 
 }

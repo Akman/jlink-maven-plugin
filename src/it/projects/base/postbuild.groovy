@@ -15,5 +15,4 @@
 */
 
 File output = new File(basedir, "target/runtime")
-
 assert output.isDirectory()

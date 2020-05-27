@@ -33,7 +33,7 @@ public class CommandLineOption {
 
   public CommandLineOption(Commandline cmdLine) {
     this.cmdLine = cmdLine;
-    this.args = new ArrayList<Arg>();
+    this.args = new ArrayList<>();
   }
 
   public Arg createArg() {

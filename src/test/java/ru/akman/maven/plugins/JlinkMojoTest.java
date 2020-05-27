@@ -202,18 +202,29 @@ public class JlinkMojoTest {
     assertNotNull("", dependencysets);
     assertEquals("", dependencysets.size(), 1);
     DependencySet depset = dependencysets.get(0);
-    assertEquals("", depset.getType(), DependencySetType.RUNTIME);
     assertEquals(
       "",
       buildStringFromNames(depset.getIncludes()),
-      buildStringFromNames(Arrays.asList("**/*.jar"))
+      buildStringFromNames(Arrays.asList(
+        "glob:**/*.jar",
+        "regex:foo-(bar|baz)-.*?\\.jar"
+      ))
     );
     assertEquals(
       "",
       buildStringFromNames(depset.getExcludes()),
-      buildStringFromNames(Arrays.asList("**/*Empty.jar"))
+      buildStringFromNames(Arrays.asList("glob:**/javafx.*Empty"))
     );
-    // TODO: dependencies
+    assertEquals(
+      "",
+      buildStringFromNames(depset.getIncludeNames()),
+      buildStringFromNames(Arrays.asList(".*"))
+    );
+    assertEquals(
+      "",
+      buildStringFromNames(depset.getExcludeNames()),
+      buildStringFromNames(Arrays.asList("javafx\\..+Empty"))
+    );
   }
 
   @Test
