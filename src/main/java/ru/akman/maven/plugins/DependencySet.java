@@ -24,6 +24,10 @@ import java.util.List;
  */
 public class DependencySet {
 
+  private boolean includeoutput = false;
+
+  private boolean excludeautomatic = false;
+
   private List<String> includes;
 
   private List<String> includenames;
@@ -31,6 +35,22 @@ public class DependencySet {
   private List<String> excludes;
 
   private List<String> excludenames;
+
+  public boolean isOutputIncluded() {
+    return this.includeoutput;
+  }
+
+  public void setOutputIncluded(boolean includeoutput) {
+    this.includeoutput = includeoutput;
+  }
+
+  public boolean isAutomaticExcluded() {
+    return this.excludeautomatic;
+  }
+
+  public void setAutomaticExcluded(boolean excludeautomatic) {
+    this.excludeautomatic = excludeautomatic;
+  }
 
   public List<String> getIncludes() {
     return this.includes;

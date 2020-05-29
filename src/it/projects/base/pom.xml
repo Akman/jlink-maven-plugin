@@ -21,20 +21,30 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ru.akman.maven.plugins</groupId>
-  <artifactId>jlink-maven-plugin-it</artifactId>
+  <artifactId>hello</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>jlink-maven-plugin Integration Test</name>
+  <description>JavaFX application using slf4j with logback-classic</description>
 
   <properties>
-    <default.encoding>UTF-8</default.encoding>
     <jdk.toolchain>jdk13</jdk.toolchain>
-    <javaVersion>13</javaVersion>
+    <default.encoding>UTF-8</default.encoding>
+    <java.source.version>13</java.source.version>
+    <java.target.version>13</java.target.version>
+    <java.release.version>13</java.release.version>
     <javafx.version>13.0.2</javafx.version>
     <slf4j.version>2.0.0-alpha1</slf4j.version>
     <logback.version>1.3.0-alpha4</logback.version>
+    <application.name>hello</application.name>
+    <application.module>hello</application.module>
+    <application.class>ru.akman.hello.Main</application.class>
     <project.build.sourceEncoding>${default.encoding}</project.build.sourceEncoding>
+    <build.dir>${project.build.directory}</build.dir>
+    <mods.dir>${build.dir}/mods</mods.dir>
+    <libs.dir>${build.dir}/libs</libs.dir>
+    <image.dir>${build.dir}/image</image.dir>
   </properties>
 
   <dependencies>
@@ -96,85 +106,45 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <artifactId>maven-toolchains-plugin</artifactId>
-          <version>3.0.0</version>
+          <groupId>@project.groupId@</groupId>
+          <artifactId>@project.artifactId@</artifactId>
+          <version>@project.version@</version>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>
         </plugin>
         <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>2.5.2</version>
         </plugin>
         <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.1.2</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
           <version>2.8.2</version>
         </plugin>
         <plugin>
-          <groupId>@project.groupId@</groupId>
-          <artifactId>@project.artifactId@</artifactId>
-          <version>@project.version@</version>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>3.0.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
-      <plugin>
-        <artifactId>maven-toolchains-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <toolchains>
-            <jdk>
-              <id>${jdk.toolchain}</id>
-            </jdk>
-          </toolchains>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-          <source>${javaVersion}</source>
-          <target>${javaVersion}</target>
-          <release>${javaVersion}</release>
-          <fork>true</fork>
-          <compilerArgs>
-            <!--
-              Give more detail for unchecked conversion warnings
-              that are mandated by the Java Language Specification.
-            -->
-            <arg>-Xlint:unchecked</arg>
-            <!--
-              Show a description of each use or override of a deprecated member
-              or class. Without this, javac shows a summary of the source files
-              that use or override deprecated members or classes.
-            -->
-            <arg>-Xlint:deprecation</arg>
-            <!--
-              Terminate compilation if warnings occur.
-            -->
-            <arg>-Werror</arg>
-          </compilerArgs>          
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>@project.groupId@</groupId>
         <artifactId>@project.artifactId@</artifactId>
@@ -207,50 +177,31 @@
                              and regex patterns only for module names
           -->
           <modulepath>
+            <!--
             <pathelements>
-              <pathelement>mod.jar</pathelement>
-              <pathelement>mod.jmod</pathelement>
-              <pathelement>mods/exploded/mod</pathelement>
+              <pathelement>${mods.dir}</pathelement>
+              <pathelement>${libs.dir}</pathelement>
             </pathelements>
-            <filesets>
-              <fileset>
-                <directory>${project.build.directory}</directory>
-                <includes>
-                  <include>**/*</include>
-                </includes>
-                <excludes>
-                  <exclude>**/*Empty.jar</exclude>
-                </excludes>
-                <followSymlinks>false</followSymlinks>
-              </fileset>
-            </filesets>
+            -->
+            <!--
             <dirsets>
               <dirset>
-                <directory>target</directory>
+                <directory>${build.dir}</directory>
                 <includes>
-                  <include>**/*</include>
+                  <include>classes</include>
                 </includes>
-                <excludes>
-                  <exclude>**/*Test</exclude>
-                </excludes>
-                <followSymlinks>true</followSymlinks>
               </dirset>
             </dirsets>
+            -->
             <dependencysets>
               <dependencyset>
-                <includes>
-                  <include>glob:**/*.jar</include>
-                  <include>regex:foo-(bar|baz)-.*?\.jar</include>
-                </includes>
-                <includenames>
-                  <includename>.*</includename>
-                </includenames>
-                <excludes>
-                  <exclude>glob:**/javafx.*Empty</exclude>
-                </excludes>
+                <includeoutput>true</includeoutput>
+                <excludeautomatic>true</excludeautomatic>
+                <!--
                 <excludenames>
                   <excludename>javafx\..+Empty</excludename>
                 </excludenames>
+                -->
               </dependencyset>
             </dependencysets>
           </modulepath>
@@ -259,14 +210,13 @@
             the runtime image. Their transitive dependencies will add too.
           -->
           <addmodules>
-            <addmodule>java.base</addmodule>
-            <addmodule>org.example.rootmodule</addmodule>
+            <addmodule>${application.module}</addmodule>
           </addmodules>
           <!--
             Specifies the location of the generated runtime image.
             Default value: ${project.build.directory}/runtime.
           -->
-          <output>${project.build.directory}/runtime</output>
+          <output>${image.dir}</output>
           <!--
             Limits the universe of observable modules to those in
             the transitive closure of the named modules, mod,
@@ -276,29 +226,28 @@
             the selected services, if the property "bindservices"
             set to true.
           -->
-          <limitmodules>
-            <limitmodule>java.base</limitmodule>
+          <!--limitmodules>
             <limitmodule>org.example.limitmodule</limitmodule>
-          </limitmodules>
+          </limitmodules-->
           <!--
             Suggest providers that implement the given service types
             from the module path.
           -->
-          <suggestproviders>
+          <!--suggestproviders>
             <suggestprovider>provider.name</suggestprovider>
-          </suggestproviders>
+          </suggestproviders-->
           <!--
             Save jlink options in the given file.
           -->
-          <saveopts>${project.build.directory}/jlink-opts</saveopts>
+          <saveopts>${build.dir}/image-opts</saveopts>
           <!--
             The last plugin allowed to sort resources.
           -->
-          <resourceslastsorter>resource-sorter-name</resourceslastsorter>
+          <!--resourceslastsorter>resource-sorter-name</resourceslastsorter-->
           <!--
             Post process an existing image.
           -->
-          <postprocesspath>${project.build.directory}/imagefile</postprocesspath>
+          <!--postprocesspath>${project.build.directory}/imagefile</postprocesspath-->
           <!--
             Enable verbose tracing.
             Default value: false.
@@ -308,49 +257,49 @@
             Link service provider modules and their dependencies.
             Default value: false.
           -->
-          <bindservices>false</bindservices>
+          <!--bindservices>false</bindservices-->
           <!--
             Specifies the launcher command name for the module or
             the command name for the module and main class (the module and
             the main class names are separated by a slash).
           -->
           <launcher>
-            <command>myLauncher</command>
-            <mainmodule>mainModule</mainmodule>
-            <mainclass>mainClass</mainclass>
+            <command>${application.name}</command>
+            <mainmodule>${application.module}</mainmodule>
+            <mainclass>${application.class}</mainclass>
           </launcher>
           <!--
             Excludes header files.
             Default value: false.
           -->
-          <noheaderfiles>false</noheaderfiles>
+          <noheaderfiles>true</noheaderfiles>
           <!--
             Excludes man pages.
             Default value: false.
           -->
-          <nomanpages>false</nomanpages>
+          <nomanpages>true</nomanpages>
           <!--
             Specifies the byte order of the generated
             image { NATIVE | LITTLE | BIG }.
             Default value: NATIVE (the format of your system's architecture).
           -->
-          <endian>NATIVE</endian>
+          <!--endian>NATIVE</endian-->
           <!--
             Suppresses a fatal error when signed modular JARs are linked
             in the runtime image. The signature-related files of the signed
             modular JARs aren't copied to the runtime image.
             Default value: false.
           -->
-          <ignoresigninginformation>false</ignoresigninginformation>
+          <!--ignoresigninginformation>false</ignoresigninginformation-->
           <!--
             Disables the specified plug-ins.
             For a complete list of all available plug-ins,
             run the command: jlink ‒‒list-plugins
           -->
-          <disableplugins>
+          <!--disableplugins>
             <disableplugin>compress</disableplugin>
             <disableplugin>dedup-legal-notices</disableplugin>
-          </disableplugins>
+          </disableplugins-->
 
           <!-- PLUGINS -->
           <!--
@@ -374,12 +323,12 @@
           -->
           <compress>
             <compression>ZIP</compression>
-            <filters>
+            <!--filters>
               <filter>**/*-info.class</filter>
               <filter>glob:**/module-info.class</filter>
               <filter>regex:/java[a-z]+$</filter>
               <filter>@filename</filter>
-            </filters>
+            </filters-->
           </compress>
           <!--
             Includes the list of locales where langtag is
@@ -388,39 +337,39 @@
             Ensure that you specified: ‒‒add-modules jdk.localedata when
             using this property.
           -->
-          <includelocales>
+          <!--includelocales>
             <includelocale>en</includelocale>
             <includelocale>ja</includelocale>
             <includelocale>*-IN</includelocale>
-          </includelocales>
+          </includelocales-->
           <!--
             Orders the specified paths in priority order.
           -->
-          <orderresources>
+          <!--orderresources>
             <orderresource>**/*-info.class</orderresource>
             <orderresource>glob:**/module-info.class</orderresource>
             <orderresource>regex:/java[a-z]+$</orderresource>
             <orderresource>@filename</orderresource>
-          </orderresources>
+          </orderresources-->
           <!--
             Specify resources to exclude.
           -->
-          <excluderesources>
+          <!--excluderesources>
             <excluderesource>**/*-info.class</excluderesource>
             <excluderesource>glob:**/META-INF/**</excluderesource>
             <excluderesource>regex:/java[a-z]+$</excluderesource>
             <excluderesource>@filename</excluderesource>
-          </excluderesources>
+          </excluderesources-->
           <!--
             Strips debug information from the output image.
             Default value: false.
           -->
-          <stripdebug>false</stripdebug>
+          <stripdebug>true</stripdebug>
           <!--
             Strip Java debug attributes from classes in the output image.
             Default value: false.
           -->
-          <stripjavadebugattributes>false</stripjavadebugattributes>
+          <!--stripjavadebugattributes>false</stripjavadebugattributes-->
           <!--
             Exclude native commands (such as java/java.exe) from the image.
             Default value: false.
@@ -432,20 +381,20 @@
             are different.
             Default value: false.
           -->
-          <deduplegalnotices>false</deduplegalnotices>
+          <!--deduplegalnotices>false</deduplegalnotices-->
           <!--
             Specify files to exclude.
           -->
-          <excludefiles>
+          <!--excludefiles>
             <excludefile>**/*-info.class</excludefile>
             <excludefile>glob:**/META-INF/**</excludefile>
             <excludefile>regex:/java[a-z]+$</excludefile>
             <excludefile>@filename</excludefile>
-          </excludefiles>
+          </excludefiles-->
           <!--
             Specify a JMOD section to exclude { MAN | HEADERS }.
           -->
-          <excludejmodsection>MAN</excludejmodsection>
+          <!--excludejmodsection>MAN</excludejmodsection-->
           <!--
             Specify a file listing the java.lang.invoke classes to pre-generate.
             By default, this plugin may use a builtin list of classes
@@ -454,14 +403,14 @@
             will be disabled by default to guarantee correctness add
             ignore-version=true to override this.
           -->
-          <generatejliclasses>${project.basedir}/jli-classes</generatejliclasses>
+          <!--generatejliclasses>${project.basedir}/jli-classes</generatejliclasses-->
           <!--
             Load release properties from the supplied option file.
             - adds: is to add properties to the release file.
             - dels: is to delete the list of keys in release file.
             - Any number of key=value pairs can be passed.
           -->
-          <releaseinfo>
+          <!--releaseinfo>
             <file>file</file>
             <adds>
               <key1>value1</key1>
@@ -471,19 +420,98 @@
               <key1 />
               <key2 />
             </dels>
-          </releaseinfo>
+          </releaseinfo-->
           <!--
             Fast loading of module descriptors (always enabled).
             The jlink CLI is: ‒‒system-modules=retainModuleTarget.
             Default value: false.
           -->
-          <systemmodules>true</systemmodules>
+          <!--systemmodules>true</systemmodules-->
           <!--
             Select the HotSpot VM in
             the output image: { CLIENT | SERVER | MINIMAL | ALL }
             Default value: ALL.
           -->
-          <vm>ALL</vm>
+          <!--vm>ALL</vm-->
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <toolchains>
+            <jdk>
+              <id>${jdk.toolchain}</id>
+            </jdk>
+          </toolchains>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <encoding>${default.encoding}</encoding>
+          <source>${java.source.version}</source>
+          <target>${java.target.version}</target>
+          <release>${java.release.version}</release>
+          <fork>true</fork>
+          <compilerArgs>
+            <!--
+              Give more detail for unchecked conversion warnings
+              that are mandated by the Java Language Specification.
+            -->
+            <arg>-Xlint:unchecked</arg>
+            <!--
+              Show a description of each use or override of a deprecated member
+              or class. Without this, javac shows a summary of the source files
+              that use or override deprecated members or classes.
+            -->
+            <arg>-Xlint:deprecation</arg>
+            <!--
+              Terminate compilation if warnings occur.
+            -->
+            <arg>-Werror</arg>
+          </compilerArgs>          
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${libs.dir}</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <outputDirectory>${mods.dir}</outputDirectory>
+          <excludes>
+            <exclude>**/*.bat</exclude>
+            <exclude>**/org.codehaus.plexus.compiler.javac.*</exclude>
+          </excludes>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <manifest>
+              <addDefaultEntries>false</addDefaultEntries>
+              <mainClass>${application.class}</mainClass>
+            </manifest>
+            <manifestEntries>
+              <Implementation-Title>${application.name}</Implementation-Title>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
     </plugins>

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.testing.MojoRule;
@@ -90,8 +91,6 @@ public class JlinkMojoTest {
       // Mojo
 	    mojo = (JlinkMojo) lookupConfiguredMojo(session, execution);
       assertNotNull("Can lookup configured mojo", mojo);
-
-      mojo.execute();
     }
 
     @Override
@@ -118,7 +117,6 @@ public class JlinkMojoTest {
         "mods/exploded/mod"
       ))
     );
-    FileSetManager fileSetManager = new FileSetManager();
     // filesets
     List<FileSet> filesets = modulepath.getFileSets();
     assertNotNull("", filesets);
@@ -153,13 +151,6 @@ public class JlinkMojoTest {
       getCanonicalPath(new File(fileset.getDirectory())),
       getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
-    assertEquals(
-      "",
-      Arrays.asList(fileSetManager.getIncludedFiles(fileset))
-          .stream()
-          .collect(Collectors.joining(System.lineSeparator())),
-      ""
-    );
     // dirsets
     List<FileSet> dirsets = modulepath.getDirSets();
     assertNotNull("", dirsets);
@@ -190,18 +181,13 @@ public class JlinkMojoTest {
       getCanonicalPath(new File(dirset.getDirectory())),
       getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
-    assertEquals(
-      "",
-      Arrays.asList(fileSetManager.getIncludedDirectories(dirset))
-          .stream()
-          .collect(Collectors.joining(System.lineSeparator())),
-      "runtime"
-    );
     // dependencysets
     List<DependencySet> dependencysets = modulepath.getDependencySets();
     assertNotNull("", dependencysets);
     assertEquals("", dependencysets.size(), 1);
     DependencySet depset = dependencysets.get(0);
+    assertFalse("", depset.isOutputIncluded());
+    assertFalse("", depset.isAutomaticExcluded());
     assertEquals(
       "",
       buildStringFromNames(depset.getIncludes()),
@@ -236,7 +222,7 @@ public class JlinkMojoTest {
       "",
       buildStringFromNames(addmodules),
       buildStringFromNames(Arrays.asList(
-          "java.base", "org.example.rootmodule", "jdk.localedata"))
+          "java.base", "org.example.rootmodule"))
     );
   }
 
@@ -548,16 +534,6 @@ public class JlinkMojoTest {
     HotSpotVM vm =
         (HotSpotVM) rule.getVariableValueFromObject(mojo, "vm");
     assertEquals("", vm, HotSpotVM.SERVER);
-  }
-  
-  // execution
-  
-  @Test
-  public void testMojoCreatesOutput() throws Exception {
-    File output =
-        (File) rule.getVariableValueFromObject(mojo, "output");
-    assertNotNull("", output);
-    assertTrue("", output.exists());
   }
 
 }

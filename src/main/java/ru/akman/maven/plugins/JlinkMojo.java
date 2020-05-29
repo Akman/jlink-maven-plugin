@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.artifact.Artifact;
@@ -64,6 +65,7 @@ import org.codehaus.plexus.util.cli.Arg;
 import org.codehaus.plexus.util.cli.Commandline;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
+import org.codehaus.plexus.util.FileUtils;
 
 /**
  * The `jlink` goal lets you create a custom runtime image with
@@ -111,6 +113,16 @@ public class JlinkMojo extends AbstractMojo {
    * Project base directory (that containing the pom.xml file).
    */
   private File baseDir;
+
+  /**
+   * Project build directory (${project.basedir}/target).
+   */
+  private File buildDir;
+
+  /**
+   * Project output directory (${project.build.directory}/classes).
+   */
+  private File outputDir;
 
   /**
    * Project properties.
@@ -218,6 +230,8 @@ public class JlinkMojo extends AbstractMojo {
    *   &lt;/dirsets&gt;
    *   &lt;dependencysets&gt;
    *     &lt;dependencyset&gt;
+   *       &lt;includeoutput&gt;false&lt;/includeoutput&gt;
+   *       &lt;excludeautomatic&gt;false&lt;/excludeautomatic&gt;
    *       &lt;includes&gt;
    *         &lt;include&gt;glob:*&#42;/*.jar&lt;/include&gt;
    *         &lt;include&gt;regex:foo-(bar|baz)-.*?\.jar&lt;/include&gt;
@@ -265,7 +279,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--output path</code>
    */
   @Parameter(
-    property = "jlink.output",
     defaultValue = "${project.build.directory}/runtime"
   )
   private File output;
@@ -311,9 +324,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--save-opts filename</code>
    */
-  @Parameter(
-    property = "jlink.saveopts"
-  )
+  @Parameter
   private File saveopts;
 
   /**
@@ -321,9 +332,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--resources-last-sorter name</code>
    */
-  @Parameter(
-    property = "jlink.resourceslastsorter"
-  )
+  @Parameter
   private String resourceslastsorter;
 
   /**
@@ -331,9 +340,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--post-process-path imagefile</code>
    */
-  @Parameter(
-    property = "jlink.postprocesspath"
-  )
+  @Parameter
   private File postprocesspath;
 
   /**
@@ -344,7 +351,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--verbose</code>
    */
   @Parameter(
-    property = "jlink.verbose",
     defaultValue = "false"
   )
   private boolean verbose;
@@ -357,7 +363,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--bind-services</code>
    */
   @Parameter(
-    property = "jlink.bindservices",
     defaultValue = "false"
   )
   private boolean bindservices;
@@ -375,6 +380,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--launcher command=main-module[/main-class]</code>
    */
+  @Parameter
   private Launcher launcher;
 
   /**
@@ -385,7 +391,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--no-header-files</code>
    */
   @Parameter(
-    property = "jlink.noheaderfiles",
     defaultValue = "false"
   )
   private boolean noheaderfiles;
@@ -398,7 +403,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--no-man-pages</code>
    */
   @Parameter(
-    property = "jlink.nomanpages",
     defaultValue = "false"
   )
   private boolean nomanpages;
@@ -411,7 +415,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--endian {little|big}</code>
    */
   @Parameter(
-    property = "jlink.endian",
     defaultValue = "NATIVE"
   )
   private Endian endian;
@@ -426,7 +429,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--ignore-signing-information</code>
    */
   @Parameter(
-    property = "jlink.ignoresigninginformation",
     defaultValue = "false"
   )
   private boolean ignoresigninginformation;
@@ -545,7 +547,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--strip-debug</code>
    */
   @Parameter(
-    property = "jlink.stripdebug",
     defaultValue = "false"
   )
   private boolean stripdebug;
@@ -558,7 +559,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--strip-java-debug-attributes</code>
    */
   @Parameter(
-    property = "jlink.stripjavadebugattributes",
     defaultValue = "false"
   )
   private boolean stripjavadebugattributes;
@@ -571,7 +571,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--strip-native-commands</code>
    */
   @Parameter(
-    property = "jlink.stripnativecommands",
     defaultValue = "false"
   )
   private boolean stripnativecommands;
@@ -586,7 +585,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--dedup-legal-notices=[error-if-not-same-content]</code>
    */
   @Parameter(
-    property = "jlink.deduplegalnotices",
     defaultValue = "false"
   )
   private boolean deduplegalnotices;
@@ -613,9 +611,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--exclude-jmod-section={man|headers}</code>
    */
-  @Parameter(
-    property = "jlink.excludejmodsection"
-  )
+  @Parameter
   private Section excludejmodsection;
 
   /**
@@ -628,9 +624,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--generate-jli-classes=@filename</code>
    */
-  @Parameter(
-    property = "jlink.generatejliclasses"
-  )
+  @Parameter
   private File generatejliclasses;
 
   /**
@@ -667,7 +661,6 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--system-modules=retainModuleTarget</code>
    */
   @Parameter(
-    property = "jlink.systemmodules",
     defaultValue = "false"
   )
   private boolean systemmodules;
@@ -680,9 +673,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * The jlink CLI is: <code>--vm={client|server|minimal|all}</code>
    */
-  @Parameter(
-    property = "jlink.vm"
-  )
+  @Parameter
   private HotSpotVM vm;
 
   /**
@@ -697,11 +688,17 @@ public class JlinkMojo extends AbstractMojo {
     // independently from maven-toolchains-plugin
     List<Toolchain>	toolchains = toolchainManager.getToolchains(
         session, JDK, null);
-    toolchains.forEach(tc -> {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("Found toolchain: " + tc);
+    if (toolchains == null) {
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("No toolchains found");
       }
-    });
+    } else {
+      toolchains.forEach(tc -> {
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Found toolchain: " + tc);
+        }
+      });
+    }
     // Retrieve jdk toolchain from build context,
     // i.e. the toolchain selected by maven-toolchains-plugin
     Toolchain toolchain =
@@ -731,17 +728,18 @@ public class JlinkMojo extends AbstractMojo {
       toolExecutable = toolchain.findTool(TOOL_NAME);
       if (toolExecutable == null) {
         if (getLog().isWarnEnabled()) {
-          getLog().warn("Executable (toolchain) for [" + TOOL_NAME + "] not found");
+          getLog().warn("Executable (toolchain) for [" + TOOL_NAME
+              + "] not found");
         }
       } else {
         if (getLog().isDebugEnabled()) {
-          getLog().debug("Executable (toolchain) for [" + TOOL_NAME + "]: "
-              + toolExecutable);
+          getLog().debug("Executable (toolchain) for [" + TOOL_NAME
+              + "]: " + toolExecutable);
         }
       }
     }
     // If toolchain is not specified/used try get tool executable
-    // from the system
+    // from the system path or system JAVA_HOME
     if (toolExecutable == null) {
       Path javaHome = getJavaHome();
       if (javaHome == null) {
@@ -806,13 +804,13 @@ public class JlinkMojo extends AbstractMojo {
         systemPath = null;
       }
     }
-    if (systemPath != null) {
-      return Arrays.asList(systemPath.split(File.pathSeparator))
-          .stream().filter(s -> !s.trim().isEmpty())
-          .map(s -> Paths.get(s))
-          .collect(Collectors.toList());
+    if (systemPath == null) {
+      return new ArrayList<Path>();
     }
-    return new ArrayList<Path>();
+    return Arrays.asList(systemPath.split(File.pathSeparator)).stream()
+        .filter(s -> !s.trim().isEmpty())
+        .map(s -> Paths.get(s))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -832,8 +830,8 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
       if (systemPathExt != null) {
-        return Arrays.asList(systemPathExt.split(File.pathSeparator))
-            .stream().filter(s -> !s.trim().isEmpty())
+        return Arrays.asList(systemPathExt.split(File.pathSeparator)).stream()
+            .filter(s -> !s.trim().isEmpty())
             .collect(Collectors.toList());
       }
     }
@@ -853,14 +851,15 @@ public class JlinkMojo extends AbstractMojo {
       paths.add(0, javaHome.resolve(JAVA_HOME_BIN));
     }
     for (Path path : paths) {
-      if (!SystemUtils.IS_OS_WINDOWS) {
-        Path tool = path.resolve(TOOL_NAME);
-        if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
-          return tool.toString();
+      if (SystemUtils.IS_OS_WINDOWS) {
+        for (String ext : exts) {
+          Path tool = path.resolve(TOOL_NAME.concat(ext));
+          if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
+            return tool.toString();
+          }
         }
-      }
-      for (String ext : exts) {
-        Path tool = path.resolve(TOOL_NAME.concat(ext));
+      } else {
+        Path tool = path.resolve(TOOL_NAME);
         if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
           return tool.toString();
         }
@@ -882,39 +881,36 @@ public class JlinkMojo extends AbstractMojo {
     if (getLog().isDebugEnabled()) {
       getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
     }
-    return 0;
-    // TODO: uncomment
-    // CommandLineUtils.StringStreamConsumer err =
-    //     new CommandLineUtils.StringStreamConsumer();
-    // CommandLineUtils.StringStreamConsumer out =
-    //     new CommandLineUtils.StringStreamConsumer();
-    // int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
-    // String stdout = out.getOutput().trim();
-    // String stderr = err.getOutput().trim();
-    // if (exitCode == 0) {
-    //   if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
-    //     getLog().info(stdout);
-    //   }
-    //   if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
-    //     getLog().info(stderr);
-    //   }
-    // } else {
-    //   if (getLog().isErrorEnabled()) {
-    //     if (!stdout.isEmpty()) {
-    //       getLog().error("Exit code: " + exitCode
-    //           + System.lineSeparator() + stdout);
-    //     }
-    //     if (!stderr.isEmpty()) {
-    //       getLog().error("Exit code: " + exitCode
-    //           + System.lineSeparator() + stderr);
-    //     }
-    //     getLog().error("Command line was: "
-    //         + CommandLineUtils.toString(cmdLine.getCommandline()));
-    //   }
-    // }
-    // return exitCode;
+    CommandLineUtils.StringStreamConsumer err =
+        new CommandLineUtils.StringStreamConsumer();
+    CommandLineUtils.StringStreamConsumer out =
+        new CommandLineUtils.StringStreamConsumer();
+    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
+    String stdout = out.getOutput().trim();
+    String stderr = err.getOutput().trim();
+    if (exitCode == 0) {
+      if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
+        getLog().info(stdout);
+      }
+      if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
+        getLog().info(stderr);
+      }
+    } else {
+      if (getLog().isErrorEnabled()) {
+        if (!stdout.isEmpty()) {
+          getLog().error("Exit code: " + exitCode
+              + System.lineSeparator() + stdout);
+        }
+        if (!stderr.isEmpty()) {
+          getLog().error("Exit code: " + exitCode
+              + System.lineSeparator() + stderr);
+        }
+        getLog().error("Command line was: "
+            + CommandLineUtils.toString(cmdLine.getCommandline()));
+      }
+    }
+    return exitCode;
   }
-
 
   /**
    * Resolve project dependencies.
@@ -942,16 +938,20 @@ public class JlinkMojo extends AbstractMojo {
     // get list of project artifacts files
     List<File> paths = artifacts.stream()
         .filter(Objects::nonNull)
-        .map(a -> a.getFile()).collect(Collectors.toList());
+        .map(a -> a.getFile())
+        .collect(Collectors.toList());
+
+    // add the project output directory to paths will be resolved
+    paths.add(outputDir);
 
     // create request contains all information
     // required to analyze the project
     ResolvePathsRequest<File> request = ResolvePathsRequest.ofFiles(paths);
 
     // TODO: is it really needed?
-    // set request jdkHome in case the JRE is Java 8 or before,
-    // this jdkHome is used to extract the module name
-    // if (javaHomeDir != null) {
+    // if (SystemUtils.isJavaVersionAtMost(JavaVersion.JAVA_8)
+    //     && javaHomeDir != null) {
+    //   // this is used to extract the module name
     //   request.setJdkHome(javaHomeDir);
     // }
 
@@ -982,10 +982,8 @@ public class JlinkMojo extends AbstractMojo {
       if (pathelements != null && !pathelements.isEmpty()) {
         result = pathelements.stream()
             .filter(Objects::nonNull)
-            // TODO: path in quotes
             .map(file -> file.toString())
-            .collect(Collectors.joining(File.pathSeparator))
-            .trim();
+            .collect(Collectors.joining(File.pathSeparator));
         if (getLog().isDebugEnabled()) {
           getLog().debug(
               System.lineSeparator()
@@ -1011,8 +1009,9 @@ public class JlinkMojo extends AbstractMojo {
       List<FileSet> filesets = modulepath.getFileSets();
       if (filesets != null && !filesets.isEmpty()) {
         for (FileSet fileSet : filesets) {
+          final File fileSetDir;
           try {
-            Utils.normalizeFileSetBaseDir(baseDir, fileSet);
+            fileSetDir = Utils.normalizeFileSetBaseDir(baseDir, fileSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
               getLog().error(ex);
@@ -1024,8 +1023,9 @@ public class JlinkMojo extends AbstractMojo {
               Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
               .stream()
               .filter(Objects::nonNull)
-              .collect(Collectors.joining(File.pathSeparator))
-              .trim();
+              .filter(fileName -> !fileName.trim().isEmpty())
+              .map(fileName -> fileSetDir.toPath().resolve(fileName).toString())
+              .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
             getLog().debug(Utils.getFileSetDebugInfo(
                 "FILESET", fileSet, result));
@@ -1049,8 +1049,9 @@ public class JlinkMojo extends AbstractMojo {
       List<FileSet> dirsets = modulepath.getDirSets();
       if (dirsets != null && !dirsets.isEmpty()) {
         for (FileSet dirSet : dirsets) {
+          final File dirSetDir;
           try {
-            Utils.normalizeFileSetBaseDir(baseDir, dirSet);
+            dirSetDir = Utils.normalizeFileSetBaseDir(baseDir, dirSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
               getLog().error(ex);
@@ -1062,8 +1063,9 @@ public class JlinkMojo extends AbstractMojo {
               Arrays.asList(fileSetManager.getIncludedDirectories(dirSet))
               .stream()
               .filter(Objects::nonNull)
-              .collect(Collectors.joining(File.pathSeparator))
-              .trim();
+              .filter(dirName -> !dirName.trim().isEmpty())
+              .map(dirName -> dirSetDir.toPath().resolve(dirName).toString())
+              .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
             getLog().debug(Utils.getFileSetDebugInfo(
                 "DIRSET", dirSet, result));
@@ -1089,8 +1091,7 @@ public class JlinkMojo extends AbstractMojo {
         for (DependencySet dependencySet : dependencysets) {
           result = getIncludedDependencies(dependencySet)
               .stream()
-              .collect(Collectors.joining(File.pathSeparator))
-              .trim();
+              .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
             getLog().debug(Utils.getDependencySetDebugInfo(
                 "DEPENDENCYSET", dependencySet, result));
@@ -1127,6 +1128,10 @@ public class JlinkMojo extends AbstractMojo {
    * @return the set of the excluded project dependencies
    */
   private Set<String> getExcludedDependencies(DependencySet depSet) {
+    if (depSet == null) {
+      throw new IllegalArgumentException(
+          "The depSet cannot be null");
+    }
     return projectDependencies.getPathElements().entrySet().stream()
         .filter(entry -> entry != null
             && entry.getKey() != null
@@ -1136,7 +1141,11 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Filter dependency based on rules defined in the dependencyset.
+   * Checks whether the dependency defined by the file and
+   * the module descriptor matches the rules defined in the dependencyset.
+   * The dependency that matches at least one include pattern will be included,
+   * but if the dependency matches at least one exclude pattern too,
+   * then the dependency will not be included.
    *
    * @param depSet the dependencyset
    * @param file the dependency file
@@ -1147,89 +1156,227 @@ public class JlinkMojo extends AbstractMojo {
   private boolean filterDependency(DependencySet depSet, File file,
       JavaModuleDescriptor descriptor) {
 
+    if (file == null) {
+      throw new IllegalArgumentException(
+          "The file cannot be null");
+    }
+
     if (descriptor == null) {
-      if (getLog().isWarnEnabled()) {
-        getLog().warn("Missing module descriptor: " + file.toString());
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("Missing module descriptor: " + file.toString());
       }
     } else {
       if (descriptor.isAutomatic()) {
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("Found automatic module: " + file.toString());
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Found automatic module: " + file.toString());
         }
       }
     }
 
-    Path filePath = file.toPath();
-    boolean isIncluded = true;
+    boolean isIncluded = false;
 
-    // Includes (filenames)
-    List<String> includes = depSet.getIncludes();
-    if (includes != null && includes.size() != 0) {
-      isIncluded = false;
-      for (String include : includes) {
-        PathMatcher pathMatcher =
-            FileSystems.getDefault().getPathMatcher(include);
-        if (pathMatcher.matches(filePath)) {
-          isIncluded = true;
-          break;
+    if (depSet == null) {
+      // include module by default
+      isIncluded = true;
+      // include automatic module by default
+      if (descriptor != null && descriptor.isAutomatic()) {
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Included automatic module: " + file.toString());
         }
       }
-    }
-    
-    // Excludes (filenames)
-    if (isIncluded) {
-      List<String> excludes = depSet.getExcludes();
-      if (excludes != null && excludes.size() != 0) {
-        for (String exclude : excludes) {
-          PathMatcher pathMatcher =
-              FileSystems.getDefault().getPathMatcher(exclude);
-          if (pathMatcher.matches(filePath)) {
-            isIncluded = false;
-            break;
-          }
+      // exclude output module by default
+      if (file.compareTo(outputDir) == 0) {
+        isIncluded = false;
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Excluded output module: " + file.toString());
         }
       }
-    }
-
-    if (descriptor != null) {
-
-      // Includenames (modulenames)
-      List<String> includenames = depSet.getIncludeNames();
-      if (includenames != null && includenames.size() != 0) {
-        isIncluded = false; // !!!
-        for (String includename : includenames) {
-          Pattern regexPattern = Pattern.compile(includename);
-          Matcher nameMatcher = regexPattern.matcher(descriptor.name());
-          if (nameMatcher.matches()) {
-            isIncluded = true; // !!!
-            break;
-          }
+    } else {
+      if (descriptor != null && descriptor.isAutomatic()
+          && depSet.isAutomaticExcluded()) {
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Excluded automatic module: " + file.toString());
         }
-      }
-      
-      // Excludenames (modulenames)
-      if (isIncluded) {
-        List<String> excludenames = depSet.getExcludeNames();
-        if (excludenames != null && excludenames.size() != 0) {
-          for (String excludename : excludenames) {
-            Pattern regexPattern = Pattern.compile(excludename);
-            Matcher nameMatcher = regexPattern.matcher(descriptor.name());
-            if (nameMatcher.matches()) {
-              isIncluded = false; // !!!
-              break;
+      } else {
+        if (file.compareTo(outputDir) == 0) {
+          if (depSet.isOutputIncluded()) {
+            isIncluded = true;
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Included output module: " + file.toString());
+            }
+          } else {
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Excluded output module: " + file.toString());
             }
           }
+        } else {
+          isIncluded = matchesIncludes(depSet, file, descriptor)
+              && !matchesExcludes(depSet, file, descriptor);
         }
       }
-
     }
-    
+
     if (getLog().isDebugEnabled()) {
       getLog().debug(Utils.getDependencyDebugInfo(
           file, descriptor, isIncluded));
     }
 
     return isIncluded;
+  }
+
+  /**
+   * Checks whether the dependency defined by the file and
+   * the module descriptor matches the include patterns
+   * from the dependencyset.
+   *
+   * @param depSet the dependencyset
+   * @param file the file
+   * @param descriptor the module descriptor
+   *
+   * @return should the dependency be included
+   */
+  private boolean matchesIncludes(DependencySet depSet, File file,
+      JavaModuleDescriptor descriptor) {
+
+    if (depSet == null) {
+      throw new IllegalArgumentException(
+          "The depSet cannot be null");
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(
+          "The file cannot be null");
+    }
+
+    Path path = file.toPath();
+    String name = descriptor == null ? "" : descriptor.name();
+
+    List<String> includes = depSet.getIncludes();
+    List<String> includenames = depSet.getIncludeNames();
+
+    boolean result = true;
+
+    if (includenames == null || includenames.size() == 0) {
+      if (includes == null || includes.size() == 0) {
+        result = true;
+      } else {
+        result = pathMatches(includes, path);
+      }
+    } else {
+      if (includes == null || includes.size() == 0) {
+        result = nameMatches(includenames, name);
+      } else {
+        result = pathMatches(includes, path)
+            || nameMatches(includenames, name);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Checks whether the dependency defined by the file and
+   * the module descriptor matches the exclude patterns
+   * from the dependencyset.
+   *
+   * @param depSet the dependencyset
+   * @param file the file
+   * @param descriptor the module descriptor
+   *
+   * @return should the dependency be excluded
+   */
+  private boolean matchesExcludes(DependencySet depSet, File file,
+      JavaModuleDescriptor descriptor) {
+
+    if (depSet == null) {
+      throw new IllegalArgumentException(
+          "The depSet cannot be null");
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(
+          "The file cannot be null");
+    }
+
+    Path path = file.toPath();
+    String name = descriptor == null ? "" : descriptor.name();
+
+    List<String> excludes = depSet.getExcludes();
+    List<String> excludenames = depSet.getExcludeNames();
+
+    boolean result = false;
+
+    if (excludenames == null || excludenames.size() == 0) {
+      if (excludes == null || excludes.size() == 0) {
+        result = false;
+      } else {
+        result = pathMatches(excludes, path);
+      }
+    } else {
+      if (excludes == null || excludes.size() == 0) {
+        result = nameMatches(excludenames, name);
+      } else {
+        result = pathMatches(excludes, path)
+            || nameMatches(excludenames, name);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Checks if the path matches at least one of the patterns.
+   * The pattern should be regex or glob, this is determined
+   * by the prefix specified in the pattern.
+   *
+   * @param patterns the list of patterns
+   * @param path the file path
+   *
+   * @return true if the path matches at least one of the patterns or
+   *              if no patterns are specified
+   */
+  private boolean pathMatches(List<String> patterns, Path path) {
+    if (patterns == null || patterns.size() == 0) {
+      throw new IllegalArgumentException(
+          "The patterns cannot be null or empty");
+    }
+    if (path == null) {
+      throw new IllegalArgumentException(
+          "The path cannot be null");
+    }
+    for (String pattern : patterns) {
+      PathMatcher pathMatcher =
+          FileSystems.getDefault().getPathMatcher(pattern);
+      if (pathMatcher.matches(path)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if the name matches at least one of the patterns.
+   * The pattern should be regex only.
+   *
+   * @param patterns the list of patterns
+   * @param name the name
+   *
+   * @return true if the name matches at least one of the patterns or
+   *              if no patterns are specified
+   */
+  private boolean nameMatches(List<String> patterns, String name) {
+    if (patterns == null || patterns.size() == 0) {
+      throw new IllegalArgumentException(
+          "The patterns cannot be null or empty");
+    }
+    if (name == null) {
+      throw new IllegalArgumentException(
+          "The name cannot be null");
+    }
+    for (String pattern : patterns) {
+      Pattern regexPattern = Pattern.compile(pattern);
+      Matcher nameMatcher = regexPattern.matcher(name);
+      if (nameMatcher.matches()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1250,28 +1397,27 @@ public class JlinkMojo extends AbstractMojo {
         path.append(pathElements);
       }
       String fileSets = getFileSets();
-      if (!fileSets.isEmpty()) {
+      if (fileSets != null && !fileSets.isEmpty()) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
         path.append(fileSets);
       }
       String dirSets = getDirSets();
-      if (!dirSets.isEmpty()) {
+      if (dirSets != null && !dirSets.isEmpty()) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
         path.append(dirSets);
       }
       String dependencySets = getDependencySets();
-      if (!dependencySets.isEmpty()) {
+      if (dependencySets != null && !dependencySets.isEmpty()) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
         path.append(dependencySets);
       }
       if (path.length() != 0) {
-        // TODO: modulepath in quotes
         opt = cmdLine.createOpt();
         opt.createArg().setValue("--module-path");
         opt.createArg().setValue(path.toString());
@@ -1329,27 +1475,33 @@ public class JlinkMojo extends AbstractMojo {
     }
     // verbose
     if (verbose) {
-      cmdLine.createArg().setValue("--verbose");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--verbose");
     }
     // bindservices
     if (bindservices) {
-      cmdLine.createArg().setValue("--bind-services");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--bind-services");
     }
     // noheaderfiles
     if (noheaderfiles) {
-      cmdLine.createArg().setValue("--no-header-files");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--no-header-files");
     }
     // nomanpages
     if (nomanpages) {
-      cmdLine.createArg().setValue("--no-man-pages");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--no-man-pages");
     }
     // ignoresigninginformation
     if (ignoresigninginformation) {
-      cmdLine.createArg().setValue("--ignore-signing-information");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--ignore-signing-information");
     }
     // stripdebug
     if (stripdebug) {
-      cmdLine.createArg().setValue("--strip-debug");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--strip-debug");
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
@@ -1360,22 +1512,26 @@ public class JlinkMojo extends AbstractMojo {
               + " is required to use parameter [stripjavadebugattributes]");
         }
       } else {
-        cmdLine.createArg().setValue("--strip-java-debug-attributes");
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue("--strip-java-debug-attributes");
       }
     }
     // stripnativecommands
     if (stripnativecommands) {
-      cmdLine.createArg().setValue("--strip-native-commands");
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--strip-native-commands");
     }
     // TODO: --dedup-legal-notices=[error-if-not-same-content]
     // deduplegalnotices
     // if (deduplegalnotices) {
-    //   cmdLine.createArg().setValue("--dedup-legal-notices=[error-if-not-same-content]");
+    //   opt = cmdLine.createOpt();
+    //   opt.createArg().setValue("--dedup-legal-notices=[error-if-not-same-content]");
     // }
     // TODO: --system-modules=retainModuleTarget
     // systemmodules
     // if (systemmodules) {
-    //   cmdLine.createArg().setValue("--system-modules=retainModuleTarget");
+    //   opt = cmdLine.createOpt();
+    //   opt.createArg().setValue("--system-modules=retainModuleTarget");
     // }
     // limitmodules
     if (limitmodules != null && !limitmodules.isEmpty()) {
@@ -1407,24 +1563,27 @@ public class JlinkMojo extends AbstractMojo {
     }
     // includelocales
     if (includelocales != null && !includelocales.isEmpty()) {
-      cmdLine.createArg().setValue(
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue(
           includelocales.stream()
               .collect(Collectors.joining(",", "--include-locales=", "")));
     }
     // excludejmodsection
     if (excludejmodsection != null) {
-      cmdLine.createArg().setValue("--exclude-jmod-section="
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--exclude-jmod-section="
           + excludejmodsection.toString().toLowerCase());
     }
-    // TODO: filename in quotes
     // generatejliclasses
     if (generatejliclasses != null) {
-      cmdLine.createArg().setValue("--generate-jli-classes=@"
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--generate-jli-classes=@"
           + generatejliclasses.toString());
     }
     // vm
     if (vm != null) {
-      cmdLine.createArg().setValue("--vm=" + vm.toString().toLowerCase());
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--vm=" + vm.toString().toLowerCase());
     }
     // launcher
     if (launcher != null) {
@@ -1466,25 +1625,29 @@ public class JlinkMojo extends AbstractMojo {
           option.append(filters.stream()
               .collect(Collectors.joining(",", ":filter=", "")));
         }
-        cmdLine.createArg().setValue(option.toString());
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue(option.toString());
       }
     }
     // TODO: pattern-list
     // orderresources
     if (orderresources != null && !orderresources.isEmpty()) {
-      cmdLine.createArg().setValue(orderresources.stream()
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue(orderresources.stream()
           .collect(Collectors.joining(",", "--order-resources=", "")));
     }
     // TODO: pattern-list
     // excluderesources
     if (excluderesources != null && !excluderesources.isEmpty()) {
-      cmdLine.createArg().setValue(excluderesources.stream()
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue(excluderesources.stream()
           .collect(Collectors.joining(",", "--exclude-resources=", "")));
     }
     // TODO: pattern-list
     // excludefiles
     if (excludefiles != null && !excludefiles.isEmpty()) {
-      cmdLine.createArg().setValue(excludefiles.stream()
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue(excludefiles.stream()
           .collect(Collectors.joining(",", "--exclude-files=", "")));
     }
     // TODO: filename in quotes
@@ -1509,7 +1672,8 @@ public class JlinkMojo extends AbstractMojo {
               .map(del -> del.getKey())
               .collect(Collectors.joining(":", "|del:", "")));
         }
-        cmdLine.createArg().setValue(option.toString());
+        opt = cmdLine.createOpt();
+        opt.createArg().setValue(option.toString());
       }
     }
   }
@@ -1536,6 +1700,18 @@ public class JlinkMojo extends AbstractMojo {
     if (baseDir == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project.basedir} is not defined");
+    }
+
+    buildDir = new File(project.getBuild().getDirectory());
+    if (buildDir == null) {
+      throw new MojoExecutionException(
+          "Error: The predefined variable ${project.build.directory} is not defined");
+    }
+
+    outputDir = new File(project.getBuild().getOutputDirectory());
+    if (outputDir == null) {
+      throw new MojoExecutionException(
+          "Error: The predefined variable ${project.build.outputDirectory} is not defined");
     }
 
     properties = project.getProperties();
@@ -1584,17 +1760,18 @@ public class JlinkMojo extends AbstractMojo {
     // Get project dependencies
     projectDependencies = resolveDependencies();
 
-    // Create output directory if it does not exist
-    Path outputPath = output.toPath();
+    // Delete output directory if it exists
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Set output directory to: [" + outputPath + "]");
+      getLog().debug("Set output directory to: [" + output.toString() + "]");
     }
-    try {
-      Files.createDirectories(outputPath);
-    } catch (IOException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to create output directory: ["
-          + outputPath + "]", ex);
+    if (output.exists() && output.isDirectory()) {
+      try {
+        FileUtils.deleteDirectory(output);
+      } catch (IOException ex) {
+        throw new MojoExecutionException(
+            "Error: Unable to delete output directory: ["
+            + output.toString() + "]", ex);
+      }
     }
     
     // Build command line and populate the list of the command options
@@ -1613,9 +1790,7 @@ public class JlinkMojo extends AbstractMojo {
 
     // Save the list of command options to the file
     // will be used in the tool command line
-    Path cmdOptsPath = Paths.get(project.getBuild().getDirectory(), OPTS_FILE);
-    // TODO: uncomment
-    // cmdOptsPath.toFile().deleteOnExit();
+    Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);
     try {
       Files.write(cmdOptsPath, optsLines, defaultCharset);
     } catch (Exception ex) {
@@ -1648,6 +1823,15 @@ public class JlinkMojo extends AbstractMojo {
           + exitCode);
     }
     
+    // Delete temporary file
+    try {
+      FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());
+    } catch (IOException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to delete temporary file: ["
+          + cmdOptsPath.toString() + "]", ex);
+    }
+
   }
 
 }

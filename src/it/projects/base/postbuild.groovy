@@ -14,5 +14,5 @@
   limitations under the License.
 */
 
-File output = new File(basedir, "target/runtime")
+File output = new File(basedir, "target/image")
 assert output.isDirectory()

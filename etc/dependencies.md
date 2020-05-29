@@ -1,4 +1,48 @@
-================================================================================
+
+
+
+hello                     file:///F:/Workspace/java/jlink-maven-plugin/target/it/projects/base/target/classes/
+
+ch.qos.logback.classic    file:///F:/Workspace/java/jlink-maven-plugin/target/local-repo/ch/qos/logback/logback-classic/1.3.0-alpha4/logback-classic-1.3.0-alpha4.jar
+ch.qos.logback.core       file:///F:/Workspace/java/jlink-maven-plugin/target/local-repo/ch/qos/logback/logback-core/1.3.0-alpha4/logback-core-1.3.0-alpha4.jar
+javafx.base               file:///F:/Workspace/java/jlink-maven-plugin/target/local-repo/org/openjfx/javafx-base/13.0.2/javafx-base-13.0.2-win.jar
+javafx.graphics           file:///F:/Workspace/java/jlink-maven-plugin/target/local-repo/org/openjfx/javafx-graphics/13.0.2/javafx-graphics-13.0.2-win.jar
+org.slf4j                 file:///F:/Workspace/java/jlink-maven-plugin/target/local-repo/org/slf4j/slf4j-api/2.0.0-alpha1/slf4j-api-2.0.0-alpha1.jar
+
+java.base                 file:///D:/Programs/Java/jdk-13/jmods/java.base.jmod
+java.datatransfer         file:///D:/Programs/Java/jdk-13/jmods/java.datatransfer.jmod
+java.desktop              file:///D:/Programs/Java/jdk-13/jmods/java.desktop.jmod
+java.logging              file:///D:/Programs/Java/jdk-13/jmods/java.logging.jmod
+java.naming               file:///D:/Programs/Java/jdk-13/jmods/java.naming.jmod
+java.prefs                file:///D:/Programs/Java/jdk-13/jmods/java.prefs.jmod
+java.security.sasl        file:///D:/Programs/Java/jdk-13/jmods/java.security.sasl.jmod
+java.xml                  file:///D:/Programs/Java/jdk-13/jmods/java.xml.jmod
+jdk.unsupported           file:///D:/Programs/Java/jdk-13/jmods/jdk.unsupported.jmod
+
+
+
+
+Providers:
+  java.desktop            provides java.net.ContentHandlerFactory used by java.base
+  java.desktop            provides javax.print.PrintServiceLookup used by java.desktop
+  java.desktop            provides javax.print.StreamPrintServiceFactory used by java.desktop
+  java.desktop            provides javax.sound.midi.spi.MidiDeviceProvider used by java.desktop
+  java.desktop            provides javax.sound.midi.spi.MidiFileReader used by java.desktop
+  java.desktop            provides javax.sound.midi.spi.MidiFileWriter used by java.desktop
+  java.desktop            provides javax.sound.midi.spi.SoundbankReader used by java.desktop
+  java.desktop            provides javax.sound.sampled.spi.AudioFileReader used by java.desktop
+  java.desktop            provides javax.sound.sampled.spi.AudioFileWriter used by java.desktop
+  java.desktop            provides javax.sound.sampled.spi.FormatConversionProvider used by java.desktop
+  java.desktop            provides javax.sound.sampled.spi.MixerProvider used by java.desktop
+  java.desktop            provides sun.datatransfer.DesktopDatatransferService used by java.datatransfer
+  java.base               provides java.nio.file.spi.FileSystemProvider used by java.base
+  java.naming             provides java.security.Provider used by java.base
+  java.security.sasl      provides java.security.Provider used by java.base
+  java.logging            provides jdk.internal.logger.DefaultLoggerFinder used by java.base
+  ch.qos.logback.classic  provides org.slf4j.spi.SLF4JServiceProvider used by org.slf4j
+
+
+
 REQUIRES::MODIFIERS
 
 MANDATED   - The dependence was implicitly declared in
@@ -11,7 +55,10 @@ SYNTHETIC  - The dependence was not explicitly or implicitly declared
 TRANSITIVE - The dependence causes any module which depends on
              the current module to have an implicitly declared
              dependence on the module named by the Requires.
-================================================================================
+
+
+
+
 
 file: javafx-base-13.0.2-win.jar
 name: javafx.base

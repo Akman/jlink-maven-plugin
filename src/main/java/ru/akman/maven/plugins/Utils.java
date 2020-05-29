@@ -18,6 +18,7 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.maven.shared.model.fileset.FileSet;
@@ -36,8 +37,10 @@ public final class Utils {
    *
    * @param baseDir base directory
    * @param fileSet fileset
+   *
+   * @return normalized fileset dir
    */
-  public static void normalizeFileSetBaseDir(File baseDir, FileSet fileSet)
+  public static File normalizeFileSetBaseDir(File baseDir, FileSet fileSet)
       throws IOException {
     String dir = fileSet.getDirectory();
     if (dir == null) {
@@ -48,6 +51,7 @@ public final class Utils {
       fileSetDir = new File(baseDir, dir);
     }
     fileSet.setDirectory(fileSetDir.getCanonicalPath());
+    return fileSetDir;
   }
 
   /**
@@ -95,23 +99,57 @@ public final class Utils {
    */
   public static String getDependencySetDebugInfo(String title,
       DependencySet depSet, String data) {
-    return new StringBuilder(System.lineSeparator())
+    StringBuilder result = new StringBuilder(System.lineSeparator());
+    result
         .append(title)
         .append(System.lineSeparator())
-        .append("includes:")
+        .append("excludeautomatic: ")
+        .append(depSet.isAutomaticExcluded())
         .append(System.lineSeparator())
-        .append(depSet.getIncludes().stream()
-            .collect(Collectors.joining(System.lineSeparator())))
+        .append("includes:");
+    List<String> includes = depSet.getIncludes();
+    if (includes != null) {
+      result
+          .append(System.lineSeparator())
+          .append(includes.stream()
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+    result
         .append(System.lineSeparator())
-        .append("excludes:")
+        .append("includenames:");
+    List<String> includenames = depSet.getIncludeNames();
+    if (includenames != null) {
+      result
+          .append(System.lineSeparator())
+          .append(includenames.stream()
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+    result
         .append(System.lineSeparator())
-        .append(depSet.getExcludes().stream()
-            .collect(Collectors.joining(System.lineSeparator())))
+        .append("excludes:");
+    List<String> excludes = depSet.getExcludes();
+    if (excludes != null) {
+      result  
+          .append(System.lineSeparator())
+          .append(depSet.getExcludes().stream()
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+    result
+        .append(System.lineSeparator())
+        .append("excludenames:");
+    List<String> excludenames = depSet.getExcludeNames();
+    if (excludenames != null) {
+      result  
+          .append(System.lineSeparator())
+          .append(depSet.getExcludeNames().stream()
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+    result
         .append(System.lineSeparator())
         .append("data:")
         .append(System.lineSeparator())
-        .append(data)
-        .toString();
+        .append(data);
+    return result.toString();
   }
 
   /**

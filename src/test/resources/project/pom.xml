@@ -55,7 +55,8 @@
             dirsets - sets of directories (without files)
             dependencysets - sets of dependencies with specified includes and
                              excludes patterns (glob: or regex:) for file names
-                             and regex patterns only for module names
+                             and regex patterns only for module names, and
+                             excludes for automatic modules
           -->
           <modulepath>
             <pathelements>
@@ -91,6 +92,8 @@
             </dirsets>
             <dependencysets>
               <dependencyset>
+                <includeoutput>false</includeoutput>
+                <excludeautomatic>false</excludeautomatic>
                 <includes>
                   <include>glob:**/*.jar</include>
                   <include>regex:foo-(bar|baz)-.*?\.jar</include>
