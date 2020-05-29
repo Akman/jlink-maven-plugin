@@ -342,11 +342,11 @@
                 Ensure that you specified: ‒‒add-modules jdk.localedata when
                 using this property.
               -->
-              <!--includelocales>
+              <includelocales>
                 <includelocale>en</includelocale>
-                <includelocale>ja</includelocale>
-                <includelocale>*-IN</includelocale>
-              </includelocales-->
+                <includelocale>ru</includelocale>
+                <!--includelocale>*-IN</includelocale-->
+              </includelocales>
               <!--
                 Orders the specified paths in priority order.
               -->
@@ -386,7 +386,7 @@
                 are different.
                 Default value: false.
               -->
-              <!--deduplegalnotices>false</deduplegalnotices-->
+              <!--deduplegalnotices>true</deduplegalnotices-->
               <!--
                 Specify files to exclude.
               -->
@@ -427,11 +427,11 @@
                 </dels>
               </releaseinfo-->
               <!--
-                Fast loading of module descriptors (always enabled).
-                The jlink CLI is: ‒‒system-modules=retainModuleTarget.
-                Default value: false.
+                Fast loading of module descriptors. Always on.
+                The jlink CLI is: ‒‒system-modules=.
+                Default value: true.
               -->
-              <!--systemmodules>true</systemmodules-->
+              <!--systemmodules>false</systemmodules-->
               <!--
                 Select the HotSpot VM in
                 the output image: { CLIENT | SERVER | MINIMAL | ALL }

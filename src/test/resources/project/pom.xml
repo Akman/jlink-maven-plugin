@@ -329,11 +329,11 @@
             </dels>
           </releaseinfo>
           <!--
-            Fast loading of module descriptors (always enabled).
-            The jlink CLI is: ‒‒system-modules=retainModuleTarget.
-            Default value: false.
+            Fast loading of module descriptors. Always on.
+            The jlink CLI is: ‒‒system-modules=.
+            Default value: true.
           -->
-          <systemmodules>true</systemmodules>
+          <!--systemmodules>false</systemmodules-->
           <!--
             Select the HotSpot VM in
             the output image: { CLIENT | SERVER | MINIMAL | ALL }

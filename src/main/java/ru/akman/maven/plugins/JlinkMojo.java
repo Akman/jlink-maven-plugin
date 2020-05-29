@@ -148,6 +148,11 @@ public class JlinkMojo extends AbstractMojo {
   private ResolvePathsResult<File> projectDependencies;
 
   /**
+   * Resolved main module descriptor
+   */
+  private JavaModuleDescriptor mainModuleDescriptor;
+
+  /**
    * Path exceptions (not resolved dependencies)
    */
   private List<File> pathExceptions;
@@ -600,7 +605,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * Default value: false.
    *
-   * The jlink CLI is: <code>--dedup-legal-notices=[error-if-not-same-content]</code>
+   * The jlink CLI is: <code>--dedup-legal-notices=error-if-not-same-content</code>
    */
   @Parameter(
     defaultValue = "false"
@@ -671,17 +676,16 @@ public class JlinkMojo extends AbstractMojo {
   private ReleaseInfo releaseinfo;
 
   /**
-   * Fast loading of module descriptors (always enabled).
-   * Uses "retainModuleTarget" value.
+   * Fast loading of module descriptors. Always on.
    *
-   * Default value: false.
+   * Default value: true.
    *
-   * The jlink CLI is: <code>--system-modules=retainModuleTarget</code>
+   * The jlink CLI is: <code>--system-modules=</code>
    */
-  @Parameter(
-    defaultValue = "false"
-  )
-  private boolean systemmodules;
+  // @Parameter(
+  //   defaultValue = "true"
+  // )
+  // private boolean systemmodules;
 
   /**
    * Select the HotSpot VM in
@@ -968,16 +972,19 @@ public class JlinkMojo extends AbstractMojo {
           .collect(Collectors.joining(System.lineSeparator())));
     }
 
-    // get list of project artifacts files
-    List<File> paths = artifacts.stream()
-        .filter(Objects::nonNull)
-        .map(a -> a.getFile())
-        .collect(Collectors.toList());
+    // create a list of the paths which will be resolved
+    List<File> paths = new ArrayList<>();
 
-    // add the project output directory to paths will be resolved
+    // add the project output directory
     paths.add(outputDir);
 
-    // add system dependencies
+    // add the project artifacts files
+    paths.addAll(artifacts.stream()
+        .filter(Objects::nonNull)
+        .map(a -> a.getFile())
+        .collect(Collectors.toList()));
+
+    // add the project system dependencies
     paths.addAll(project.getDependencies().stream()
         .filter(Objects::nonNull)
         .filter(d -> d.getSystemPath() != null && !d.getSystemPath().isEmpty())
@@ -995,7 +1002,6 @@ public class JlinkMojo extends AbstractMojo {
       request.setMainModuleDescriptor(descriptorFile);
     }
 
-    // TODO: toolchain jdk differ from default jdk/jre
     // this is used to extract the module name
     if (javaHomeDir != null) {
       request.setJdkHome(javaHomeDir);
@@ -1013,10 +1019,18 @@ public class JlinkMojo extends AbstractMojo {
           "Error: Unable to resolve project dependencies", ex);
     }
 
-    // get the resolved main module descriptor
-    JavaModuleDescriptor mainModuleDescriptor =
-        result.getMainModuleDescriptor();
-    if (mainModuleDescriptor == null) {
+    return result;
+  }
+
+  /**
+   * Fetch the resolved main module descriptor.
+   *
+   * @return main module descriptor or null if it not exists
+   */
+  private JavaModuleDescriptor fetchMainModuleDescriptor() {
+    JavaModuleDescriptor descriptor =
+        projectDependencies.getMainModuleDescriptor();
+    if (descriptor == null) {
       // detected that the project is non modular
       if (getLog().isDebugEnabled()) {
         getLog().debug("The main module descriptor not found");
@@ -1024,45 +1038,69 @@ public class JlinkMojo extends AbstractMojo {
     } else {
       if (getLog().isDebugEnabled()) {
         getLog().debug("Found the main module descriptor: ["
-            + mainModuleDescriptor.name() + "]");
+            + descriptor.name() + "]");
       }
     }
+    return descriptor;
+  }
 
-    // get path exceptions for every modulename which resolution failed
-    pathExceptions = result.getPathExceptions().keySet().stream()
+  /**
+   * Fetch path exceptions for every modulename which resolution failed.
+   *
+   * @return path exceptions
+   */
+  private List<File> fetchPathExceptions() {
+    List<File> result = projectDependencies.getPathExceptions().keySet()
+        .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Found path exceptions: " + pathExceptions.size()
+      getLog().debug("Found path exceptions: " + result.size()
           + System.lineSeparator()
-          + result.getPathExceptions().entrySet().stream()
+          + projectDependencies.getPathExceptions().entrySet().stream()
               .filter(entry -> entry != null && entry.getKey() != null)
               .map(entry -> "Unable to resolve module ["
                   + entry.getKey().toString()
                   + "] - " + getThrowableCause(entry.getValue()))
               .collect(Collectors.joining(System.lineSeparator())));
     }
+    return result;
+  }
 
-    // get classpath elements
-    classpathElements = result.getClasspathElements().stream()
+  /**
+   * Fetch classpath elements.
+   *
+   * @return classpath elements
+   */
+  private List<File> fetchClasspathElements() {
+    List<File> result = projectDependencies.getClasspathElements()
+        .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Found classpath elements: " + classpathElements.size()
+      getLog().debug("Found classpath elements: " + result.size()
           + System.lineSeparator()
-          + classpathElements.stream()
+          + result.stream()
               .map(file -> file.toString())
               .collect(Collectors.joining(System.lineSeparator())));
     }
+    return result;
+  }
 
-    // get modulepath elements
-    modulepathElements = result.getModulepathElements().keySet().stream()
+  /**
+   * Fetch modulepath elements.
+   *
+   * @return modulepath elements
+   */
+  private List<File> fetchModulepathElements() {
+    List<File> result = projectDependencies.getModulepathElements().keySet()
+        .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Found modulepath elements: " + modulepathElements.size()
+      getLog().debug("Found modulepath elements: " + result.size()
           + System.lineSeparator()
-          + result.getModulepathElements().entrySet().stream()
+          + projectDependencies.getModulepathElements().entrySet().stream()
               .filter(entry -> entry != null && entry.getKey() != null)
               .map(entry -> entry.getKey().toString()
                   + (ModuleNameSource.FILENAME.equals(entry.getValue()) ?
@@ -1079,7 +1117,6 @@ public class JlinkMojo extends AbstractMojo {
                       : ""))
               .collect(Collectors.joining(System.lineSeparator())));
     }
-
     return result;
   }
 
@@ -1614,7 +1651,6 @@ public class JlinkMojo extends AbstractMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      // TODO: toolchain jdk differ from default jdk/jre
       if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_13)) {
         stripjavadebugattributes = false;
         if (getLog().isWarnEnabled()) {
@@ -1631,17 +1667,15 @@ public class JlinkMojo extends AbstractMojo {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--strip-native-commands");
     }
-    // TODO: --dedup-legal-notices=[error-if-not-same-content]
     // deduplegalnotices
-    // if (deduplegalnotices) {
-    //   opt = cmdLine.createOpt();
-    //   opt.createArg().setValue("--dedup-legal-notices=[error-if-not-same-content]");
-    // }
-    // TODO: --system-modules=retainModuleTarget
+    if (deduplegalnotices) {
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--dedup-legal-notices=error-if-not-same-content");
+    }
     // systemmodules
-    // if (systemmodules) {
+    // if (!systemmodules) {
     //   opt = cmdLine.createOpt();
-    //   opt.createArg().setValue("--system-modules=retainModuleTarget");
+    //   opt.createArg().setValue("--system-modules=");
     // }
     // limitmodules
     if (limitmodules != null && !limitmodules.isEmpty()) {
@@ -1723,7 +1757,6 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
     }
-    // TODO: pattern-list
     // compress
     if (compress != null) {
       Compression compression = compress.getCompression();
@@ -1739,51 +1772,56 @@ public class JlinkMojo extends AbstractMojo {
         opt.createArg().setValue(option.toString());
       }
     }
-    // TODO: pattern-list
     // orderresources
     if (orderresources != null && !orderresources.isEmpty()) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue(orderresources.stream()
           .collect(Collectors.joining(",", "--order-resources=", "")));
     }
-    // TODO: pattern-list
     // excluderesources
     if (excluderesources != null && !excluderesources.isEmpty()) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue(excluderesources.stream()
           .collect(Collectors.joining(",", "--exclude-resources=", "")));
     }
-    // TODO: pattern-list
     // excludefiles
     if (excludefiles != null && !excludefiles.isEmpty()) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue(excludefiles.stream()
           .collect(Collectors.joining(",", "--exclude-files=", "")));
     }
-    // TODO: --release-info=file|add:key1=value1:key2=value2:...|del:key-list
     // releaseinfo
     if (releaseinfo != null) {
+      StringBuilder option = new StringBuilder();
       File releaseinfofile = releaseinfo.getFile();
       if (releaseinfofile != null) {
-        StringBuilder option = new StringBuilder("--release-info=");
         option.append(releaseinfofile.toString());
-        Map<String, String> adds = releaseinfo.getAdds();
-        if (adds != null) {
-          option.append(adds.entrySet().stream()
-              .filter(add -> !add.getKey().trim().isEmpty())
-              .map(add -> add.getKey() + "=" + add.getValue())
-              .collect(Collectors.joining(":", "|add:", "")));
-        }
-        Map<String, String> dels = releaseinfo.getDels();
-        if (dels != null) {
-          option.append(dels.entrySet().stream()
-              .filter(del -> !del.getKey().trim().isEmpty())
-              .map(del -> del.getKey())
-              .collect(Collectors.joining(":", "|del:", "")));
-        }
-        opt = cmdLine.createOpt();
-        opt.createArg().setValue(option.toString());
       }
+      Map<String, String> adds = releaseinfo.getAdds();
+      if (adds != null && !adds.entrySet().isEmpty()) {
+        if (option.length() != 0) {
+          option.append(":");
+        }
+        option.append(adds.entrySet().stream()
+            .filter(add -> add != null && add.getKey() != null
+                && !add.getKey().trim().isEmpty())
+            .map(add -> add.getKey().trim() + "="
+                + (add == null ? "" : add.getValue().trim()))
+            .collect(Collectors.joining(":", "add:", "")));
+      }
+      Map<String, String> dels = releaseinfo.getDels();
+      if (dels != null && !dels.entrySet().isEmpty()) {
+        if (option.length() != 0) {
+          option.append(":");
+        }
+        option.append(dels.entrySet().stream()
+            .filter(del -> del != null && del.getKey() != null
+                && !del.getKey().trim().isEmpty())
+            .map(del -> del.getKey().trim())
+            .collect(Collectors.joining(":", "del:", "")));
+      }
+      opt = cmdLine.createOpt();
+      opt.createArg().setValue("--release-info=" + option.toString());
     }
   }
 
@@ -1849,7 +1887,6 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     // Get suitable executable and resolve JAVA_HOME
-    // TODO: toolchain jdk differ from default jdk/jre
     if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
       throw new MojoExecutionException(
           "Error: At least " + JavaVersion.JAVA_9
@@ -1869,6 +1906,10 @@ public class JlinkMojo extends AbstractMojo {
 
     // Get project dependencies
     projectDependencies = resolveDependencies();
+    mainModuleDescriptor = fetchMainModuleDescriptor();
+    pathExceptions = fetchPathExceptions();
+    classpathElements = fetchClasspathElements();
+    modulepathElements = fetchModulepathElements();
 
     // Delete output directory if it exists
     if (getLog().isDebugEnabled()) {
