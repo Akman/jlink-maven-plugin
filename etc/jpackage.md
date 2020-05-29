@@ -1,5 +1,14 @@
 # Creating application image and installer (modular and non modular)
 
+module hello does not have a ModuleMainClass attribute, use -m <module>/<main-class>
+
+Создать из образа, который был создан ранее с помощью jlink
+
+--runtime-image image
+--module hello/ru.akman.hello.Main
+         ^^^^^^___________________________________ !!!!!!!
+
+
 ## Pass (I) create application image (image only)
 
 ### Modular application (with or without classpath)
@@ -31,6 +40,7 @@ At first, you need JRE runtime-image in dist/jre builded with jlink
 
 ```console
 $ jlink --output dist/jre --add-modules $(java --list-modules | grep 'java\.' | sed 's/@.*/ /g' | xargs echo | tr ' ' ',')
+$ jlink --output dist/jre --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.se,java.security.jgss,java.security.sasl,java.smartcardio,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto
 ```
 
 #### Create application image with '--input libs' option, but without '--module-path ...' option

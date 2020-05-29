@@ -1,5 +1,8 @@
 module hello {
 
+  // jansi
+  // requires org.fusesource.jansi;
+
   // slf4j + logback
   requires org.slf4j;
   requires java.naming;

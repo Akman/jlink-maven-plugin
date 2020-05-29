@@ -25,7 +25,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
@@ -59,6 +59,7 @@ import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.Toolchain;
 import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
+import org.codehaus.plexus.languages.java.jpms.ModuleNameSource;
 import org.codehaus.plexus.languages.java.jpms.ResolvePathsRequest;
 import org.codehaus.plexus.languages.java.jpms.ResolvePathsResult;
 import org.codehaus.plexus.util.cli.Arg;
@@ -108,6 +109,8 @@ public class JlinkMojo extends AbstractMojo {
   private static final String PATHEXT = "PATHEXT";
 
   private static final String OPTS_FILE = TOOL_NAME + ".opts";
+  
+  private static final String DESCRIPTOR_NAME = "module-info.class";
 
   /**
    * Project base directory (that containing the pom.xml file).
@@ -144,6 +147,21 @@ public class JlinkMojo extends AbstractMojo {
    */
   private ResolvePathsResult<File> projectDependencies;
 
+  /**
+   * Path exceptions (not resolved dependencies)
+   */
+  private List<File> pathExceptions;
+  
+  /**
+   * Classpath elements (classpath dependencies)
+   */
+  private List<File> classpathElements;
+  
+  /**
+   * Modulepath elements (modulepath dependencies)
+   */
+  private List<File> modulepathElements;
+  
   /**
    * Used JAVA_HOME.
    */
@@ -807,7 +825,7 @@ public class JlinkMojo extends AbstractMojo {
     if (systemPath == null) {
       return new ArrayList<Path>();
     }
-    return Arrays.asList(systemPath.split(File.pathSeparator)).stream()
+    return Stream.of(systemPath.split(File.pathSeparator))
         .filter(s -> !s.trim().isEmpty())
         .map(s -> Paths.get(s))
         .collect(Collectors.toList());
@@ -830,7 +848,7 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
       if (systemPathExt != null) {
-        return Arrays.asList(systemPathExt.split(File.pathSeparator)).stream()
+        return Stream.of(systemPathExt.split(File.pathSeparator))
             .filter(s -> !s.trim().isEmpty())
             .collect(Collectors.toList());
       }
@@ -913,6 +931,20 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
+   * Get the cause message for throwable.
+   *
+   * @param throwable the throwable
+   *
+   * @return the cause error message
+   */
+  private String getThrowableCause(Throwable throwable) {
+    while (throwable.getCause() != null) {
+      throwable = throwable.getCause();
+    }
+    return throwable.getMessage();
+  }
+
+  /**
    * Resolve project dependencies.
    *
    * @return map of the resolved project dependencies
@@ -922,7 +954,8 @@ public class JlinkMojo extends AbstractMojo {
   private ResolvePathsResult<File> resolveDependencies()
       throws MojoExecutionException {
 
-    // get project artifacts
+    // get project artifacts - all dependencies that this project has,
+    // including transitive ones (depends on what phases have run)
     Set<Artifact> artifacts = project.getArtifacts();
     if (getLog().isDebugEnabled()) {
       getLog().debug(System.lineSeparator()
@@ -944,16 +977,29 @@ public class JlinkMojo extends AbstractMojo {
     // add the project output directory to paths will be resolved
     paths.add(outputDir);
 
+    // add system dependencies
+    paths.addAll(project.getDependencies().stream()
+        .filter(Objects::nonNull)
+        .filter(d -> d.getSystemPath() != null && !d.getSystemPath().isEmpty())
+        .map(d -> new File(d.getSystemPath()))
+        .collect(Collectors.toList()));
+
     // create request contains all information
     // required to analyze the project
     ResolvePathsRequest<File> request = ResolvePathsRequest.ofFiles(paths);
 
-    // TODO: is it really needed?
-    // if (SystemUtils.isJavaVersionAtMost(JavaVersion.JAVA_8)
-    //     && javaHomeDir != null) {
-    //   // this is used to extract the module name
-    //   request.setJdkHome(javaHomeDir);
-    // }
+    // this is used to resolve main module descriptor
+    File descriptorFile =
+        outputDir.toPath().resolve(DESCRIPTOR_NAME).toFile();
+    if (descriptorFile.exists() && !descriptorFile.isDirectory()) {
+      request.setMainModuleDescriptor(descriptorFile);
+    }
+
+    // TODO: toolchain jdk differ from default jdk/jre
+    // this is used to extract the module name
+    if (javaHomeDir != null) {
+      request.setJdkHome(javaHomeDir);
+    }
 
     // resolve project dependencies
     ResolvePathsResult<File> result = null;
@@ -966,7 +1012,74 @@ public class JlinkMojo extends AbstractMojo {
       throw new MojoExecutionException(
           "Error: Unable to resolve project dependencies", ex);
     }
-    
+
+    // get the resolved main module descriptor
+    JavaModuleDescriptor mainModuleDescriptor =
+        result.getMainModuleDescriptor();
+    if (mainModuleDescriptor == null) {
+      // detected that the project is non modular
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("The main module descriptor not found");
+      }
+    } else {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("Found the main module descriptor: ["
+            + mainModuleDescriptor.name() + "]");
+      }
+    }
+
+    // get path exceptions for every modulename which resolution failed
+    pathExceptions = result.getPathExceptions().keySet().stream()
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Found path exceptions: " + pathExceptions.size()
+          + System.lineSeparator()
+          + result.getPathExceptions().entrySet().stream()
+              .filter(entry -> entry != null && entry.getKey() != null)
+              .map(entry -> "Unable to resolve module ["
+                  + entry.getKey().toString()
+                  + "] - " + getThrowableCause(entry.getValue()))
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+
+    // get classpath elements
+    classpathElements = result.getClasspathElements().stream()
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Found classpath elements: " + classpathElements.size()
+          + System.lineSeparator()
+          + classpathElements.stream()
+              .map(file -> file.toString())
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+
+    // get modulepath elements
+    modulepathElements = result.getModulepathElements().keySet().stream()
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Found modulepath elements: " + modulepathElements.size()
+          + System.lineSeparator()
+          + result.getModulepathElements().entrySet().stream()
+              .filter(entry -> entry != null && entry.getKey() != null)
+              .map(entry -> entry.getKey().toString()
+                  + (ModuleNameSource.FILENAME.equals(entry.getValue()) ?
+                      System.lineSeparator()
+                      + "[!] Detected 'requires' filename based "
+                      + "automatic module"
+                      + System.lineSeparator()
+                      + "[!] Please don't publish this project to "
+                      + "a public artifact repository"
+                      + System.lineSeparator()
+                      + (mainModuleDescriptor != null
+                          && mainModuleDescriptor.exports().isEmpty() ?
+                          "[*] APPLICATION" : "[!] LIBRARY")
+                      : ""))
+              .collect(Collectors.joining(System.lineSeparator())));
+    }
+
     return result;
   }
 
@@ -1019,9 +1132,7 @@ public class JlinkMojo extends AbstractMojo {
             throw new MojoExecutionException(
                 "Error: Unable to resolve fileset", ex);
           }
-          result =
-              Arrays.asList(fileSetManager.getIncludedFiles(fileSet))
-              .stream()
+          result = Stream.of(fileSetManager.getIncludedFiles(fileSet))
               .filter(Objects::nonNull)
               .filter(fileName -> !fileName.trim().isEmpty())
               .map(fileName -> fileSetDir.toPath().resolve(fileName).toString())
@@ -1059,9 +1170,7 @@ public class JlinkMojo extends AbstractMojo {
             throw new MojoExecutionException(
               "Error: Unable to resolve dirset", ex);
           }
-          result =
-              Arrays.asList(fileSetManager.getIncludedDirectories(dirSet))
-              .stream()
+          result = Stream.of(fileSetManager.getIncludedDirectories(dirSet))
               .filter(Objects::nonNull)
               .filter(dirName -> !dirName.trim().isEmpty())
               .map(dirName -> dirSetDir.toPath().resolve(dirName).toString())
@@ -1505,6 +1614,7 @@ public class JlinkMojo extends AbstractMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
+      // TODO: toolchain jdk differ from default jdk/jre
       if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_13)) {
         stripjavadebugattributes = false;
         if (getLog().isWarnEnabled()) {
@@ -1650,7 +1760,6 @@ public class JlinkMojo extends AbstractMojo {
       opt.createArg().setValue(excludefiles.stream()
           .collect(Collectors.joining(",", "--exclude-files=", "")));
     }
-    // TODO: filename in quotes
     // TODO: --release-info=file|add:key1=value1:key2=value2:...|del:key-list
     // releaseinfo
     if (releaseinfo != null) {
@@ -1740,6 +1849,7 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     // Get suitable executable and resolve JAVA_HOME
+    // TODO: toolchain jdk differ from default jdk/jre
     if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
       throw new MojoExecutionException(
           "Error: At least " + JavaVersion.JAVA_9
