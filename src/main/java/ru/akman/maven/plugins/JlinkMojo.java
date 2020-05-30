@@ -914,24 +914,32 @@ public class JlinkMojo extends AbstractMojo {
     String stderr = err.getOutput().trim();
     if (exitCode == 0) {
       if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
-        getLog().info(stdout);
+        getLog().info(System.lineSeparator()
+            + System.lineSeparator()
+            + stdout);
       }
       if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
-        getLog().info(stderr);
+        getLog().info(System.lineSeparator()
+            + System.lineSeparator()
+            + stderr);
       }
     } else {
       if (getLog().isErrorEnabled()) {
         if (!stdout.isEmpty()) {
-          getLog().error("Exit code: " + exitCode
+          getLog().error(System.lineSeparator()
+              + "Exit code: " + exitCode
               + System.lineSeparator() + stdout);
         }
         if (!stderr.isEmpty()) {
-          getLog().error("Exit code: " + exitCode
+          getLog().error(System.lineSeparator()
+              + "Exit code: " + exitCode
               + System.lineSeparator() + stderr);
         }
-        getLog().error("Command line was: "
+        getLog().error(System.lineSeparator()
+            + "Command line was: "
             + CommandLineUtils.toString(cmdLine.getCommandline()));
-        getLog().error("Command options was: "
+        getLog().error(System.lineSeparator()
+            + "Command options was: "
             + System.lineSeparator()
             + optsLines.stream()
                 .collect(Collectors.joining(System.lineSeparator())));
@@ -1060,7 +1068,7 @@ public class JlinkMojo extends AbstractMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isWarnEnabled()) {
+    if (result.size() != 0 && getLog().isWarnEnabled()) {
       getLog().warn("Found path exceptions: " + result.size()
           + System.lineSeparator()
           + projectDependencies.getPathExceptions().entrySet().stream()
@@ -1319,8 +1327,8 @@ public class JlinkMojo extends AbstractMojo {
       }
     } else {
       if (descriptor.isAutomatic()) {
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("Found automatic module: " + file.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Found automatic module: " + file.toString());
         }
       }
     }
