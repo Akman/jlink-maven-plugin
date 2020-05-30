@@ -716,8 +716,8 @@ public class JlinkMojo extends AbstractMojo {
       }
     } else {
       toolchains.forEach(tc -> {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Found toolchain: " + tc);
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Found toolchain: " + tc);
         }
       });
     }
@@ -732,14 +732,14 @@ public class JlinkMojo extends AbstractMojo {
       }
       javaHomeDir = null;
     } else {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
+      if (getLog().isInfoEnabled()) {
+        getLog().info("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
       }
       if (toolchain instanceof DefaultJavaToolChain) {
         javaHomeDir = new File(
             DefaultJavaToolChain.class.cast(toolchain).getJavaHome());
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("JAVA_HOME (toolchain): " + javaHomeDir.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("JAVA_HOME (toolchain): " + javaHomeDir.toString());
         }
       } else {
         javaHomeDir = null;
@@ -754,8 +754,8 @@ public class JlinkMojo extends AbstractMojo {
               + "] not found");
         }
       } else {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Executable (toolchain) for [" + TOOL_NAME
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Executable (toolchain) for [" + TOOL_NAME
               + "]: " + toolExecutable);
         }
       }
@@ -771,8 +771,8 @@ public class JlinkMojo extends AbstractMojo {
         }
       } else {
         javaHomeDir = javaHome.toFile();
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("JAVA_HOME (system): " + javaHome.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("JAVA_HOME (system): " + javaHome.toString());
         }
       }
       toolExecutable = findToolExecutable();
@@ -783,8 +783,8 @@ public class JlinkMojo extends AbstractMojo {
         }
         return null;
       } else {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Executable (system) for [" + TOOL_NAME
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Executable (system) for [" + TOOL_NAME
               + "]: " + toolExecutable);
         }
       }
@@ -894,12 +894,14 @@ public class JlinkMojo extends AbstractMojo {
    * Execute command line.
    *
    * @param cmdLine command line
+   * @param optsLines list of the command line options
    *
    * @return exit code
    *
    * @throws CommandLineException
    */
-  private int execCmdLine(Commandline cmdLine) throws CommandLineException {
+  private int execCmdLine(Commandline cmdLine, List<String> optsLines)
+      throws CommandLineException {
     if (getLog().isDebugEnabled()) {
       getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
     }
@@ -929,6 +931,10 @@ public class JlinkMojo extends AbstractMojo {
         }
         getLog().error("Command line was: "
             + CommandLineUtils.toString(cmdLine.getCommandline()));
+        getLog().error("Command options was: "
+            + System.lineSeparator()
+            + optsLines.stream()
+                .collect(Collectors.joining(System.lineSeparator())));
       }
     }
     return exitCode;
@@ -1013,7 +1019,7 @@ public class JlinkMojo extends AbstractMojo {
       result = locationManager.resolvePaths(request);
     } catch (IOException ex) {
       if (getLog().isErrorEnabled()) {
-        getLog().error(ex);
+        getLog().error("Unable to resolve project dependencies", ex);
       }
       throw new MojoExecutionException(
           "Error: Unable to resolve project dependencies", ex);
@@ -1032,12 +1038,12 @@ public class JlinkMojo extends AbstractMojo {
         projectDependencies.getMainModuleDescriptor();
     if (descriptor == null) {
       // detected that the project is non modular
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("The main module descriptor not found");
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("The main module descriptor not found");
       }
     } else {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("Found the main module descriptor: ["
+      if (getLog().isInfoEnabled()) {
+        getLog().info("Found the main module descriptor: ["
             + descriptor.name() + "]");
       }
     }
@@ -1054,8 +1060,8 @@ public class JlinkMojo extends AbstractMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Found path exceptions: " + result.size()
+    if (getLog().isWarnEnabled()) {
+      getLog().warn("Found path exceptions: " + result.size()
           + System.lineSeparator()
           + projectDependencies.getPathExceptions().entrySet().stream()
               .filter(entry -> entry != null && entry.getKey() != null)
@@ -1077,8 +1083,8 @@ public class JlinkMojo extends AbstractMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Found classpath elements: " + result.size()
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Found classpath elements: " + result.size()
           + System.lineSeparator()
           + result.stream()
               .map(file -> file.toString())
@@ -1097,8 +1103,8 @@ public class JlinkMojo extends AbstractMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Found modulepath elements: " + result.size()
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Found modulepath elements: " + result.size()
           + System.lineSeparator()
           + projectDependencies.getModulepathElements().entrySet().stream()
               .filter(entry -> entry != null && entry.getKey() != null)
@@ -1164,7 +1170,7 @@ public class JlinkMojo extends AbstractMojo {
             fileSetDir = Utils.normalizeFileSetBaseDir(baseDir, fileSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
-              getLog().error(ex);
+              getLog().error("Unable to resolve fileset", ex);
             }
             throw new MojoExecutionException(
                 "Error: Unable to resolve fileset", ex);
@@ -1202,7 +1208,7 @@ public class JlinkMojo extends AbstractMojo {
             dirSetDir = Utils.normalizeFileSetBaseDir(baseDir, dirSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
-              getLog().error(ex);
+              getLog().error("Unable to resolve dirset", ex);
             }
             throw new MojoExecutionException(
               "Error: Unable to resolve dirset", ex);
@@ -1308,13 +1314,13 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     if (descriptor == null) {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("Missing module descriptor: " + file.toString());
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("Missing module descriptor: " + file.toString());
       }
     } else {
       if (descriptor.isAutomatic()) {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Found automatic module: " + file.toString());
+        if (getLog().isWarnEnabled()) {
+          getLog().warn("Found automatic module: " + file.toString());
         }
       }
     }
@@ -1326,33 +1332,33 @@ public class JlinkMojo extends AbstractMojo {
       isIncluded = true;
       // include automatic module by default
       if (descriptor != null && descriptor.isAutomatic()) {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Included automatic module: " + file.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Included automatic module: " + file.toString());
         }
       }
       // exclude output module by default
       if (file.compareTo(outputDir) == 0) {
         isIncluded = false;
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Excluded output module: " + file.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Excluded output module: " + file.toString());
         }
       }
     } else {
       if (descriptor != null && descriptor.isAutomatic()
           && depSet.isAutomaticExcluded()) {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Excluded automatic module: " + file.toString());
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Excluded automatic module: " + file.toString());
         }
       } else {
         if (file.compareTo(outputDir) == 0) {
           if (depSet.isOutputIncluded()) {
             isIncluded = true;
-            if (getLog().isDebugEnabled()) {
-              getLog().debug("Included output module: " + file.toString());
+            if (getLog().isInfoEnabled()) {
+              getLog().info("Included output module: " + file.toString());
             }
           } else {
-            if (getLog().isDebugEnabled()) {
-              getLog().debug("Excluded output module: " + file.toString());
+            if (getLog().isInfoEnabled()) {
+              getLog().info("Excluded output module: " + file.toString());
             }
           }
         } else {
@@ -1654,8 +1660,8 @@ public class JlinkMojo extends AbstractMojo {
       if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_13)) {
         stripjavadebugattributes = false;
         if (getLog().isWarnEnabled()) {
-          getLog().warn("Skiped, at least " + JavaVersion.JAVA_13
-              + " is required to use parameter [stripjavadebugattributes]");
+          getLog().warn("Parameter [--strip-java-debug-attributes] skiped, "
+              + "at least " + JavaVersion.JAVA_13 + " is required to use it");
         }
       } else {
         opt = cmdLine.createOpt();
@@ -1882,8 +1888,8 @@ public class JlinkMojo extends AbstractMojo {
         getLog().warn("Unable to read ${project.build.sourceEncoding}");
       }
     }
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Using charset: [" + defaultCharset + "] to write files");
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Using charset: [" + defaultCharset + "] to write files");
     }
 
     // Get suitable executable and resolve JAVA_HOME
@@ -1912,8 +1918,8 @@ public class JlinkMojo extends AbstractMojo {
     modulepathElements = fetchModulepathElements();
 
     // Delete output directory if it exists
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Set output directory to: [" + output.toString() + "]");
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Set output directory to: [" + output.toString() + "]");
     }
     if (output.exists() && output.isDirectory()) {
       try {
@@ -1951,9 +1957,6 @@ public class JlinkMojo extends AbstractMojo {
       }
     }
 
-    // Prepare command line with command options specified in place
-    // Commandline cmdLine = cmdLineBuilder.buildCommandLine();
-
     // Prepare command line with command options
     // specified in the file created early
     Commandline cmdLine = new Commandline();
@@ -1963,7 +1966,7 @@ public class JlinkMojo extends AbstractMojo {
     // Execute command line
     int exitCode = 0;
     try {
-      exitCode = execCmdLine(cmdLine);
+      exitCode = execCmdLine(cmdLine, optsLines);
     } catch (CommandLineException ex) {
       throw new MojoExecutionException(
           "Error: Unable to execute [" + TOOL_NAME + "] tool", ex);
