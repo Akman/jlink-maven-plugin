@@ -18,6 +18,7 @@ package ru.akman.maven.plugins;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -40,6 +41,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Execute;
@@ -205,6 +207,30 @@ public class JlinkMojo extends AbstractMojo {
   private MavenSession session;
 
   /**
+   * Specifies the path to the JDK providing the tools needed.
+   */
+  @Parameter
+  private File jdkhome;
+
+  /**
+   * Specifies the location in which modular dependencies will be placed.
+   * Default value: ${project.build.directory}/jlink/mods.
+   */
+  @Parameter(
+    defaultValue = "${project.build.directory}/jlink/mods"
+  )
+  private File modsdir;
+
+  /**
+   * Specifies the location in which non modular dependencies will be placed.
+   * Default value: ${project.build.directory}/jlink/libs.
+   */
+  @Parameter(
+    defaultValue = "${project.build.directory}/jlink/libs"
+  )
+  private File libsdir;
+
+  /**
    * Specifies the module path. The path where the jlink tool discovers
    * observable modules: modular JAR files, JMOD files, exploded modules.
    * If this option is not specified, then the default module path
@@ -297,12 +323,12 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Specifies the location of the generated runtime image.
    *
-   * Default value: ${project.build.directory}/runtime.
+   * Default value: ${project.build.directory}/jlink/image.
    *
    * The jlink CLI is: <code>--output path</code>
    */
   @Parameter(
-    defaultValue = "${project.build.directory}/runtime"
+    defaultValue = "${project.build.directory}/jlink/image"
   )
   private File output;
 
@@ -703,8 +729,24 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @return tool executable path from the registered toolchain
    *         or system path or null if it not found
+   *
+   * @throws MojoExecutionException
    */
-  private Path getToolExecutable() {
+  private Path getToolExecutable() throws MojoExecutionException {
+    if (jdkhome == null) {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("JDK_HOME not specified");
+      }
+    } else {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("JDK_HOME: [" + jdkhome + "] specified");
+      }
+    }
+    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
+      throw new MojoExecutionException(
+          "Error: At least " + JavaVersion.JAVA_9
+          + " is required to use [" + TOOL_NAME + "]");
+    }
     String toolExecutable = null;
     // Select all jdk toolchains available in user settings
     // independently from maven-toolchains-plugin
@@ -1085,8 +1127,10 @@ public class JlinkMojo extends AbstractMojo {
    * Fetch classpath elements.
    *
    * @return classpath elements
+   *
+   * @throws MojoExecutionException
    */
-  private List<File> fetchClasspathElements() {
+  private List<File> fetchClasspathElements() throws MojoExecutionException {
     List<File> result = projectDependencies.getClasspathElements()
         .stream()
         .filter(Objects::nonNull)
@@ -1098,6 +1142,30 @@ public class JlinkMojo extends AbstractMojo {
               .map(file -> file.toString())
               .collect(Collectors.joining(System.lineSeparator())));
     }
+    for (File file : result) {
+      try {
+        if (file.exists() && !file.isDirectory()) {
+          FileUtils.copyFileToDirectory(file, libsdir);
+          if (getLog().isDebugEnabled()) {
+            getLog().debug("Copied classpath element: ["
+                + file.toString() + "]");
+          }
+        } else {
+          if (getLog().isDebugEnabled()) {
+            getLog().debug("Skiped classpath element (directory): ["
+                + file.toString() + "]");
+          }
+        }
+      } catch (IOException | IllegalArgumentException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error("Unable to copy classpath element: ["
+              + file.toString() + "]", ex);
+        }
+        throw new MojoExecutionException(
+            "Error: Unable to copy classpath element: ["
+                + file.toString() + "]", ex);
+      }
+    }
     return result;
   }
 
@@ -1105,8 +1173,10 @@ public class JlinkMojo extends AbstractMojo {
    * Fetch modulepath elements.
    *
    * @return modulepath elements
+   *
+   * @throws MojoExecutionException
    */
-  private List<File> fetchModulepathElements() {
+  private List<File> fetchModulepathElements() throws MojoExecutionException {
     List<File> result = projectDependencies.getModulepathElements().keySet()
         .stream()
         .filter(Objects::nonNull)
@@ -1130,6 +1200,30 @@ public class JlinkMojo extends AbstractMojo {
                           "[*] APPLICATION" : "[!] LIBRARY")
                       : ""))
               .collect(Collectors.joining(System.lineSeparator())));
+    }
+    for (File file : result) {
+      try {
+        if (file.exists() && !file.isDirectory()) {
+          FileUtils.copyFileToDirectory(file, modsdir);
+          if (getLog().isDebugEnabled()) {
+            getLog().debug("Copied modulepath element: ["
+                + file.toString() + "]");
+          }
+        } else {
+          if (getLog().isDebugEnabled()) {
+            getLog().debug("Skiped modulepath element (directory): ["
+                + file.toString() + "]");
+          }
+        }
+      } catch (IOException | IllegalArgumentException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error("Unable to copy modulepath element: ["
+              + file.toString() + "]", ex);
+        }
+        throw new MojoExecutionException(
+            "Error: Unable to copy modulepath element: ["
+                + file.toString() + "]", ex);
+      }
     }
     return result;
   }
@@ -1840,6 +1934,130 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
+   * Fix launcher scripts.
+   *
+   * @throws MojoExecutionException
+   */
+  private void fixLauncherScripts() throws MojoExecutionException {
+    if (launcher == null) {
+      return;
+    }
+    String scriptName = launcher.getCommand();
+    if (scriptName == null) {
+      return;
+    }
+    String moduleName = launcher.getMainModule();
+    if (moduleName == null || moduleName.isEmpty()) {
+      return;
+    }
+    String mainClassName = launcher.getMainClass();
+    if (mainClassName == null) {
+      mainClassName = "";
+    }
+    String mainName = moduleName;
+    if (mainClassName != null && !mainClassName.isEmpty()) {
+      mainName += "/" + mainClassName;
+    }
+    String args = launcher.getArgs();
+    if (args == null) {
+      args = "";
+    }
+    String jvmArgs = launcher.getJvmArgs();
+    if (jvmArgs == null) {
+      jvmArgs = "";
+    }
+
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(System.lineSeparator()
+          + "Processing launcher scripts with following variables:"
+          + System.lineSeparator()
+          + "  - moduleName = [" + moduleName + "]"
+          + System.lineSeparator()
+          + "  - mainClassName = [" + mainClassName + "]"
+          + System.lineSeparator()
+          + "  - mainName = [" + mainName + "]"
+          + System.lineSeparator()
+          + "  - args = [" + args + "]"
+          + System.lineSeparator()
+          + "  - jvmArgs = [" + jvmArgs + "]");
+    }
+
+    Map data = new HashMap();
+    data.put("moduleName", moduleName);
+    data.put("mainClassName", mainClassName);
+    data.put("mainName", mainName);
+    data.put("args", args);
+    data.put("jvmArgs", jvmArgs);
+
+    Path nixTemplate = launcher.getNixTemplate().toPath();
+    if (nixTemplate != null) {
+      Path nixScript = output.toPath().resolve("bin/" + scriptName);
+      if (Files.exists(nixScript) && !Files.isDirectory(nixScript)
+          && Files.exists(nixTemplate) && !Files.isDirectory(nixTemplate)) {
+        fixLauncherScript(nixScript, nixTemplate, data);
+      }
+    }
+
+    Path winTemplate = launcher.getWinTemplate().toPath();
+    if (winTemplate != null) {
+      Path winScript = output.toPath().resolve("bin/" + scriptName + ".bat");
+      if (Files.exists(winScript) && !Files.isDirectory(winScript)
+          && Files.exists(winTemplate) && !Files.isDirectory(winTemplate)) {
+        fixLauncherScript(winScript, winTemplate, data);
+      }
+    }
+
+  }
+
+  /**
+   * Fix launcher script.
+   * 
+   * @see https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/StringSubstitutor.html
+   *
+   * @param script the launcher script file path
+   * @param template the launcher template file path
+   * @param data the hash map contains variable names and values to substitute
+   *
+   * @throws MojoExecutionException
+   */
+  private void fixLauncherScript(Path script, Path template, Map data)
+      throws MojoExecutionException {
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(System.lineSeparator()
+          + "Fixing launcher script: [" + script + "]"
+          + System.lineSeparator()
+          + "with template: [" + template + "]");
+    }
+    StringSubstitutor engine = new StringSubstitutor(data)
+        .setEnableUndefinedVariableException(true)
+        .setPreserveEscapes(true)
+        .setEscapeChar('\\');
+    try {
+      Files.write(script,
+          Files.lines​(template, defaultCharset)
+              .map(line -> engine.replace(line).replace("\\$", "$"))
+              .collect(Collectors.toList()),
+          defaultCharset);
+    } catch (IllegalArgumentException ex) {
+      if (getLog().isErrorEnabled()) {
+        getLog().error("Variable not found in the launcher template file: ["
+            + template + "]", ex);
+      }
+      throw new MojoExecutionException(
+          "Variable not found in the launcher template file: ["
+          + template + "]", ex);
+    } catch (IOException ex) {
+      if (getLog().isErrorEnabled()) {
+        getLog().error("Unable to write to the launcher script file: ["
+            + script + "]", ex);
+      }
+      throw new MojoExecutionException(
+          "Unable to write to the launcher script file: ["
+          + script + "]", ex);
+    }
+  }
+
+  /**
    * Execute goal.
    *
    * @throws MojoExecutionException
@@ -1900,12 +2118,7 @@ public class JlinkMojo extends AbstractMojo {
       getLog().info("Using charset: [" + defaultCharset + "] to write files");
     }
 
-    // Get suitable executable and resolve JAVA_HOME
-    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
-      throw new MojoExecutionException(
-          "Error: At least " + JavaVersion.JAVA_9
-          + " is required to use [" + TOOL_NAME + "]");
-    }
+    // Resolve JAVA_HOME and the tool executable
     Path toolExecutable = getToolExecutable();
     if (toolExecutable == null) {
       throw new MojoExecutionException(
@@ -1918,12 +2131,23 @@ public class JlinkMojo extends AbstractMojo {
           "Error: Executable for [" + TOOL_NAME + "] not found", ex);
     }
 
-    // Get project dependencies
-    projectDependencies = resolveDependencies();
-    mainModuleDescriptor = fetchMainModuleDescriptor();
-    pathExceptions = fetchPathExceptions();
-    classpathElements = fetchClasspathElements();
-    modulepathElements = fetchModulepathElements();
+    // Create mods directory
+    try {
+      FileUtils.forceMkdir(modsdir);
+    } catch (IOException | IllegalArgumentException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to create mods directory: ["
+          + modsdir.toString() + "]", ex);
+    }
+
+    // Create libs directory
+    try {
+      FileUtils.forceMkdir(libsdir);
+    } catch (IOException | IllegalArgumentException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to create libs directory: ["
+          + libsdir.toString() + "]", ex);
+    }
 
     // Delete output directory if it exists
     if (getLog().isInfoEnabled()) {
@@ -1938,7 +2162,14 @@ public class JlinkMojo extends AbstractMojo {
             + output.toString() + "]", ex);
       }
     }
-    
+
+    // Resolve and fetch project dependencies
+    projectDependencies = resolveDependencies();
+    mainModuleDescriptor = fetchMainModuleDescriptor();
+    pathExceptions = fetchPathExceptions();
+    classpathElements = fetchClasspathElements();
+    modulepathElements = fetchModulepathElements();
+
     // Build command line and populate the list of the command options
     CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
     cmdLineBuilder.setExecutable(toolExecutable.toString());
@@ -1984,7 +2215,10 @@ public class JlinkMojo extends AbstractMojo {
           "Error: Tool execution failed [" + TOOL_NAME + "] with exit code: "
           + exitCode);
     }
-    
+
+    // Fix launcher scripts
+    fixLauncherScripts();
+
     // Delete temporary file
     try {
       FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());

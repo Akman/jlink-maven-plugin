@@ -102,6 +102,39 @@ public class JlinkMojoTest {
   // parameters
 
   @Test
+  public void testMojoHasJavaHome() throws Exception {
+    File jdkhome =
+        (File) rule.getVariableValueFromObject(mojo, "jdkhome");
+    assertNull("", jdkhome);
+  }
+
+  @Test
+  public void testMojoHasModsDir() throws Exception {
+    File modsdir =
+        (File) rule.getVariableValueFromObject(mojo, "modsdir");
+    assertNotNull("", modsdir);
+    assertEquals(
+      "",
+      getCanonicalPath(modsdir),
+      getCanonicalPath(new File(project.getBuild().getDirectory(),
+          "jlink/mods"))
+    );
+  }
+
+  @Test
+  public void testMojoHasLibsDir() throws Exception {
+    File libsdir =
+        (File) rule.getVariableValueFromObject(mojo, "libsdir");
+    assertNotNull("", libsdir);
+    assertEquals(
+      "",
+      getCanonicalPath(libsdir),
+      getCanonicalPath(new File(project.getBuild().getDirectory(),
+          "jlink/libs"))
+    );
+  }
+
+  @Test
   public void testMojoHasModulePath() throws Exception {
     ModulePath modulepath =
         (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
@@ -234,7 +267,8 @@ public class JlinkMojoTest {
     assertEquals(
       "",
       getCanonicalPath(output),
-      getCanonicalPath(new File(project.getBuild().getDirectory(), "runtime"))
+      getCanonicalPath(new File(project.getBuild().getDirectory(),
+          "jlink/image"))
     );
   }
 
@@ -314,9 +348,28 @@ public class JlinkMojoTest {
     Launcher launcher =
         (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
     assertNotNull("", launcher);
-    assertEquals("", "myLauncher", launcher.getCommand());
-    assertEquals("", "mainModule", launcher.getMainModule());
-    assertEquals("", "mainClass", launcher.getMainClass());
+    assertEquals("", launcher.getCommand(), "myLauncher");
+    assertEquals("", launcher.getMainModule(), "mainModule");
+    assertEquals("", launcher.getMainClass(), "mainClass");
+    assertEquals("", launcher.getJvmArgs(),
+        "-Dfile.encoding=UTF-8 -Xms256m -Xmx512m");
+    assertEquals("", launcher.getArgs(), "--debug");
+    File nixtemplate = launcher.getNixTemplate();
+    assertNotNull("", nixtemplate);
+    assertEquals(
+      "",
+      getCanonicalPath(nixtemplate),
+      getCanonicalPath(new File(project.getBasedir(),
+          "config/jlink/nix.template"))
+    );
+    File wintemplate = launcher.getWinTemplate();
+    assertNotNull("", wintemplate);
+    assertEquals(
+      "",
+      getCanonicalPath(wintemplate),
+      getCanonicalPath(new File(project.getBasedir(),
+          "config/jlink/win.template"))
+    );
   }
 
   @Test

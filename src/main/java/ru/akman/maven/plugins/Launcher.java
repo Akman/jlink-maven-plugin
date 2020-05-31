@@ -16,6 +16,8 @@
 
 package ru.akman.maven.plugins;
 
+import java.io.File;
+
 /**
  * JLink runtime image launcher
  */
@@ -26,6 +28,14 @@ public class Launcher {
   private String mainmodule = "";
 
   private String mainclass = "";
+  
+  private String jvmargs = "";
+
+  private String args = "";
+
+  private File nixtemplate = null;
+
+  private File wintemplate = null;
   
   public String getCommand() {
     return this.command;
@@ -49,6 +59,38 @@ public class Launcher {
   
   public void setMainClass(String mainclass) {
     this.mainclass = mainclass;
+  }
+
+  public String getJvmArgs() {
+    return this.jvmargs;
+  }
+  
+  public void setJvmArgs(String jvmargs) {
+    this.jvmargs = jvmargs;
+  }
+
+  public String getArgs() {
+    return this.args;
+  }
+  
+  public void setArgs(String args) {
+    this.args = args;
+  }
+
+  public File getNixTemplate() {
+    return this.nixtemplate;
+  }
+  
+  public void setNixTemplate(File nixtemplate) {
+    this.nixtemplate = nixtemplate;
+  }
+
+  public File getWinTemplate() {
+    return this.wintemplate;
+  }
+  
+  public void setWinTemplate(File wintemplate) {
+    this.wintemplate = wintemplate;
   }
 
 }

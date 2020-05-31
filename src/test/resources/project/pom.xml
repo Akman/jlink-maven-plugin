@@ -38,8 +38,25 @@
         <artifactId>jlink-maven-plugin</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <configuration>
+          <!--
+            Specifies the path to the JDK providing the tools needed.
+          -->
+          <jdkhome>${java.home}</jdkhome>
+          <!--
+            Specifies the location in which modular dependencies
+            will be placed.
+            Default value: ${project.build.directory}/jlink/mods.
+          -->
+          <modsdir>${project.build.directory}/jlink/mods</modsdir>
+          <!--
+            Specifies the location in which non modular dependencies
+            will be placed.
+            Default value: ${project.build.directory}/jlink/libs.
+          -->
+          <libsdir>${project.build.directory}/jlink/libs</libsdir>
 
-          <!-- BASIC -->
+
+          <!-- jlink basic -->
 
           <!--
             Specifies the module path. The path where the jlink tool discovers
@@ -120,9 +137,9 @@
           </addmodules>
           <!--
             Specifies the location of the generated runtime image.
-            Default value: ${project.build.directory}/runtime.
+            Default value: ${project.build.directory}/jlink/image.
           -->
-          <output>${project.build.directory}/runtime</output>
+          <output>${project.build.directory}/jlink/image</output>
           <!--
             Limits the universe of observable modules to those in
             the transitive closure of the named modules, mod,
@@ -168,12 +185,18 @@
           <!--
             Specifies the launcher command name for the module or
             the command name for the module and main class (the module and
-            the main class names are separated by a slash).
+            the main class names are separated by a slash). Arguments passed
+            to jvm, arguments passed to the application. Platform specific
+            templates for launcher script.
           -->
           <launcher>
             <command>myLauncher</command>
             <mainmodule>mainModule</mainmodule>
             <mainclass>mainClass</mainclass>
+            <jvmargs>-Dfile.encoding=UTF-8 -Xms256m -Xmx512m</jvmargs>
+            <args>--debug</args>
+            <nixtemplate>${project.basedir}/config/jlink/nix.template</nixtemplate>
+            <wintemplate>${project.basedir}/config/jlink/win.template</wintemplate>
           </launcher>
           <!--
             Excludes header files.
@@ -208,25 +231,20 @@
             <disableplugin>dedup-legal-notices</disableplugin>
           </disableplugins>
 
-          <!-- PLUGINS -->
-          <!--
-            For plug-in options that require a pattern-list, the value is
-            a comma-separated list of elements, with each element using one
-            the following forms:
 
-              - glob-pattern
-              - glob:glob-pattern
-              - regex:regex-pattern
-              - @filename
-              
-            Example: **/module-info.class,glob:/java.base/java/lang/**
-          -->
+          <!-- jlink plugins -->
+
 
           <!--
             Compresses all resources in the output image. Specify
             compression { NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }.
             An optional pattern-list filter can be specified to list
             the pattern of files to include.
+            Each pattern must be presented in one of the following forms:
+              - glob-pattern
+              - glob:glob-pattern
+              - regex:regex-pattern
+              - @filename
           -->
           <compress>
             <compression>ZIP</compression>
@@ -251,6 +269,11 @@
           </includelocales>
           <!--
             Orders the specified paths in priority order.
+            Each pattern must be presented in one of the following forms:
+              - glob-pattern
+              - glob:glob-pattern
+              - regex:regex-pattern
+              - @filename
           -->
           <orderresources>
             <orderresource>**/*-info.class</orderresource>
@@ -260,6 +283,11 @@
           </orderresources>
           <!--
             Specify resources to exclude.
+            Each pattern must be presented in one of the following forms:
+              - glob-pattern
+              - glob:glob-pattern
+              - regex:regex-pattern
+              - @filename
           -->
           <excluderesources>
             <excluderesource>**/*-info.class</excluderesource>
@@ -291,6 +319,11 @@
           <deduplegalnotices>true</deduplegalnotices>
           <!--
             Specify files to exclude.
+            Each pattern must be presented in one of the following forms:
+              - glob-pattern
+              - glob:glob-pattern
+              - regex:regex-pattern
+              - @filename
           -->
           <excludefiles>
             <excludefile>**/*-info.class</excludefile>
@@ -329,17 +362,24 @@
             </dels>
           </releaseinfo>
           <!--
-            Fast loading of module descriptors. Always on.
-            The jlink CLI is: ‒‒system-modules=.
-            Default value: true.
-          -->
-          <!--systemmodules>false</systemmodules-->
-          <!--
             Select the HotSpot VM in
             the output image: { CLIENT | SERVER | MINIMAL | ALL }
             Default value: ALL.
           -->
           <vm>SERVER</vm>
+
+
+          <!-- always on -->
+
+
+          <!--
+            Fast loading of module descriptors. Always on.
+            The jlink CLI is: ‒‒system-modules=.
+            Default value: true.
+          -->
+          <!--
+          <systemmodules>false</systemmodules>
+          -->
         </configuration>
       </plugin>
     </plugins>

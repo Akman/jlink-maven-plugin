@@ -1,7 +1,8 @@
 module hello {
 
-  // jansi
-  // requires org.fusesource.jansi;
+  // picocli
+  requires info.picocli;
+  opens ru.akman.hello to info.picocli;
 
   // slf4j + logback
   requires org.slf4j;

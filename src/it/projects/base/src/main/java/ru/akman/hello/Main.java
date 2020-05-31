@@ -4,41 +4,56 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-// import org.fusesource.jansi.AnsiConsole;
+import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-// import static org.fusesource.jansi.Ansi.*;
-// import static org.fusesource.jansi.Ansi.Color.*;
-
-public class Main extends Application {
+@Command(
+  name = "hello",
+  mixinStandardHelpOptions = true,
+  version = "Version 1.0",
+  description = "Simple JavaFX application"
+)
+public class Main extends Application implements Callable<Integer> {
 
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
+  @Option(
+    names = {"-d", "--debug"},
+    description = "Log in debug mode."
+  )
+  private boolean isDebugEnabled = false;
+
   public static void main(String... args) {
-    // AnsiConsole.systemInstall();
-    // System.out.println(ansi()
-    //     .eraseScreen()
-    //     .fg(RED).a("Hello,")
-    //     .fg(GREEN).a(" JavaFX!")
-    //     .reset());
-    if (LOG.isInfoEnabled()) {
-      LOG.info("BEGIN");
+    int exitCode = new CommandLine(new Main()).execute(args);
+    System.exit(exitCode);    
+  }
+
+  @Override
+  public Integer call() throws Exception {
+    if (isDebugEnabled) {
+      ch.qos.logback.classic.Logger rootLogger =
+          (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(
+              ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+      rootLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
     }
-    Application.launch(args);
-    if (LOG.isInfoEnabled()) {
-      LOG.info("END");
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("BEGIN");
     }
-    // System.out.println(ansi()
-    //     .eraseScreen()
-    //     .render("@|red Good|@ @|green bye.|@"));
-    // AnsiConsole.systemUninstall();    
+    Application.launch();
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("END");
+    }
+    return 0;
   }
 
   @Override
   public void start(final Stage stage) {
-    if (LOG.isInfoEnabled()) {
-      LOG.info("GUI start");
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("GUI start");
     }
     stage.setTitle("Hello Modular Application");
     stage.setScene(new Scene(new Group(), 800, 600));
@@ -48,8 +63,8 @@ public class Main extends Application {
 
   @Override
   public void stop() {
-    if (LOG.isInfoEnabled()) {
-      LOG.info("GUI stop");
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("GUI stop");
     }
   }
 
