@@ -103,6 +103,9 @@ public final class Utils {
     result
         .append(title)
         .append(System.lineSeparator())
+        .append("includeoutput: ")
+        .append(depSet.isOutputIncluded())
+        .append(System.lineSeparator())
         .append("excludeautomatic: ")
         .append(depSet.isAutomaticExcluded())
         .append(System.lineSeparator())

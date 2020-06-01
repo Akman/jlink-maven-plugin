@@ -101,8 +101,9 @@ import org.codehaus.plexus.util.FileUtils;
 public class JlinkMojo extends AbstractMojo {
 
   private static final String TOOL_NAME = "jlink";
+  private static final String JAVA_NAME = "java";
 
-  private static final String PLUGIN_NAME = "jlink-maven-plugin";
+  private static final String PLUGIN_NAME = TOOL_NAME + "-maven-plugin";
 
   private static final String JDK = "jdk";
   private static final String JAVA_HOME = "JAVA_HOME";
@@ -143,6 +144,18 @@ public class JlinkMojo extends AbstractMojo {
    * Fileset manager.
    */
   private FileSetManager fileSetManager;
+
+  /**
+   * All JDK toolchains available in user settings
+   * independently from maven-toolchains-plugin
+   */
+  private List<Toolchain> toolchains;
+
+  /**
+   * JDK toolchain from build context,
+   * i.e. the toolchain selected by maven-toolchains-plugin
+   */
+  private Toolchain toolchain;
 
   /**
    * Resolved project dependencies.
@@ -207,10 +220,10 @@ public class JlinkMojo extends AbstractMojo {
   private MavenSession session;
 
   /**
-   * Specifies the path to the JDK providing the tools needed.
+   * Specifies the path to the JDK providing the tool needed.
    */
   @Parameter
-  private File jdkhome;
+  private File toolhome;
 
   /**
    * Specifies the location in which modular dependencies will be placed.
@@ -727,111 +740,170 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Get tool executable path.
    *
-   * @return tool executable path from the registered toolchain
-   *         or system path or null if it not found
+   * Find tool executable in following order:
+   * - toolhome (user specified JDK home directory in configuration)
+   * - toolchain (user specified JDK home directory by toolchains-plugin)
+   * - javahome (JDK home directory specified by system variable JAVA_HOME)
    *
-   * @throws MojoExecutionException
+   * @param toolName the name of the tool (without extension)
+   *
+   * @return tool executable path from JDK home directory specified in
+   *         configuration or by toolchain plugin or by system variable
+   *         JAVA_HOME or null
    */
-  private Path getToolExecutable() throws MojoExecutionException {
-    if (jdkhome == null) {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("JDK_HOME not specified");
-      }
-    } else {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("JDK_HOME: [" + jdkhome + "] specified");
-      }
-    }
-    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
-      throw new MojoExecutionException(
-          "Error: At least " + JavaVersion.JAVA_9
-          + " is required to use [" + TOOL_NAME + "]");
-    }
-    String toolExecutable = null;
-    // Select all jdk toolchains available in user settings
-    // independently from maven-toolchains-plugin
-    List<Toolchain>	toolchains = toolchainManager.getToolchains(
-        session, JDK, null);
-    if (toolchains == null) {
-      if (getLog().isWarnEnabled()) {
-        getLog().warn("No toolchains found");
-      }
-    } else {
-      toolchains.forEach(tc -> {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Found toolchain: " + tc);
+  private Path getToolExecutable(String toolName)
+      throws MojoExecutionException {
+    Path toolExecutable = null;
+    // toolhome
+    javaHomeDir = toolhome;
+    if (javaHomeDir != null) {
+      toolExecutable =
+          resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
+      if (toolExecutable != null) {
+        try {
+          toolExecutable = toolExecutable.toRealPath();
+          if (getLog().isInfoEnabled()) {
+            getLog().info("Executable (toolhome) for [" + toolName
+                + "]: " + toolExecutable);
+            getLog().info("Home directory (toolhome) for [" + toolName
+                + "]: " + javaHomeDir);
+          }
+          return toolExecutable;
+        } catch (IOException ex) {
+          if (getLog().isErrorEnabled()) {
+            getLog().error("Unable to resolve executable (toolhome) for ["
+                + toolName + "]: " + toolExecutable, ex);
+          }
+          toolExecutable = null;
         }
-      });
+      }
     }
-    // Retrieve jdk toolchain from build context,
-    // i.e. the toolchain selected by maven-toolchains-plugin
-    Toolchain toolchain =
-        toolchainManager.getToolchainFromBuildContext(JDK, session);
-    if (toolchain == null) {
-      if (getLog().isWarnEnabled()) {
-        getLog().warn("Toolchain in [" + PLUGIN_NAME + "] not specified");
-        getLog().warn("JAVA_HOME (toolchain) not found");
+    javaHomeDir = null;
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Executable (toolhome) for [" + toolName
+          + "] not found");
+    }
+    // toolchain
+    if (toolchain != null) {
+      String tcJavaHome =
+          DefaultJavaToolChain.class.cast(toolchain).getJavaHome();
+      if (tcJavaHome != null) {
+        String tcToolExecutable = toolchain.findTool(toolName);
+        if (tcToolExecutable != null) {
+          javaHomeDir = new File(tcJavaHome);
+          toolExecutable = Paths.get(tcToolExecutable);
+          try {
+            toolExecutable = toolExecutable.toRealPath();
+            if (getLog().isInfoEnabled()) {
+              getLog().info("Executable (toolchain) for [" + toolName
+                  + "]: " + toolExecutable);
+              getLog().info("Home directory (toolchain) for [" + toolName
+                  + "]: " + javaHomeDir);
+            }
+            return toolExecutable;
+          } catch (IOException ex) {
+            if (getLog().isErrorEnabled()) {
+              getLog().error("Unable to resolve executable (toolchain) for ["
+                  + toolName + "]: " + toolExecutable, ex);
+            }
+            toolExecutable = null;
+          }
+        }
       }
-      javaHomeDir = null;
-    } else {
-      if (getLog().isInfoEnabled()) {
-        getLog().info("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
+    }
+    javaHomeDir = null;
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Executable (toolchain) for [" + toolName
+          + "] not found");
+    }
+    // javahome
+    javaHomeDir = getJavaHome();
+    if (javaHomeDir != null) {
+      toolExecutable =
+          resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
+      if (toolExecutable != null) {
+        try {
+          toolExecutable = toolExecutable.toRealPath();
+          if (getLog().isInfoEnabled()) {
+            getLog().info("Executable (javahome) for [" + toolName
+                + "]: " + toolExecutable);
+            getLog().info("Home directory (javahome) for [" + toolName
+                + "]: " + javaHomeDir);
+          }
+          return toolExecutable;
+        } catch (IOException ex) {
+          if (getLog().isErrorEnabled()) {
+            getLog().error("Unable to resolve executable (javahome) for ["
+                + toolName + "]: " + toolExecutable, ex);
+          }
+          toolExecutable = null;
+        }
       }
-      if (toolchain instanceof DefaultJavaToolChain) {
-        javaHomeDir = new File(
-            DefaultJavaToolChain.class.cast(toolchain).getJavaHome());
-        if (getLog().isInfoEnabled()) {
-          getLog().info("JAVA_HOME (toolchain): " + javaHomeDir.toString());
+    }
+    javaHomeDir = null;
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Executable (javahome) for [" + toolName
+          + "] not found");
+    }
+    return toolExecutable;
+  }
+
+  /**
+   * Resolve the tool path against the specified home dir.
+   *
+   * @param toolName the name of the tool (without extension)
+   * @param toolHomeDir the home path of the tool
+   * @param toolBinDirName the name of subdirectory where the tool live
+   *
+   * @return tool executable path or null
+   */
+  private Path resolveToolPath(String toolName, Path toolHomeDir,
+      String toolBinDirName) {
+    if (toolHomeDir == null || toolName == null || toolName.isEmpty()) {
+      return null;
+    }
+    Path toolBinDir = toolHomeDir;
+    if (toolBinDirName != null && !toolBinDirName.isEmpty()) {
+      toolBinDir = toolHomeDir.resolve(toolBinDirName);
+    }
+    if (!Files.exists(toolBinDir) || !Files.isDirectory(toolBinDir)) {
+      return null;
+    }
+    return findToolExecutable(toolName, List.of(toolBinDir));
+  }
+
+  /**
+   * Find tool executable under specified paths.
+   *
+   * @param toolName the name of the tool (without extension)
+   * @param paths the list of path under which the tool will be find
+   *
+   * @return tool executable path or null if it not found
+   */
+  private Path findToolExecutable(String toolName, List<Path> paths) {
+    Path toolExecutable = null;
+    Path toolFile = null;
+    List<String> exts = getPathExt();
+    for (Path path : paths) {
+      if (SystemUtils.IS_OS_WINDOWS) {
+        for (String ext : exts) {
+          toolFile = path.resolve(toolName.concat(ext));
+          if (Files.isExecutable(toolFile)
+              && !Files.isDirectory(toolFile)) {
+            toolExecutable = toolFile;
+            break;
+          }
         }
       } else {
-        javaHomeDir = null;
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("JAVA_HOME (toolchain) not found");
-        }
-      }
-      toolExecutable = toolchain.findTool(TOOL_NAME);
-      if (toolExecutable == null) {
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("Executable (toolchain) for [" + TOOL_NAME
-              + "] not found");
-        }
-      } else {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Executable (toolchain) for [" + TOOL_NAME
-              + "]: " + toolExecutable);
+        toolFile = path.resolve(toolName);
+        if (Files.isExecutable(toolFile)
+            && !Files.isDirectory(toolFile)) {
+          toolExecutable = toolFile;
+          break;
         }
       }
     }
-    // If toolchain is not specified/used try get tool executable
-    // from the system path or system JAVA_HOME
-    if (toolExecutable == null) {
-      Path javaHome = getJavaHome();
-      if (javaHome == null) {
-        javaHomeDir = null;
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("JAVA_HOME (system) not found");
-        }
-      } else {
-        javaHomeDir = javaHome.toFile();
-        if (getLog().isInfoEnabled()) {
-          getLog().info("JAVA_HOME (system): " + javaHome.toString());
-        }
-      }
-      toolExecutable = findToolExecutable();
-      if (toolExecutable == null) {
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("Executable (system) for [" + TOOL_NAME
-              + "] not found");
-        }
-        return null;
-      } else {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Executable (system) for [" + TOOL_NAME
-              + "]: " + toolExecutable);
-        }
-      }
-    }
-    return Paths.get(toolExecutable);
+    return toolExecutable;
   }
 
   /**
@@ -839,8 +911,8 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @return path from the system environment variable JAVA_HOME
    */
-  private Path getJavaHome() {
-    Path path = null;
+  private File getJavaHome() {
+    File path = null;
     String javaHome = System.getenv(JAVA_HOME);
     if (javaHome != null) {
       javaHome = javaHome.trim();
@@ -849,7 +921,7 @@ public class JlinkMojo extends AbstractMojo {
       }
     }
     if (javaHome != null) {
-      path = Paths.get(javaHome);
+      path = new File(javaHome);
     }
     return path;
   }
@@ -900,36 +972,6 @@ public class JlinkMojo extends AbstractMojo {
       }
     }
     return new ArrayList<String>();
-  }
-
-  /**
-   * Find tool executable path under JAVA_HOME or/and system path.
-   *
-   * @return tool executable path or null if it not found
-   */
-  private String findToolExecutable() {
-    List<String> exts = getPathExt();
-    List<Path> paths = getSystemPath();
-    Path javaHome = getJavaHome();
-    if (javaHome != null) {
-      paths.add(0, javaHome.resolve(JAVA_HOME_BIN));
-    }
-    for (Path path : paths) {
-      if (SystemUtils.IS_OS_WINDOWS) {
-        for (String ext : exts) {
-          Path tool = path.resolve(TOOL_NAME.concat(ext));
-          if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
-            return tool.toString();
-          }
-        }
-      } else {
-        Path tool = path.resolve(TOOL_NAME);
-        if (Files.isExecutable(tool) && !Files.isDirectory(tool)) {
-          return tool.toString();
-        }
-      }
-    }
-    return null;
   }
 
   /**
@@ -1127,10 +1169,8 @@ public class JlinkMojo extends AbstractMojo {
    * Fetch classpath elements.
    *
    * @return classpath elements
-   *
-   * @throws MojoExecutionException
    */
-  private List<File> fetchClasspathElements() throws MojoExecutionException {
+  private List<File> fetchClasspathElements() {
     List<File> result = projectDependencies.getClasspathElements()
         .stream()
         .filter(Objects::nonNull)
@@ -1142,30 +1182,6 @@ public class JlinkMojo extends AbstractMojo {
               .map(file -> file.toString())
               .collect(Collectors.joining(System.lineSeparator())));
     }
-    for (File file : result) {
-      try {
-        if (file.exists() && !file.isDirectory()) {
-          FileUtils.copyFileToDirectory(file, libsdir);
-          if (getLog().isDebugEnabled()) {
-            getLog().debug("Copied classpath element: ["
-                + file.toString() + "]");
-          }
-        } else {
-          if (getLog().isDebugEnabled()) {
-            getLog().debug("Skiped classpath element (directory): ["
-                + file.toString() + "]");
-          }
-        }
-      } catch (IOException | IllegalArgumentException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error("Unable to copy classpath element: ["
-              + file.toString() + "]", ex);
-        }
-        throw new MojoExecutionException(
-            "Error: Unable to copy classpath element: ["
-                + file.toString() + "]", ex);
-      }
-    }
     return result;
   }
 
@@ -1173,10 +1189,8 @@ public class JlinkMojo extends AbstractMojo {
    * Fetch modulepath elements.
    *
    * @return modulepath elements
-   *
-   * @throws MojoExecutionException
    */
-  private List<File> fetchModulepathElements() throws MojoExecutionException {
+  private List<File> fetchModulepathElements() {
     List<File> result = projectDependencies.getModulepathElements().keySet()
         .stream()
         .filter(Objects::nonNull)
@@ -1200,30 +1214,6 @@ public class JlinkMojo extends AbstractMojo {
                           "[*] APPLICATION" : "[!] LIBRARY")
                       : ""))
               .collect(Collectors.joining(System.lineSeparator())));
-    }
-    for (File file : result) {
-      try {
-        if (file.exists() && !file.isDirectory()) {
-          FileUtils.copyFileToDirectory(file, modsdir);
-          if (getLog().isDebugEnabled()) {
-            getLog().debug("Copied modulepath element: ["
-                + file.toString() + "]");
-          }
-        } else {
-          if (getLog().isDebugEnabled()) {
-            getLog().debug("Skiped modulepath element (directory): ["
-                + file.toString() + "]");
-          }
-        }
-      } catch (IOException | IllegalArgumentException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error("Unable to copy modulepath element: ["
-              + file.toString() + "]", ex);
-        }
-        throw new MojoExecutionException(
-            "Error: Unable to copy modulepath element: ["
-                + file.toString() + "]", ex);
-      }
     }
     return result;
   }
@@ -1417,12 +1407,12 @@ public class JlinkMojo extends AbstractMojo {
 
     if (descriptor == null) {
       if (getLog().isWarnEnabled()) {
-        getLog().warn("Missing module descriptor: " + file.toString());
+        getLog().warn("Missing module descriptor: " + file);
       }
     } else {
       if (descriptor.isAutomatic()) {
         if (getLog().isInfoEnabled()) {
-          getLog().info("Found automatic module: " + file.toString());
+          getLog().info("Found automatic module: " + file);
         }
       }
     }
@@ -1435,32 +1425,32 @@ public class JlinkMojo extends AbstractMojo {
       // include automatic module by default
       if (descriptor != null && descriptor.isAutomatic()) {
         if (getLog().isInfoEnabled()) {
-          getLog().info("Included automatic module: " + file.toString());
+          getLog().info("Included automatic module: " + file);
         }
       }
       // exclude output module by default
       if (file.compareTo(outputDir) == 0) {
         isIncluded = false;
         if (getLog().isInfoEnabled()) {
-          getLog().info("Excluded output module: " + file.toString());
+          getLog().info("Excluded output module: " + file);
         }
       }
     } else {
       if (descriptor != null && descriptor.isAutomatic()
           && depSet.isAutomaticExcluded()) {
         if (getLog().isInfoEnabled()) {
-          getLog().info("Excluded automatic module: " + file.toString());
+          getLog().info("Excluded automatic module: " + file);
         }
       } else {
         if (file.compareTo(outputDir) == 0) {
           if (depSet.isOutputIncluded()) {
             isIncluded = true;
             if (getLog().isInfoEnabled()) {
-              getLog().info("Included output module: " + file.toString());
+              getLog().info("Included output module: " + file);
             }
           } else {
             if (getLog().isInfoEnabled()) {
-              getLog().info("Excluded output module: " + file.toString());
+              getLog().info("Excluded output module: " + file);
             }
           }
         } else {
@@ -1934,11 +1924,72 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Fix launcher scripts.
+   * Copy files.
+   *
+   * @param files the list of files
+   * @param dir the destination directory
    *
    * @throws MojoExecutionException
    */
-  private void fixLauncherScripts() throws MojoExecutionException {
+  private void copyFiles(List<File> files, File dir)
+      throws MojoExecutionException {
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Copy files to: [" + dir + "]");
+    }
+    for (File file : files) {
+      try {
+        if (file.exists()) {
+          if (file.isDirectory()) {
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Skiped directory: [" + file + "]");
+            }
+          } else {
+            FileUtils.copyFileToDirectory(file, dir);
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Copied file: [" + file + "]");
+            }
+          }
+        }
+      } catch (IOException | IllegalArgumentException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error("Unable to copy file: [" + file + "]", ex);
+        }
+        throw new MojoExecutionException(
+            "Error: Unable to copy file: [" + file + "]", ex);
+      }
+    }
+  }
+
+  /**
+   * Get the tool version.
+   *
+   * @return the tool version or null
+   *
+   * @throws CommandLineException
+   */
+  private String getToolVersion(Path toolExecutable)
+      throws CommandLineException {
+    String toolVersion = null;
+    Commandline cmdLine = new Commandline();
+    cmdLine.setExecutable(toolExecutable.toString());
+    cmdLine.createArg().setValue("--version");
+    CommandLineUtils.StringStreamConsumer err =
+        new CommandLineUtils.StringStreamConsumer();
+    CommandLineUtils.StringStreamConsumer out =
+        new CommandLineUtils.StringStreamConsumer();
+    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
+    if (exitCode == 0) {
+      toolVersion = out.getOutput().trim() + err.getOutput().trim();
+    }
+    return toolVersion;
+  }
+
+  /**
+   * Process launcher scripts.
+   *
+   * @throws MojoExecutionException
+   */
+  private void processLauncherScripts() throws MojoExecutionException {
     if (launcher == null) {
       return;
     }
@@ -1946,6 +1997,34 @@ public class JlinkMojo extends AbstractMojo {
     if (scriptName == null) {
       return;
     }
+
+    Path nixScript = output.toPath().resolve("bin/" + scriptName);
+    Path winScript = output.toPath().resolve("bin/" + scriptName + ".bat");
+
+    if (stripnativecommands) {
+      if (Files.exists(nixScript) && !Files.isDirectory(nixScript)) {
+        try {
+          FileUtils.forceDelete(nixScript.toFile());
+        } catch (IOException ex) {
+          if (getLog().isWarnEnabled()) {
+            getLog().warn("Unable to delete launcher script: ["
+                + nixScript + "]");
+          }
+        }
+      }
+      if (Files.exists(winScript) && !Files.isDirectory(winScript)) {
+        try {
+          FileUtils.forceDelete(winScript.toFile());
+        } catch (IOException ex) {
+          if (getLog().isWarnEnabled()) {
+            getLog().warn("Unable to delete launcher script: ["
+                + winScript + "]");
+          }
+        }
+      }
+      return;
+    }
+
     String moduleName = launcher.getMainModule();
     if (moduleName == null || moduleName.isEmpty()) {
       return;
@@ -1989,28 +2068,22 @@ public class JlinkMojo extends AbstractMojo {
     data.put("args", args);
     data.put("jvmArgs", jvmArgs);
 
-    Path nixTemplate = launcher.getNixTemplate().toPath();
-    if (nixTemplate != null) {
-      Path nixScript = output.toPath().resolve("bin/" + scriptName);
-      if (Files.exists(nixScript) && !Files.isDirectory(nixScript)
-          && Files.exists(nixTemplate) && !Files.isDirectory(nixTemplate)) {
-        fixLauncherScript(nixScript, nixTemplate, data);
-      }
+    File nixTemplate = launcher.getNixTemplate();
+    if (nixTemplate != null && Files.exists(nixTemplate.toPath())
+        && !Files.isDirectory(nixTemplate.toPath())) {
+      createLauncherScript(nixScript, nixTemplate.toPath(), data);
     }
 
-    Path winTemplate = launcher.getWinTemplate().toPath();
-    if (winTemplate != null) {
-      Path winScript = output.toPath().resolve("bin/" + scriptName + ".bat");
-      if (Files.exists(winScript) && !Files.isDirectory(winScript)
-          && Files.exists(winTemplate) && !Files.isDirectory(winTemplate)) {
-        fixLauncherScript(winScript, winTemplate, data);
-      }
+    File winTemplate = launcher.getWinTemplate();
+    if (winTemplate != null && Files.exists(winTemplate.toPath())
+        && !Files.isDirectory(winTemplate.toPath())) {
+      createLauncherScript(winScript, winTemplate.toPath(), data);
     }
 
   }
 
   /**
-   * Fix launcher script.
+   * Create launcher script.
    * 
    * @see https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/StringSubstitutor.html
    *
@@ -2020,7 +2093,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @throws MojoExecutionException
    */
-  private void fixLauncherScript(Path script, Path template, Map data)
+  private void createLauncherScript(Path script, Path template, Map data)
       throws MojoExecutionException {
     if (getLog().isDebugEnabled()) {
       getLog().debug(System.lineSeparator()
@@ -2118,17 +2191,67 @@ public class JlinkMojo extends AbstractMojo {
       getLog().info("Using charset: [" + defaultCharset + "] to write files");
     }
 
+    // Resolve all available jdk toolchains
+    toolchains = toolchainManager.getToolchains(session, JDK, null);
+    if (toolchains == null) {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("No toolchains found");
+      }
+    } else {
+      toolchains.forEach(tc -> {
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Found toolchain: " + tc);
+        }
+      });
+    }
+
+    // Retrieve jdk toolchain from build context,
+    // i.e. the toolchain selected by maven-toolchains-plugin
+    toolchain = toolchainManager.getToolchainFromBuildContext(JDK, session);
+    if (toolchain == null) {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("Toolchain in [" + PLUGIN_NAME + "] not specified");
+      }
+    } else {
+      if (toolchain instanceof DefaultJavaToolChain) {
+        if (getLog().isInfoEnabled()) {
+          getLog().info("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
+        }
+      } else {
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain
+              + ", but it is not default Java toolchain");
+        }
+        toolchain = null;
+      }
+    }
+
     // Resolve JAVA_HOME and the tool executable
-    Path toolExecutable = getToolExecutable();
+    Path toolExecutable = getToolExecutable(TOOL_NAME);
     if (toolExecutable == null) {
       throw new MojoExecutionException(
           "Error: Executable for [" + TOOL_NAME + "] not found");
     }
+    // Obtain the tool version
+    String toolVersion = null;
     try {
-      toolExecutable = toolExecutable.toRealPath();
-    } catch (IOException ex) {
+      toolVersion = getToolVersion(toolExecutable);
+    } catch (CommandLineException ex) {
       throw new MojoExecutionException(
-          "Error: Executable for [" + TOOL_NAME + "] not found", ex);
+          "Error: Unable to obtain version of [" + TOOL_NAME + "]", ex);
+    }
+    if (toolVersion == null) {
+      throw new MojoExecutionException(
+          "Error: Unable to obtain version of [" + TOOL_NAME + "]");
+    }
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Version of [" + TOOL_NAME + "]: " + toolVersion);
+    }
+    // TODO: toolVersion = "13.0.2"
+    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
+      throw new MojoExecutionException(
+          "Error: At least " + JavaVersion.JAVA_9
+          + " is required to use [" + TOOL_NAME + "]");
     }
 
     // Create mods directory
@@ -2137,7 +2260,7 @@ public class JlinkMojo extends AbstractMojo {
     } catch (IOException | IllegalArgumentException ex) {
       throw new MojoExecutionException(
           "Error: Unable to create mods directory: ["
-          + modsdir.toString() + "]", ex);
+          + modsdir + "]", ex);
     }
 
     // Create libs directory
@@ -2146,12 +2269,12 @@ public class JlinkMojo extends AbstractMojo {
     } catch (IOException | IllegalArgumentException ex) {
       throw new MojoExecutionException(
           "Error: Unable to create libs directory: ["
-          + libsdir.toString() + "]", ex);
+          + libsdir + "]", ex);
     }
 
     // Delete output directory if it exists
     if (getLog().isInfoEnabled()) {
-      getLog().info("Set output directory to: [" + output.toString() + "]");
+      getLog().info("Set output directory to: [" + output + "]");
     }
     if (output.exists() && output.isDirectory()) {
       try {
@@ -2159,7 +2282,7 @@ public class JlinkMojo extends AbstractMojo {
       } catch (IOException ex) {
         throw new MojoExecutionException(
             "Error: Unable to delete output directory: ["
-            + output.toString() + "]", ex);
+            + output + "]", ex);
       }
     }
 
@@ -2169,6 +2292,10 @@ public class JlinkMojo extends AbstractMojo {
     pathExceptions = fetchPathExceptions();
     classpathElements = fetchClasspathElements();
     modulepathElements = fetchModulepathElements();
+
+    // copy dependencies
+    copyFiles(modulepathElements, modsdir);
+    copyFiles(classpathElements, libsdir);
 
     // Build command line and populate the list of the command options
     CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
@@ -2216,8 +2343,8 @@ public class JlinkMojo extends AbstractMojo {
           + exitCode);
     }
 
-    // Fix launcher scripts
-    fixLauncherScripts();
+    // Process launcher scripts
+    processLauncherScripts();
 
     // Delete temporary file
     try {
@@ -2225,7 +2352,7 @@ public class JlinkMojo extends AbstractMojo {
     } catch (IOException ex) {
       throw new MojoExecutionException(
           "Error: Unable to delete temporary file: ["
-          + cmdOptsPath.toString() + "]", ex);
+          + cmdOptsPath + "]", ex);
     }
 
   }

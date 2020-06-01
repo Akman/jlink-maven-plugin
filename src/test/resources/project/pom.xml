@@ -39,9 +39,9 @@
         <version>0.1.0-SNAPSHOT</version>
         <configuration>
           <!--
-            Specifies the path to the JDK providing the tools needed.
+            Specifies the JDK (home path) which provides the tool needed.
           -->
-          <jdkhome>${java.home}</jdkhome>
+          <toolhome>${java.home}</toolhome>
           <!--
             Specifies the location in which modular dependencies
             will be placed.

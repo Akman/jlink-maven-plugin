@@ -141,12 +141,10 @@
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.2.0</version>
         </plugin>
-        <!--
         <plugin>
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.1.2</version>
         </plugin>
-        -->
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
           <version>2.8.2</version>
@@ -174,9 +172,9 @@
             </goals>
             <configuration>
               <!--
-                Specifies the path to the JDK providing the tools needed.
+                Specifies the JDK (home path) which provides the tool needed.
               -->
-              <jdkhome>${env.JAVA_HOME}</jdkhome>
+              <!--toolhome>${env.JAVA_HOME}</toolhome-->
               <!--
                 Specifies the location in which modular dependencies
                 will be placed.
@@ -211,11 +209,9 @@
                                  and regex patterns only for module names
               -->
               <modulepath>
-                <!--
                 <pathelements>
                   <pathelement>${mods.dir}</pathelement>
                 </pathelements>
-                -->
                 <!--
                 <dirsets>
                   <dirset>
@@ -226,17 +222,17 @@
                   </dirset>
                 </dirsets>
                 -->
+                <!--
                 <dependencysets>
                   <dependencyset>
                     <includeoutput>true</includeoutput>
                     <excludeautomatic>true</excludeautomatic>
-                    <!--
                     <excludenames>
                       <excludename>javafx\..+Empty</excludename>
                     </excludenames>
-                    -->
                   </dependencyset>
                 </dependencysets>
+                -->
               </modulepath>
               <!--
                 Specifies the modules names (names of root modules) to add to
@@ -247,7 +243,7 @@
               </addmodules>
               <!--
                 Specifies the location of the generated runtime image.
-                Default value: ${project.build.directory}/runtime.
+                Default value: ${project.build.directory}/jlink/image.
               -->
               <output>${image.dir}</output>
               <!--
@@ -272,7 +268,7 @@
               <!--
                 Save jlink options in the given file.
               -->
-              <saveopts>${build.dir}/image-opts</saveopts>
+              <!--saveopts>${build.dir}/image-opts</saveopts-->
               <!--
                 The last plugin allowed to sort resources.
               -->
@@ -418,7 +414,7 @@
                 Exclude native commands (such as java/java.exe) from the image.
                 Default value: false.
               -->
-              <stripnativecommands>false</stripnativecommands>
+              <stripnativecommands>true</stripnativecommands>
               <!--
                 De-duplicate all legal notices. If true is specified then
                 it will be an error if two files of the same filename
@@ -581,23 +577,6 @@
           </annotationProcessorPaths>
         </configuration>
       </plugin>
-      <!--
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${mods.dir}</outputDirectory>
-              <includeScope>runtime</includeScope>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      -->
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>

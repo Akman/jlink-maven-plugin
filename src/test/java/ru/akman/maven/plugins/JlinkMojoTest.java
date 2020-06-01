@@ -102,13 +102,6 @@ public class JlinkMojoTest {
   // parameters
 
   @Test
-  public void testMojoHasJavaHome() throws Exception {
-    File jdkhome =
-        (File) rule.getVariableValueFromObject(mojo, "jdkhome");
-    assertNull("", jdkhome);
-  }
-
-  @Test
   public void testMojoHasModsDir() throws Exception {
     File modsdir =
         (File) rule.getVariableValueFromObject(mojo, "modsdir");
