@@ -1,12 +1,12 @@
 /*
   Copyright 2020 Alexander Kapitman
-  
+
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
-  
+
     http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,7 +83,7 @@ import org.codehaus.plexus.util.FileUtils;
   defaultPhase = LifecyclePhase.PACKAGE,
   requiresDependencyResolution = ResolutionScope.RUNTIME
   // requiresProject = true
-  // aggregator = <false|true>, 
+  // aggregator = <false|true>,
   // configurator = "<role hint>",
   // executionStrategy = "<once-per-session|always>",
   // inheritByDefault = <true|false>,
@@ -103,6 +103,8 @@ public class JlinkMojo extends AbstractMojo {
   private static final String TOOL_NAME = "jlink";
   private static final String JAVA_NAME = "java";
 
+  private static final String VERSION_PATTERN = "^(\\d+)\\.(\\d+).*";
+
   private static final String PLUGIN_NAME = TOOL_NAME + "-maven-plugin";
 
   private static final String JDK = "jdk";
@@ -112,7 +114,7 @@ public class JlinkMojo extends AbstractMojo {
   private static final String PATHEXT = "PATHEXT";
 
   private static final String OPTS_FILE = TOOL_NAME + ".opts";
-  
+
   private static final String DESCRIPTOR_NAME = "module-info.class";
 
   /**
@@ -171,21 +173,31 @@ public class JlinkMojo extends AbstractMojo {
    * Path exceptions (not resolved dependencies)
    */
   private List<File> pathExceptions;
-  
+
   /**
    * Classpath elements (classpath dependencies)
    */
   private List<File> classpathElements;
-  
+
   /**
    * Modulepath elements (modulepath dependencies)
    */
   private List<File> modulepathElements;
-  
+
   /**
-   * Used JAVA_HOME.
+   * Tool home directory.
    */
-  private File javaHomeDir;
+  private File toolHomeDir;
+
+  /**
+   * Tool version.
+   */
+  private String toolVersion;
+
+  /**
+   * Tool corresponding java version.
+   */
+  private JavaVersion toolJavaVersion;
 
   /**
    * Toolchain manager.
@@ -320,14 +332,14 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Specifies the modules names (names of root modules) to add to
    * the runtime image. Their transitive dependencies will add too.
-   * 
+   *
    * <pre>
    * &lt;addmodules&gt;
    *   &lt;addmodule&gt;java.base&lt;/addmodule&gt;
    *   &lt;addmodule&gt;org.example.rootmodule&lt;/addmodule&gt;
    * &lt;/addmodules&gt;
    * </pre>
-   * 
+   *
    * The jlink CLI is: <code>--add-modules module [, module...]</code>
    */
   @Parameter
@@ -353,14 +365,14 @@ public class JlinkMojo extends AbstractMojo {
    * It used to limit resolve any services other than
    * the selected services, if the property "bindservices"
    * set to true.
-   * 
+   *
    * <pre>
    * &lt;limitmodules&gt;
    *   &lt;limitmodule&gt;java.base&lt;/limitmodule&gt;
    *   &lt;limitmodule&gt;org.example.limitmodule&lt;/limitmodule&gt;
    * &lt;/limitmodules&gt;
    * </pre>
-   * 
+   *
    * The jlink CLI is: <code>--limit-modules module [, module...]</code>
    */
   @Parameter
@@ -369,13 +381,13 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Suggest providers that implement the given service types
    * from the module path.
-   * 
+   *
    * <pre>
    * &lt;suggestproviders&gt;
    *   &lt;suggestprovider&gt;provider.name&lt;/suggestprovider&gt;
    * &lt;/suggestproviders&gt;
    * </pre>
-   * 
+   *
    * The jlink CLI is: <code>--suggest-providers [name, ...]</code>
    */
   @Parameter
@@ -499,14 +511,14 @@ public class JlinkMojo extends AbstractMojo {
    * Disables the specified plug-ins.
    * For a complete list of all available plug-ins,
    * run the command: <code>jlink --list-plugins</code>
-   * 
+   *
    * <pre>
    * &lt;disableplugins&gt;
    *   &lt;disableplugin&gt;compress&lt;/disableplugin&gt;
    *   &lt;disableplugin&gt;dedup-legal-notices&lt;/disableplugin&gt;
    * &lt;/disableplugins&gt;
    * </pre>
-   * 
+   *
    * The jlink CLI is: <code>--disable-plugin pluginname</code>
    */
   @Parameter
@@ -547,13 +559,13 @@ public class JlinkMojo extends AbstractMojo {
    */
   @Parameter
   private Compress compress;
-  
+
   /**
    * Includes the list of locales where langtag is
    * a BCP 47 language tag. This option supports locale matching as
    * defined in RFC 4647. CAUTION! Ensure that you specified:
    * <code>‒‒add-modules jdk.localedata</code> when using this property.
-   * 
+   *
    * <pre>
    * &lt;includelocales&gt;
    *   &lt;includelocale&gt;en&lt;/includelocale&gt;
@@ -561,12 +573,12 @@ public class JlinkMojo extends AbstractMojo {
    *   &lt;includelocale&gt;*-IN&lt;/includelocale&gt;
    * &lt;/includelocales&gt;
    * </pre>
-   * 
+   *
    * The jlink CLI is: <code>--include-locales=langtag[,langtag ...]</code>
    */
   @Parameter
   private List<String> includelocales;
-  
+
   /**
    * Orders the specified paths in priority order.
    *
@@ -755,10 +767,10 @@ public class JlinkMojo extends AbstractMojo {
       throws MojoExecutionException {
     Path toolExecutable = null;
     // toolhome
-    javaHomeDir = toolhome;
-    if (javaHomeDir != null) {
+    toolHomeDir = toolhome;
+    if (toolHomeDir != null) {
       toolExecutable =
-          resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
+          resolveToolPath(toolName, toolHomeDir.toPath(), JAVA_HOME_BIN);
       if (toolExecutable != null) {
         try {
           toolExecutable = toolExecutable.toRealPath();
@@ -766,7 +778,7 @@ public class JlinkMojo extends AbstractMojo {
             getLog().info("Executable (toolhome) for [" + toolName
                 + "]: " + toolExecutable);
             getLog().info("Home directory (toolhome) for [" + toolName
-                + "]: " + javaHomeDir);
+                + "]: " + toolHomeDir);
           }
           return toolExecutable;
         } catch (IOException ex) {
@@ -778,7 +790,7 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
     }
-    javaHomeDir = null;
+    toolHomeDir = null;
     if (getLog().isDebugEnabled()) {
       getLog().debug("Executable (toolhome) for [" + toolName
           + "] not found");
@@ -790,7 +802,7 @@ public class JlinkMojo extends AbstractMojo {
       if (tcJavaHome != null) {
         String tcToolExecutable = toolchain.findTool(toolName);
         if (tcToolExecutable != null) {
-          javaHomeDir = new File(tcJavaHome);
+          toolHomeDir = new File(tcJavaHome);
           toolExecutable = Paths.get(tcToolExecutable);
           try {
             toolExecutable = toolExecutable.toRealPath();
@@ -798,7 +810,7 @@ public class JlinkMojo extends AbstractMojo {
               getLog().info("Executable (toolchain) for [" + toolName
                   + "]: " + toolExecutable);
               getLog().info("Home directory (toolchain) for [" + toolName
-                  + "]: " + javaHomeDir);
+                  + "]: " + toolHomeDir);
             }
             return toolExecutable;
           } catch (IOException ex) {
@@ -811,16 +823,16 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
     }
-    javaHomeDir = null;
+    toolHomeDir = null;
     if (getLog().isDebugEnabled()) {
       getLog().debug("Executable (toolchain) for [" + toolName
           + "] not found");
     }
     // javahome
-    javaHomeDir = getJavaHome();
-    if (javaHomeDir != null) {
+    toolHomeDir = getJavaHome();
+    if (toolHomeDir != null) {
       toolExecutable =
-          resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
+          resolveToolPath(toolName, toolHomeDir.toPath(), JAVA_HOME_BIN);
       if (toolExecutable != null) {
         try {
           toolExecutable = toolExecutable.toRealPath();
@@ -828,7 +840,7 @@ public class JlinkMojo extends AbstractMojo {
             getLog().info("Executable (javahome) for [" + toolName
                 + "]: " + toolExecutable);
             getLog().info("Home directory (javahome) for [" + toolName
-                + "]: " + javaHomeDir);
+                + "]: " + toolHomeDir);
           }
           return toolExecutable;
         } catch (IOException ex) {
@@ -840,7 +852,7 @@ public class JlinkMojo extends AbstractMojo {
         }
       }
     }
-    javaHomeDir = null;
+    toolHomeDir = null;
     if (getLog().isDebugEnabled()) {
       getLog().debug("Executable (javahome) for [" + toolName
           + "] not found");
@@ -1101,8 +1113,8 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     // this is used to extract the module name
-    if (javaHomeDir != null) {
-      request.setJdkHome(javaHomeDir);
+    if (toolHomeDir != null) {
+      request.setJdkHome(toolHomeDir);
     }
 
     // resolve project dependencies
@@ -1749,7 +1761,7 @@ public class JlinkMojo extends AbstractMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_13)) {
+      if (!toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {
         stripjavadebugattributes = false;
         if (getLog().isWarnEnabled()) {
           getLog().warn("Parameter [--strip-java-debug-attributes] skiped, "
@@ -1969,7 +1981,7 @@ public class JlinkMojo extends AbstractMojo {
    */
   private String getToolVersion(Path toolExecutable)
       throws CommandLineException {
-    String toolVersion = null;
+    String version = null;
     Commandline cmdLine = new Commandline();
     cmdLine.setExecutable(toolExecutable.toString());
     cmdLine.createArg().setValue("--version");
@@ -1979,9 +1991,9 @@ public class JlinkMojo extends AbstractMojo {
         new CommandLineUtils.StringStreamConsumer();
     int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
     if (exitCode == 0) {
-      toolVersion = out.getOutput().trim() + err.getOutput().trim();
+      version = out.getOutput().trim() + err.getOutput().trim();
     }
-    return toolVersion;
+    return version;
   }
 
   /**
@@ -2084,7 +2096,7 @@ public class JlinkMojo extends AbstractMojo {
 
   /**
    * Create launcher script.
-   * 
+   *
    * @see https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/StringSubstitutor.html
    *
    * @param script the launcher script file path
@@ -2128,6 +2140,39 @@ public class JlinkMojo extends AbstractMojo {
           "Unable to write to the launcher script file: ["
           + script + "]", ex);
     }
+  }
+
+  /**
+   * Get Java version corresponding to the tool version passed in.
+   *
+   * @param version the tool version, not null
+   *
+   * @return the corresponding Java version matching the tool version
+   */
+  private JavaVersion getCorrespondingJavaVersion(String version) {
+    if (version == null) {
+      throw new NullPointerException();
+    }
+    Matcher versionMatcher = Pattern.compile(VERSION_PATTERN)
+        .matcher(version);
+    if (!versionMatcher.matches()) {
+      throw new IllegalArgumentException("Invalid version format");
+    }
+    int majorVersion = 0;
+    int minorVersion = 0;
+    try {
+      majorVersion = Integer.valueOf(versionMatcher.group(1));
+      minorVersion = Integer.valueOf(versionMatcher.group(2));
+    } catch (NumberFormatException ex) {
+      throw new IllegalArgumentException("Invalid version format", ex);
+    }
+    if (majorVersion < 2) {
+      return JavaVersion.valueOf("JAVA_" + majorVersion + "_" + minorVersion);
+    }
+    if (majorVersion > 8) {
+      return JavaVersion.valueOf("JAVA_" + majorVersion);
+    }
+    throw new IllegalArgumentException("Invalid version format");
   }
 
   /**
@@ -2226,14 +2271,14 @@ public class JlinkMojo extends AbstractMojo {
       }
     }
 
-    // Resolve JAVA_HOME and the tool executable
+    // Resolve the tool home directory and executable file
     Path toolExecutable = getToolExecutable(TOOL_NAME);
     if (toolExecutable == null) {
       throw new MojoExecutionException(
           "Error: Executable for [" + TOOL_NAME + "] not found");
     }
+
     // Obtain the tool version
-    String toolVersion = null;
     try {
       toolVersion = getToolVersion(toolExecutable);
     } catch (CommandLineException ex) {
@@ -2247,8 +2292,22 @@ public class JlinkMojo extends AbstractMojo {
     if (getLog().isInfoEnabled()) {
       getLog().info("Version of [" + TOOL_NAME + "]: " + toolVersion);
     }
-    // TODO: toolVersion = "13.0.2"
-    if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) {
+
+    // Obtain the corresponding java version matching the tool version
+    try {
+      toolJavaVersion = getCorrespondingJavaVersion(toolVersion);
+    } catch (IllegalArgumentException ex) {
+      throw new MojoExecutionException(
+          "Error: Unable to obtain corresponding java version of ["
+              + TOOL_NAME + "]", ex);
+    }
+    if (getLog().isInfoEnabled()) {
+      getLog().info("Version (corresponding java version) of [" + TOOL_NAME
+          + "]: " + toolJavaVersion);
+    }
+
+    // Check version
+    if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {
       throw new MojoExecutionException(
           "Error: At least " + JavaVersion.JAVA_9
           + " is required to use [" + TOOL_NAME + "]");
