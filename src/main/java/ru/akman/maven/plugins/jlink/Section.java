@@ -14,13 +14,12 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
 /**
- * Byte order
+ * JMOD Section
  */
-public enum Endian {
-  NATIVE,
-  LITTLE,
-  BIG
+public enum Section {
+  MAN,
+  HEADERS
 }

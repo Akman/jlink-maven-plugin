@@ -14,69 +14,52 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
 import java.io.IOException;
 import java.io.File;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.function.Function;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.JavaVersion;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
-import org.apache.maven.shared.model.fileset.util.FileSetManager;
-import org.apache.maven.toolchain.java.DefaultJavaToolChain;
-import org.apache.maven.toolchain.ToolchainManager;
-import org.apache.maven.toolchain.Toolchain;
 import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
 import org.codehaus.plexus.languages.java.jpms.LocationManager;
 import org.codehaus.plexus.languages.java.jpms.ModuleNameSource;
 import org.codehaus.plexus.languages.java.jpms.ResolvePathsRequest;
 import org.codehaus.plexus.languages.java.jpms.ResolvePathsResult;
-import org.codehaus.plexus.util.cli.Arg;
 import org.codehaus.plexus.util.cli.Commandline;
 import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.FileUtils;
+import ru.akman.maven.plugins.BaseToolMojo;
+import ru.akman.maven.plugins.CommandLineBuilder;
+import ru.akman.maven.plugins.CommandLineOption;
+import ru.akman.maven.plugins.Utils;
 
 /**
  * The `jlink` goal lets you create a custom runtime image with
  * the jlink tool introduced in Java 9. It used to link a set of modules,
  * along with their transitive dependences.
- *
- * <a href="https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html">The jlink tool official description</a>.
- * <a href="http://openjdk.java.net/jeps/220">JEP 220: Modular Run-Time Images</a>.
  */
 @Mojo(
   name = "jlink",
@@ -98,66 +81,87 @@ import org.codehaus.plexus.util.FileUtils;
   // goal = "<goal-name>",
   // lifecycle = "<lifecycle-id>"
 )
-public class JlinkMojo extends AbstractMojo {
+public class JlinkMojo extends BaseToolMojo {
 
+  /**
+   * The name of subdirectory where the tool live
+   */
+  private static final String TOOL_HOME_BIN = "bin";
+
+  /**
+   * The tool name.
+   */
   private static final String TOOL_NAME = "jlink";
-  private static final String JAVA_NAME = "java";
-
-  private static final String VERSION_PATTERN = "^(\\d+)\\.(\\d+).*";
-
+  
+  /**
+   * The plugin name.
+   */
   private static final String PLUGIN_NAME = TOOL_NAME + "-maven-plugin";
 
-  private static final String JDK = "jdk";
-  private static final String JAVA_HOME = "JAVA_HOME";
-  private static final String JAVA_HOME_BIN = "bin";
-  private static final String PATH = "PATH";
-  private static final String PATHEXT = "PATHEXT";
-
+  /**
+   * Filename for temporary file contains the tool options.
+   */
   private static final String OPTS_FILE = TOOL_NAME + ".opts";
-
+  
+  /**
+   * Filename of a module descriptor.
+   */
   private static final String DESCRIPTOR_NAME = "module-info.class";
 
-  /**
-   * Project base directory (that containing the pom.xml file).
-   */
-  private File baseDir;
-
-  /**
-   * Project build directory (${project.basedir}/target).
-   */
-  private File buildDir;
-
-  /**
-   * Project output directory (${project.build.directory}/classes).
-   */
-  private File outputDir;
-
-  /**
-   * Project properties.
-   */
-  private Properties properties;
-
-  /**
-   * Default charset (value of project.build.sourceEncoding)
-   */
-  private Charset defaultCharset = StandardCharsets.UTF_8;
-
-  /**
-   * Fileset manager.
-   */
-  private FileSetManager fileSetManager;
-
-  /**
+  /*
+   * Following fields inherit from BaseToolMojo
+   * ==========================================
+   *
+   * Maven project.
+   * MavenProject project;
+   *
+   * Maven session.
+   * MavenSession session;
+   *
    * All JDK toolchains available in user settings
-   * independently from maven-toolchains-plugin
-   */
-  private List<Toolchain> toolchains;
-
-  /**
+   * independently from maven-toolchains-plugin.
+   * List<Toolchain> toolchains;
+   *
    * JDK toolchain from build context,
-   * i.e. the toolchain selected by maven-toolchains-plugin
+   * i.e. the toolchain selected by maven-toolchains-plugin.
+   * Toolchain toolchain;
+   *
+   * Toolchain manager.
+   * ToolchainManager toolchainManager;
+   *
+   * Build plugin manager.
+   * BuildPluginManager pluginManager;
+   *
+   * Fileset manager.
+   * FileSetManager fileSetManager;
+   *
+   * Project properties.
+   * Properties properties;
+   *
+   * Default charset (${project.build.sourceEncoding}).
+   * Charset sourceEncoding = Charset.defaultCharset();
+   *
+   * Project base directory (that containing the pom.xml file).
+   * File baseDir;
+   *
+   * Project build directory (${project.basedir}/target).
+   * File buildDir;
+   *
+   * Project output directory (${project.build.directory}/classes).
+   * File outputDir;
+   *
+   * Tool home directory.
+   * File toolHomeDir;
+   *
+   * Tool executable.
+   * File toolExecutable;
+   *
+   * Tool version.
+   * String toolVersion;
+   *
+   * Tool corresponding java version.
+   * JavaVersion toolJavaVersion;
    */
-  private Toolchain toolchain;
 
   /**
    * Resolved project dependencies.
@@ -165,80 +169,34 @@ public class JlinkMojo extends AbstractMojo {
   private ResolvePathsResult<File> projectDependencies;
 
   /**
-   * Resolved main module descriptor
+   * Resolved main module descriptor.
    */
   private JavaModuleDescriptor mainModuleDescriptor;
 
   /**
-   * Path exceptions (not resolved dependencies)
+   * Path exceptions (not resolved dependencies).
    */
   private List<File> pathExceptions;
 
   /**
-   * Classpath elements (classpath dependencies)
+   * Classpath elements (classpath dependencies).
    */
   private List<File> classpathElements;
 
   /**
-   * Modulepath elements (modulepath dependencies)
+   * Modulepath elements (modulepath dependencies).
    */
   private List<File> modulepathElements;
 
   /**
-   * Tool home directory.
-   */
-  private File toolHomeDir;
-
-  /**
-   * Tool version.
-   */
-  private String toolVersion;
-
-  /**
-   * Tool corresponding java version.
-   */
-  private JavaVersion toolJavaVersion;
-
-  /**
-   * Toolchain manager.
-   */
-  @Component
-  private ToolchainManager toolchainManager;
-
-  /**
-   * Location manager.
+   * JPMS location manager.
    */
   @Component
   private LocationManager locationManager;
 
   /**
-   * Maven project.
-   */
-  @Parameter(
-    defaultValue = "${project}",
-    readonly = true,
-    required = true
-  )
-  private MavenProject project;
-
-  /**
-   * Maven session.
-   */
-  @Parameter(
-    defaultValue = "${session}",
-    readonly = true,
-    required = true
-  )
-  private MavenSession session;
-
-  /**
-   * Specifies the path to the JDK providing the tool needed.
-   */
-  @Parameter
-  private File toolhome;
-
-  /**
-   * Specifies the location in which modular dependencies will be placed.
+   * Specifies the location in which modular dependencies will be copied.
+   *
    * Default value: ${project.build.directory}/jlink/mods.
    */
   @Parameter(
@@ -247,7 +205,8 @@ public class JlinkMojo extends AbstractMojo {
   private File modsdir;
 
   /**
-   * Specifies the location in which non modular dependencies will be placed.
+   * Specifies the location in which non modular dependencies will be copied.
+   *
    * Default value: ${project.build.directory}/jlink/libs.
    */
   @Parameter(
@@ -747,323 +706,15 @@ public class JlinkMojo extends AbstractMojo {
    * The jlink CLI is: <code>--vm={client|server|minimal|all}</code>
    */
   @Parameter
-  private HotSpotVM vm;
-
-  /**
-   * Get tool executable path.
-   *
-   * Find tool executable in following order:
-   * - toolhome (user specified JDK home directory in configuration)
-   * - toolchain (user specified JDK home directory by toolchains-plugin)
-   * - javahome (JDK home directory specified by system variable JAVA_HOME)
-   *
-   * @param toolName the name of the tool (without extension)
-   *
-   * @return tool executable path from JDK home directory specified in
-   *         configuration or by toolchain plugin or by system variable
-   *         JAVA_HOME or null
-   */
-  private Path getToolExecutable(String toolName)
-      throws MojoExecutionException {
-    Path toolExecutable = null;
-    // toolhome
-    toolHomeDir = toolhome;
-    if (toolHomeDir != null) {
-      toolExecutable =
-          resolveToolPath(toolName, toolHomeDir.toPath(), JAVA_HOME_BIN);
-      if (toolExecutable != null) {
-        try {
-          toolExecutable = toolExecutable.toRealPath();
-          if (getLog().isInfoEnabled()) {
-            getLog().info("Executable (toolhome) for [" + toolName
-                + "]: " + toolExecutable);
-            getLog().info("Home directory (toolhome) for [" + toolName
-                + "]: " + toolHomeDir);
-          }
-          return toolExecutable;
-        } catch (IOException ex) {
-          if (getLog().isErrorEnabled()) {
-            getLog().error("Unable to resolve executable (toolhome) for ["
-                + toolName + "]: " + toolExecutable, ex);
-          }
-          toolExecutable = null;
-        }
-      }
-    }
-    toolHomeDir = null;
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (toolhome) for [" + toolName
-          + "] not found");
-    }
-    // toolchain
-    if (toolchain != null) {
-      String tcJavaHome =
-          DefaultJavaToolChain.class.cast(toolchain).getJavaHome();
-      if (tcJavaHome != null) {
-        String tcToolExecutable = toolchain.findTool(toolName);
-        if (tcToolExecutable != null) {
-          toolHomeDir = new File(tcJavaHome);
-          toolExecutable = Paths.get(tcToolExecutable);
-          try {
-            toolExecutable = toolExecutable.toRealPath();
-            if (getLog().isInfoEnabled()) {
-              getLog().info("Executable (toolchain) for [" + toolName
-                  + "]: " + toolExecutable);
-              getLog().info("Home directory (toolchain) for [" + toolName
-                  + "]: " + toolHomeDir);
-            }
-            return toolExecutable;
-          } catch (IOException ex) {
-            if (getLog().isErrorEnabled()) {
-              getLog().error("Unable to resolve executable (toolchain) for ["
-                  + toolName + "]: " + toolExecutable, ex);
-            }
-            toolExecutable = null;
-          }
-        }
-      }
-    }
-    toolHomeDir = null;
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (toolchain) for [" + toolName
-          + "] not found");
-    }
-    // javahome
-    toolHomeDir = getJavaHome();
-    if (toolHomeDir != null) {
-      toolExecutable =
-          resolveToolPath(toolName, toolHomeDir.toPath(), JAVA_HOME_BIN);
-      if (toolExecutable != null) {
-        try {
-          toolExecutable = toolExecutable.toRealPath();
-          if (getLog().isInfoEnabled()) {
-            getLog().info("Executable (javahome) for [" + toolName
-                + "]: " + toolExecutable);
-            getLog().info("Home directory (javahome) for [" + toolName
-                + "]: " + toolHomeDir);
-          }
-          return toolExecutable;
-        } catch (IOException ex) {
-          if (getLog().isErrorEnabled()) {
-            getLog().error("Unable to resolve executable (javahome) for ["
-                + toolName + "]: " + toolExecutable, ex);
-          }
-          toolExecutable = null;
-        }
-      }
-    }
-    toolHomeDir = null;
-    if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (javahome) for [" + toolName
-          + "] not found");
-    }
-    return toolExecutable;
-  }
-
-  /**
-   * Resolve the tool path against the specified home dir.
-   *
-   * @param toolName the name of the tool (without extension)
-   * @param toolHomeDir the home path of the tool
-   * @param toolBinDirName the name of subdirectory where the tool live
-   *
-   * @return tool executable path or null
-   */
-  private Path resolveToolPath(String toolName, Path toolHomeDir,
-      String toolBinDirName) {
-    if (toolHomeDir == null || toolName == null || toolName.isEmpty()) {
-      return null;
-    }
-    Path toolBinDir = toolHomeDir;
-    if (toolBinDirName != null && !toolBinDirName.isEmpty()) {
-      toolBinDir = toolHomeDir.resolve(toolBinDirName);
-    }
-    if (!Files.exists(toolBinDir) || !Files.isDirectory(toolBinDir)) {
-      return null;
-    }
-    return findToolExecutable(toolName, List.of(toolBinDir));
-  }
-
-  /**
-   * Find tool executable under specified paths.
-   *
-   * @param toolName the name of the tool (without extension)
-   * @param paths the list of path under which the tool will be find
-   *
-   * @return tool executable path or null if it not found
-   */
-  private Path findToolExecutable(String toolName, List<Path> paths) {
-    Path toolExecutable = null;
-    Path toolFile = null;
-    List<String> exts = getPathExt();
-    for (Path path : paths) {
-      if (SystemUtils.IS_OS_WINDOWS) {
-        for (String ext : exts) {
-          toolFile = path.resolve(toolName.concat(ext));
-          if (Files.isExecutable(toolFile)
-              && !Files.isDirectory(toolFile)) {
-            toolExecutable = toolFile;
-            break;
-          }
-        }
-      } else {
-        toolFile = path.resolve(toolName);
-        if (Files.isExecutable(toolFile)
-            && !Files.isDirectory(toolFile)) {
-          toolExecutable = toolFile;
-          break;
-        }
-      }
-    }
-    return toolExecutable;
-  }
-
-  /**
-   * Get path from the system environment variable JAVA_HOME.
-   *
-   * @return path from the system environment variable JAVA_HOME
-   */
-  private File getJavaHome() {
-    File path = null;
-    String javaHome = System.getenv(JAVA_HOME);
-    if (javaHome != null) {
-      javaHome = javaHome.trim();
-      if (javaHome.isEmpty()) {
-        javaHome = null;
-      }
-    }
-    if (javaHome != null) {
-      path = new File(javaHome);
-    }
-    return path;
-  }
-
-  /**
-   * Get list of the paths registered in the system environment variable PATH.
-   *
-   * @return list of the paths registered in the system
-   *         environment variable PATH.
-   */
-  private List<Path> getSystemPath() {
-    String systemPath = System.getenv(PATH);
-    if (systemPath != null) {
-      systemPath = systemPath.trim();
-      if (systemPath.isEmpty()) {
-        systemPath = null;
-      }
-    }
-    if (systemPath == null) {
-      return new ArrayList<Path>();
-    }
-    return Stream.of(systemPath.split(File.pathSeparator))
-        .filter(s -> !s.trim().isEmpty())
-        .map(s -> Paths.get(s))
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * Get list of the registered path extensions from
-   * the system environment variable PATHEXT.
-   *
-   * @return list of the registered path extensions from the system
-   *         environment variable PATHEXT
-   */
-  private List<String> getPathExt() {
-    if (SystemUtils.IS_OS_WINDOWS) {
-      String systemPathExt = System.getenv(PATHEXT);
-      if (systemPathExt != null) {
-        systemPathExt = systemPathExt.trim();
-        if (systemPathExt.isEmpty()) {
-          systemPathExt = null;
-        }
-      }
-      if (systemPathExt != null) {
-        return Stream.of(systemPathExt.split(File.pathSeparator))
-            .filter(s -> !s.trim().isEmpty())
-            .collect(Collectors.toList());
-      }
-    }
-    return new ArrayList<String>();
-  }
-
-  /**
-   * Execute command line.
-   *
-   * @param cmdLine command line
-   * @param optsLines list of the command line options
-   *
-   * @return exit code
-   *
-   * @throws CommandLineException
-   */
-  private int execCmdLine(Commandline cmdLine, List<String> optsLines)
-      throws CommandLineException {
-    if (getLog().isDebugEnabled()) {
-      getLog().debug(CommandLineUtils.toString(cmdLine.getCommandline()));
-    }
-    CommandLineUtils.StringStreamConsumer err =
-        new CommandLineUtils.StringStreamConsumer();
-    CommandLineUtils.StringStreamConsumer out =
-        new CommandLineUtils.StringStreamConsumer();
-    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
-    String stdout = out.getOutput().trim();
-    String stderr = err.getOutput().trim();
-    if (exitCode == 0) {
-      if (getLog().isInfoEnabled() && !stdout.isEmpty()) {
-        getLog().info(System.lineSeparator()
-            + System.lineSeparator()
-            + stdout);
-      }
-      if (getLog().isInfoEnabled() && !stderr.isEmpty()) {
-        getLog().info(System.lineSeparator()
-            + System.lineSeparator()
-            + stderr);
-      }
-    } else {
-      if (getLog().isErrorEnabled()) {
-        if (!stdout.isEmpty()) {
-          getLog().error(System.lineSeparator()
-              + "Exit code: " + exitCode
-              + System.lineSeparator() + stdout);
-        }
-        if (!stderr.isEmpty()) {
-          getLog().error(System.lineSeparator()
-              + "Exit code: " + exitCode
-              + System.lineSeparator() + stderr);
-        }
-        getLog().error(System.lineSeparator()
-            + "Command line was: "
-            + CommandLineUtils.toString(cmdLine.getCommandline()));
-        getLog().error(System.lineSeparator()
-            + "Command options was: "
-            + System.lineSeparator()
-            + optsLines.stream()
-                .collect(Collectors.joining(System.lineSeparator())));
-      }
-    }
-    return exitCode;
-  }
-
-  /**
-   * Get the cause message for throwable.
-   *
-   * @param throwable the throwable
-   *
-   * @return the cause error message
-   */
-  private String getThrowableCause(Throwable throwable) {
-    while (throwable.getCause() != null) {
-      throwable = throwable.getCause();
-    }
-    return throwable.getMessage();
-  }
+  private HotSpot vm;
 
   /**
    * Resolve project dependencies.
    *
    * @return map of the resolved project dependencies
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred while resolving
+   *                                dependencies
    */
   private ResolvePathsResult<File> resolveDependencies()
       throws MojoExecutionException {
@@ -1072,14 +723,7 @@ public class JlinkMojo extends AbstractMojo {
     // including transitive ones (depends on what phases have run)
     Set<Artifact> artifacts = project.getArtifacts();
     if (getLog().isDebugEnabled()) {
-      getLog().debug(System.lineSeparator()
-          + "ARTIFACTS"
-          + System.lineSeparator()
-          + artifacts.stream()
-          .filter(Objects::nonNull)
-          .map(a -> a.getGroupId() + ":" + a.getArtifactId() + ":"
-              + a.getVersion() + " - " + a.getFile().getName())
-          .collect(Collectors.joining(System.lineSeparator())));
+      getLog().debug(Utils.getArtifactSetDebugInfo(artifacts));
     }
 
     // create a list of the paths which will be resolved
@@ -1103,6 +747,7 @@ public class JlinkMojo extends AbstractMojo {
 
     // create request contains all information
     // required to analyze the project
+    // TODO: only RUNTIME dependencies
     ResolvePathsRequest<File> request = ResolvePathsRequest.ofFiles(paths);
 
     // this is used to resolve main module descriptor
@@ -1171,7 +816,7 @@ public class JlinkMojo extends AbstractMojo {
               .filter(entry -> entry != null && entry.getKey() != null)
               .map(entry -> "Unable to resolve module ["
                   + entry.getKey().toString()
-                  + "] - " + getThrowableCause(entry.getValue()))
+                  + "] - " + Utils.getThrowableCause(entry.getValue()))
               .collect(Collectors.joining(System.lineSeparator())));
     }
     return result;
@@ -1231,9 +876,9 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Get pathelements from modulepath parameter.
+   * Get path from the pathelements parameter.
    *
-   * @return path contains pathelements
+   * @return path contains parameter elements
    */
   private String getPathElements() {
     String result = null;
@@ -1245,11 +890,9 @@ public class JlinkMojo extends AbstractMojo {
             .map(file -> file.toString())
             .collect(Collectors.joining(File.pathSeparator));
         if (getLog().isDebugEnabled()) {
-          getLog().debug(
-              System.lineSeparator()
-              + "PATHELEMENTS"
-              + System.lineSeparator()
-              + result);
+          getLog().debug(Utils.getPathElementsDebugInfo("PATHELEMENTS",
+              pathelements));
+          getLog().debug(result);
         }
       }
     }
@@ -1261,7 +904,8 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @return path contains filesets
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred while resolving
+   *                                a fileset
    */
   private String getFileSets() throws MojoExecutionException {
     String result = null;
@@ -1285,8 +929,7 @@ public class JlinkMojo extends AbstractMojo {
               .map(fileName -> fileSetDir.toPath().resolve(fileName).toString())
               .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
-            getLog().debug(Utils.getFileSetDebugInfo(
-                "FILESET", fileSet, result));
+            getLog().debug(Utils.getFileSetDebugInfo("FILESET", fileSet, result));
           }
         }
       }
@@ -1299,7 +942,8 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @return path contains dirsets
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred while resolving
+   *                                a dirset
    */
   private String getDirSets() throws MojoExecutionException {
     String result = null;
@@ -1323,8 +967,7 @@ public class JlinkMojo extends AbstractMojo {
               .map(dirName -> dirSetDir.toPath().resolve(dirName).toString())
               .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
-            getLog().debug(Utils.getFileSetDebugInfo(
-                "DIRSET", dirSet, result));
+            getLog().debug(Utils.getFileSetDebugInfo("DIRSET", dirSet, result));
           }
         }
       }
@@ -1336,10 +979,8 @@ public class JlinkMojo extends AbstractMojo {
    * Get dependencysets from modulepath parameter.
    *
    * @return path contains dependencysets
-   *
-   * @throws MojoExecutionException
    */
-  private String getDependencySets() throws MojoExecutionException {
+  private String getDependencySets() {
     String result = null;
     if (modulepath != null) {
       List<DependencySet> dependencysets = modulepath.getDependencySets();
@@ -1473,8 +1114,8 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     if (getLog().isDebugEnabled()) {
-      getLog().debug(Utils.getDependencyDebugInfo(
-          file, descriptor, isIncluded));
+      getLog().debug(Utils.getDependencyDebugInfo(file, descriptor,
+          isIncluded));
     }
 
     return isIncluded;
@@ -1640,7 +1281,7 @@ public class JlinkMojo extends AbstractMojo {
    *
    * @param cmdLine the command line builder
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred
    */
   private void processModules(CommandLineBuilder cmdLine)
       throws MojoExecutionException {
@@ -1698,11 +1339,8 @@ public class JlinkMojo extends AbstractMojo {
    * Process options.
    *
    * @param cmdLine the command line builder
-   *
-   * @throws MojoExecutionException
    */
-  private void processOptions(CommandLineBuilder cmdLine)
-      throws MojoExecutionException {
+  private void processOptions(CommandLineBuilder cmdLine) {
     CommandLineOption opt = null;
     // output
     opt = cmdLine.createOpt();
@@ -1782,6 +1420,7 @@ public class JlinkMojo extends AbstractMojo {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--dedup-legal-notices=error-if-not-same-content");
     }
+    // Always on (not configured)
     // systemmodules
     // if (!systemmodules) {
     //   opt = cmdLine.createOpt();
@@ -1936,12 +1575,12 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Copy files.
+   * Copy files (only files, not directories) to the specified directory.
    *
    * @param files the list of files
    * @param dir the destination directory
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred while copying a file
    */
   private void copyFiles(List<File> files, File dir)
       throws MojoExecutionException {
@@ -1973,33 +1612,9 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Get the tool version.
-   *
-   * @return the tool version or null
-   *
-   * @throws CommandLineException
-   */
-  private String getToolVersion(Path toolExecutable)
-      throws CommandLineException {
-    String version = null;
-    Commandline cmdLine = new Commandline();
-    cmdLine.setExecutable(toolExecutable.toString());
-    cmdLine.createArg().setValue("--version");
-    CommandLineUtils.StringStreamConsumer err =
-        new CommandLineUtils.StringStreamConsumer();
-    CommandLineUtils.StringStreamConsumer out =
-        new CommandLineUtils.StringStreamConsumer();
-    int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
-    if (exitCode == 0) {
-      version = out.getOutput().trim() + err.getOutput().trim();
-    }
-    return version;
-  }
-
-  /**
    * Process launcher scripts.
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred
    */
   private void processLauncherScripts() throws MojoExecutionException {
     if (launcher == null) {
@@ -2007,6 +1622,10 @@ public class JlinkMojo extends AbstractMojo {
     }
     String scriptName = launcher.getCommand();
     if (scriptName == null) {
+      return;
+    }
+    scriptName = scriptName.trim();
+    if (scriptName.isEmpty()) {
       return;
     }
 
@@ -2038,21 +1657,30 @@ public class JlinkMojo extends AbstractMojo {
     }
 
     String moduleName = launcher.getMainModule();
-    if (moduleName == null || moduleName.isEmpty()) {
+    if (moduleName == null) {
       return;
     }
+    moduleName = moduleName.trim();
+    if (moduleName.isEmpty()) {
+      return;
+    }
+    
     String mainClassName = launcher.getMainClass();
     if (mainClassName == null) {
       mainClassName = "";
     }
+    mainClassName = mainClassName.trim();
+
     String mainName = moduleName;
-    if (mainClassName != null && !mainClassName.isEmpty()) {
+    if (!mainClassName.isEmpty()) {
       mainName += "/" + mainClassName;
     }
+
     String args = launcher.getArgs();
     if (args == null) {
       args = "";
     }
+
     String jvmArgs = launcher.getJvmArgs();
     if (jvmArgs == null) {
       jvmArgs = "";
@@ -2073,7 +1701,7 @@ public class JlinkMojo extends AbstractMojo {
           + "  - jvmArgs = [" + jvmArgs + "]");
     }
 
-    Map data = new HashMap();
+    Map<String, String> data = new HashMap<>();
     data.put("moduleName", moduleName);
     data.put("mainClassName", mainClassName);
     data.put("mainName", mainName);
@@ -2097,16 +1725,17 @@ public class JlinkMojo extends AbstractMojo {
   /**
    * Create launcher script.
    *
-   * @see https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/StringSubstitutor.html
+   * Using <a href="https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/StringSubstitutor.html">StringSubstitutor</a> class.
    *
    * @param script the launcher script file path
    * @param template the launcher template file path
    * @param data the hash map contains variable names and values to substitute
    *
-   * @throws MojoExecutionException
+   * @throws MojoExecutionException if any errors occurred while processing
+   *                                launcher script files
    */
-  private void createLauncherScript(Path script, Path template, Map data)
-      throws MojoExecutionException {
+  private void createLauncherScript(Path script, Path template,
+      Map<String, String> data) throws MojoExecutionException {
     if (getLog().isDebugEnabled()) {
       getLog().debug(System.lineSeparator()
           + "Fixing launcher script: [" + script + "]"
@@ -2119,10 +1748,10 @@ public class JlinkMojo extends AbstractMojo {
         .setEscapeChar('\\');
     try {
       Files.write(script,
-          Files.lines​(template, defaultCharset)
+          Files.lines​(template, sourceEncoding)
               .map(line -> engine.replace(line).replace("\\$", "$"))
               .collect(Collectors.toList()),
-          defaultCharset);
+          sourceEncoding);
     } catch (IllegalArgumentException ex) {
       if (getLog().isErrorEnabled()) {
         getLog().error("Variable not found in the launcher template file: ["
@@ -2143,168 +1772,14 @@ public class JlinkMojo extends AbstractMojo {
   }
 
   /**
-   * Get Java version corresponding to the tool version passed in.
-   *
-   * @param version the tool version, not null
-   *
-   * @return the corresponding Java version matching the tool version
-   */
-  private JavaVersion getCorrespondingJavaVersion(String version) {
-    if (version == null) {
-      throw new NullPointerException();
-    }
-    Matcher versionMatcher = Pattern.compile(VERSION_PATTERN)
-        .matcher(version);
-    if (!versionMatcher.matches()) {
-      throw new IllegalArgumentException("Invalid version format");
-    }
-    int majorVersion = 0;
-    int minorVersion = 0;
-    try {
-      majorVersion = Integer.valueOf(versionMatcher.group(1));
-      minorVersion = Integer.valueOf(versionMatcher.group(2));
-    } catch (NumberFormatException ex) {
-      throw new IllegalArgumentException("Invalid version format", ex);
-    }
-    if (majorVersion < 2) {
-      return JavaVersion.valueOf("JAVA_" + majorVersion + "_" + minorVersion);
-    }
-    if (majorVersion > 8) {
-      return JavaVersion.valueOf("JAVA_" + majorVersion);
-    }
-    throw new IllegalArgumentException("Invalid version format");
-  }
-
-  /**
    * Execute goal.
    *
-   * @throws MojoExecutionException
-   * @throws MojoFailureException
+   * @throws MojoExecutionException if any errors occurred
    */
-  public void execute() throws MojoExecutionException, MojoFailureException {
+  public void execute() throws MojoExecutionException {
 
-    if (project == null) {
-      throw new MojoExecutionException(
-          "Error: The predefined variable ${project} is not defined");
-    }
-
-    if (session == null) {
-      throw new MojoExecutionException(
-          "Error: The predefined variable ${session} is not defined");
-    }
-
-    baseDir = project.getBasedir();
-    if (baseDir == null) {
-      throw new MojoExecutionException(
-          "Error: The predefined variable ${project.basedir} is not defined");
-    }
-
-    buildDir = new File(project.getBuild().getDirectory());
-    if (buildDir == null) {
-      throw new MojoExecutionException(
-          "Error: The predefined variable ${project.build.directory} is not defined");
-    }
-
-    outputDir = new File(project.getBuild().getOutputDirectory());
-    if (outputDir == null) {
-      throw new MojoExecutionException(
-          "Error: The predefined variable ${project.build.outputDirectory} is not defined");
-    }
-
-    properties = project.getProperties();
-    if (properties == null) {
-      throw new MojoExecutionException(
-          "Error: Unable to read project properties");
-    }
-
-    fileSetManager = new FileSetManager(getLog(), true);
-    if (fileSetManager == null) {
-      throw new MojoExecutionException(
-          "Error: Unable to create file set manager");
-    }
-
-    // Get charset to write files
-    try {
-      defaultCharset = Charset.forName(
-          properties.getProperty("project.build.sourceEncoding"));
-    } catch (Exception ex) {
-      if (getLog().isWarnEnabled()) {
-        getLog().warn("Unable to read ${project.build.sourceEncoding}");
-      }
-    }
-    if (getLog().isInfoEnabled()) {
-      getLog().info("Using charset: [" + defaultCharset + "] to write files");
-    }
-
-    // Resolve all available jdk toolchains
-    toolchains = toolchainManager.getToolchains(session, JDK, null);
-    if (toolchains == null) {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("No toolchains found");
-      }
-    } else {
-      toolchains.forEach(tc -> {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Found toolchain: " + tc);
-        }
-      });
-    }
-
-    // Retrieve jdk toolchain from build context,
-    // i.e. the toolchain selected by maven-toolchains-plugin
-    toolchain = toolchainManager.getToolchainFromBuildContext(JDK, session);
-    if (toolchain == null) {
-      if (getLog().isDebugEnabled()) {
-        getLog().debug("Toolchain in [" + PLUGIN_NAME + "] not specified");
-      }
-    } else {
-      if (toolchain instanceof DefaultJavaToolChain) {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain);
-        }
-      } else {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Toolchain in [" + PLUGIN_NAME + "]: " + toolchain
-              + ", but it is not default Java toolchain");
-        }
-        toolchain = null;
-      }
-    }
-
-    // Resolve the tool home directory and executable file
-    Path toolExecutable = getToolExecutable(TOOL_NAME);
-    if (toolExecutable == null) {
-      throw new MojoExecutionException(
-          "Error: Executable for [" + TOOL_NAME + "] not found");
-    }
-
-    // Obtain the tool version
-    try {
-      toolVersion = getToolVersion(toolExecutable);
-    } catch (CommandLineException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain version of [" + TOOL_NAME + "]", ex);
-    }
-    if (toolVersion == null) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain version of [" + TOOL_NAME + "]");
-    }
-    if (getLog().isInfoEnabled()) {
-      getLog().info("Version of [" + TOOL_NAME + "]: " + toolVersion);
-    }
-
-    // Obtain the corresponding java version matching the tool version
-    try {
-      toolJavaVersion = getCorrespondingJavaVersion(toolVersion);
-    } catch (IllegalArgumentException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain corresponding java version of ["
-              + TOOL_NAME + "]", ex);
-    }
-    if (getLog().isInfoEnabled()) {
-      getLog().info("Version (corresponding java version) of [" + TOOL_NAME
-          + "]: " + toolJavaVersion);
-    }
+    // Init
+    init(TOOL_NAME, TOOL_HOME_BIN); // from BaseToolMojo
 
     // Check version
     if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {
@@ -2331,16 +1806,16 @@ public class JlinkMojo extends AbstractMojo {
           + libsdir + "]", ex);
     }
 
-    // Delete output directory if it exists
+    // Delete image output directory if it exists
     if (getLog().isInfoEnabled()) {
-      getLog().info("Set output directory to: [" + output + "]");
+      getLog().info("Set image output directory to: [" + output + "]");
     }
     if (output.exists() && output.isDirectory()) {
       try {
         FileUtils.deleteDirectory(output);
       } catch (IOException ex) {
         throw new MojoExecutionException(
-            "Error: Unable to delete output directory: ["
+            "Error: Unable to delete image output directory: ["
             + output + "]", ex);
       }
     }
@@ -2374,7 +1849,7 @@ public class JlinkMojo extends AbstractMojo {
     // will be used in the tool command line
     Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);
     try {
-      Files.write(cmdOptsPath, optsLines, defaultCharset);
+      Files.write(cmdOptsPath, optsLines, sourceEncoding);
     } catch (Exception ex) {
       if (getLog().isErrorEnabled()) {
         getLog().error("Unable to write command options to file: ["
@@ -2391,12 +1866,19 @@ public class JlinkMojo extends AbstractMojo {
     // Execute command line
     int exitCode = 0;
     try {
-      exitCode = execCmdLine(cmdLine, optsLines);
+      exitCode = execCmdLine(cmdLine); // from BaseToolMojo
     } catch (CommandLineException ex) {
       throw new MojoExecutionException(
           "Error: Unable to execute [" + TOOL_NAME + "] tool", ex);
     }
     if (exitCode != 0) {
+      if (getLog().isErrorEnabled()) {
+        getLog().error(System.lineSeparator()
+            + "Command options was: "
+            + System.lineSeparator()
+            + optsLines.stream()
+                .collect(Collectors.joining(System.lineSeparator())));
+      }
       throw new MojoExecutionException(
           "Error: Tool execution failed [" + TOOL_NAME + "] with exit code: "
           + exitCode);

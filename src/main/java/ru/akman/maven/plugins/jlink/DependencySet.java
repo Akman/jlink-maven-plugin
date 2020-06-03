@@ -14,9 +14,8 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
-import java.io.File;
 import java.util.List;
 
 /**

@@ -14,14 +14,33 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
+
+import java.util.List;
 
 /**
- * HotSpot VM
+ * Compress
  */
-public enum HotSpotVM {
-  CLIENT,
-  SERVER,
-  MINIMAL,
-  ALL
+public class Compress {
+
+  private Compression compression = Compression.NO_COMPRESSION;
+
+  private List<String> filters = null;
+  
+  public Compression getCompression() {
+    return this.compression;
+  }
+
+  public void setCompression(Compression compression) {
+    this.compression = compression;
+  }
+
+  public List<String> getFilters() {
+    return this.filters;
+  }
+
+  public void setFilters(List<String> filters) {
+    this.filters = filters;
+  }
+
 }

@@ -38,9 +38,10 @@ public final class TestUtils {
 
   /**
    * Get the canonical path for specified file.
-   * Test (caller) fails if IOException occures.
+   * Caller test fails if IOException occures.
    *
    * @param file file
+   *
    * @return canonical path
    */
   public static String getCanonicalPath(File file) {
@@ -61,6 +62,7 @@ public final class TestUtils {
    * separated by the default path separator.
    *
    * @param files list of files
+   *
    * @return path contains all file paths from a list
    */
   public static String buildPathFromFiles(List<File> files) {
@@ -73,6 +75,7 @@ public final class TestUtils {
    *
    * @param files list of files
    * @param separator separator string
+   *
    * @return path contains all file paths from a list
    */
   public static String buildPathFromFiles(List<File> files, String separator) {
@@ -88,6 +91,7 @@ public final class TestUtils {
    *
    * @param base base path to resolve paths from the list
    * @param names list of relative paths
+   *
    * @return path contains all resolved file paths from a list
    */
   public static String buildPathFromNames(String base, List<String> names) {
@@ -101,6 +105,7 @@ public final class TestUtils {
    * @param base base path to resolve paths from the list
    * @param names list of relative paths
    * @param separator separator string
+   *
    * @return path contains all resolved file paths from a list
    */
   public static String buildPathFromNames(String base, List<String> names,
@@ -118,6 +123,7 @@ public final class TestUtils {
    * system line separator.
    *
    * @param names list of string
+   *
    * @return one string contains all the specified strings from the list
    */
   public static String buildStringFromNames(List<String> names) {
@@ -130,6 +136,7 @@ public final class TestUtils {
    *
    * @param names list of string
    * @param separator separator string
+   *
    * @return one string contains all the specified strings from the list
    */
   public static String buildStringFromNames(List<String> names,

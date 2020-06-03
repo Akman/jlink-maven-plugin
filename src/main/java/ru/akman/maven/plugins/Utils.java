@@ -20,15 +20,38 @@ import java.io.IOException;
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
+import ru.akman.maven.plugins.jlink.DependencySet;
 
+/**
+ * Helper class for utilities
+ */
 public final class Utils {
 
+  /**
+   * Private constructor.
+   */
   private Utils() {
     // not called
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Get the cause message for throwable.
+   *
+   * @param throwable the throwable
+   *
+   * @return the cause error message
+   */
+  public static String getThrowableCause(Throwable throwable) {
+    while (throwable.getCause() != null) {
+      throwable = throwable.getCause();
+    }
+    return throwable.getMessage();
   }
 
   /**
@@ -39,6 +62,8 @@ public final class Utils {
    * @param fileSet fileset
    *
    * @return normalized fileset dir
+   *
+   * @throws IOException if error occurred while resolving a canonical path
    */
   public static File normalizeFileSetBaseDir(File baseDir, FileSet fileSet)
       throws IOException {
@@ -55,11 +80,51 @@ public final class Utils {
   }
 
   /**
+   * Get debug info about artifact set.
+   *
+   * @param artifacts set of project artifacts
+   *
+   * @return formatted string contains info about the artifacts
+   */
+  public static String getArtifactSetDebugInfo(Set<Artifact> artifacts) {
+    return new StringBuilder(System.lineSeparator())
+        .append("ARTIFACTS")
+        .append(System.lineSeparator())
+        .append(artifacts.stream()
+            .filter(Objects::nonNull)
+            .map(a -> a.getGroupId() + ":" + a.getArtifactId() + ":"
+                + a.getVersion() + " - " + a.getFile().getName())
+            .collect(Collectors.joining(System.lineSeparator())))
+        .toString();
+  }
+
+  /**
+   * Get debug info about path elements.
+   *
+   * @param title title
+   * @param pathelements list of path elements
+   *
+   * @return formatted string contains info about the path elements
+   */
+  public static String getPathElementsDebugInfo(String title,
+      List<File> pathelements) {
+    return new StringBuilder(System.lineSeparator())
+        .append(title)
+        .append(System.lineSeparator())
+        .append(pathelements.stream()
+            .filter(Objects::nonNull)
+            .map(file -> file.toString())
+            .collect(Collectors.joining(System.lineSeparator())))
+        .toString();
+  }
+
+  /**
    * Get debug info about a fileset.
    *
    * @param title title
    * @param fileSet fileset
-   * @param String fileset data
+   * @param data fileset data
+   *
    * @return formatted string contains info about the fileset
    */
   public static String getFileSetDebugInfo(String title, FileSet fileSet,
@@ -94,7 +159,8 @@ public final class Utils {
    *
    * @param title title
    * @param depSet dependencyset
-   * @param String dependencyset data
+   * @param data dependencyset data
+   *
    * @return formatted string contains info about the dependencyset
    */
   public static String getDependencySetDebugInfo(String title,
@@ -161,6 +227,7 @@ public final class Utils {
    * @param file the dependency file
    * @param descriptor the dependency descriptor
    * @param isIncluded will the dependency be included
+   *
    * @return formatted string contains info about the dependency
    */
   public static String getDependencyDebugInfo(File file,

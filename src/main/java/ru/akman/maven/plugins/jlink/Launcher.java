@@ -14,7 +14,7 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
 import java.io.File;
 
@@ -23,15 +23,15 @@ import java.io.File;
  */
 public class Launcher {
 
-  private String command = "";
+  private String command = null;
 
-  private String mainmodule = "";
+  private String mainmodule = null;
 
-  private String mainclass = "";
+  private String mainclass = null;
   
-  private String jvmargs = "";
+  private String jvmargs = null;
 
-  private String args = "";
+  private String args = null;
 
   private File nixtemplate = null;
 

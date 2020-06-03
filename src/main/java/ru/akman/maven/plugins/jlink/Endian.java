@@ -14,25 +14,13 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
 /**
- * Compression
+ * Byte order
  */
-public enum Compression {
-
-  NO_COMPRESSION(0),
-  CONSTANT_STRING_SHARING(1),
-  ZIP(2);
-  
-  private final int value;
-  
-  Compression(int value) {
-    this.value = value;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
+public enum Endian {
+  NATIVE,
+  LITTLE,
+  BIG
 }

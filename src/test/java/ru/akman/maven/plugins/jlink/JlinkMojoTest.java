@@ -14,7 +14,7 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
 import java.io.IOException;
 import java.io.File;
@@ -36,19 +36,27 @@ import org.apache.maven.toolchain.Toolchain;
 import org.codehaus.plexus.PlexusContainer;
 import org.junit.Rule;
 import org.junit.Test;
+import ru.akman.maven.plugins.Utils;
+import ru.akman.maven.plugins.TestUtils;
 
-import static org.junit.Assert.*;
-import static ru.akman.maven.plugins.TestUtils.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+/**
+ * JlinkMojo Test Class.
+ */
 public class JlinkMojoTest {
 
   /**
-   * Relative path to the base directory of tested project
+   * Relative path to the base directory of tested project.
    */
   private final static String PROJECT_DIR = "target/test-classes/project/";
 
   /**
-   * Executed goal
+   * Executed goal.
    */
   private final static String MOJO_EXECUTION = "jlink";
 
@@ -73,7 +81,8 @@ public class JlinkMojoTest {
       container = getContainer();
       assertNotNull("Has access to the plexus container", container);
       // Toolchain manager
-      toolchainManager = container.lookup(ToolchainManager.class);
+      toolchainManager = (ToolchainManager) container.lookup(
+          ToolchainManager.class.getName());
       assertNotNull("Can get the toolchain manager", toolchainManager);
       // Project directory
       File pom = new File(PROJECT_DIR);
@@ -108,8 +117,8 @@ public class JlinkMojoTest {
     assertNotNull("", modsdir);
     assertEquals(
       "",
-      getCanonicalPath(modsdir),
-      getCanonicalPath(new File(project.getBuild().getDirectory(),
+      TestUtils.getCanonicalPath(modsdir),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
           "jlink/mods"))
     );
   }
@@ -121,8 +130,8 @@ public class JlinkMojoTest {
     assertNotNull("", libsdir);
     assertEquals(
       "",
-      getCanonicalPath(libsdir),
-      getCanonicalPath(new File(project.getBuild().getDirectory(),
+      TestUtils.getCanonicalPath(libsdir),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
           "jlink/libs"))
     );
   }
@@ -136,8 +145,8 @@ public class JlinkMojoTest {
     assertNotNull("", pathelements);
     assertEquals(
       "",
-      buildPathFromFiles(pathelements),
-      buildPathFromNames(PROJECT_DIR, Arrays.asList(
+      TestUtils.buildPathFromFiles(pathelements),
+      TestUtils.buildPathFromNames(PROJECT_DIR, Arrays.asList(
         "mod.jar",
         "mod.jmod",
         "mods/exploded/mod"
@@ -151,13 +160,13 @@ public class JlinkMojoTest {
     assertFalse("", fileset.isFollowSymlinks());
     assertEquals(
       "",
-      buildStringFromNames(fileset.getIncludes()),
-      buildStringFromNames(Arrays.asList("**/*"))
+      TestUtils.buildStringFromNames(fileset.getIncludes()),
+      TestUtils.buildStringFromNames(Arrays.asList("**/*"))
     );
     assertEquals(
       "",
-      buildStringFromNames(fileset.getExcludes()),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(fileset.getExcludes()),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "**/*Empty.jar",
         "jlink.opts",
         "jlink-opts"
@@ -174,8 +183,8 @@ public class JlinkMojoTest {
     }
     assertEquals(
       "",
-      getCanonicalPath(new File(fileset.getDirectory())),
-      getCanonicalPath(new File(project.getBuild().getDirectory()))
+      TestUtils.getCanonicalPath(new File(fileset.getDirectory())),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
     // dirsets
     List<FileSet> dirsets = modulepath.getDirSets();
@@ -185,13 +194,13 @@ public class JlinkMojoTest {
     assertTrue("", dirset.isFollowSymlinks());
     assertEquals(
       "",
-      buildStringFromNames(dirset.getIncludes()),
-      buildStringFromNames(Arrays.asList("**/*"))
+      TestUtils.buildStringFromNames(dirset.getIncludes()),
+      TestUtils.buildStringFromNames(Arrays.asList("**/*"))
     );
     assertEquals(
       "",
-      buildStringFromNames(dirset.getExcludes()),
-      buildStringFromNames(Arrays.asList("**/*Test"))
+      TestUtils.buildStringFromNames(dirset.getExcludes()),
+      TestUtils.buildStringFromNames(Arrays.asList("**/*Test"))
     );
     try {
       Utils.normalizeFileSetBaseDir(project.getBasedir(), dirset);
@@ -204,8 +213,8 @@ public class JlinkMojoTest {
     }
     assertEquals(
       "",
-      getCanonicalPath(new File(dirset.getDirectory())),
-      getCanonicalPath(new File(project.getBuild().getDirectory()))
+      TestUtils.getCanonicalPath(new File(dirset.getDirectory())),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
     // dependencysets
     List<DependencySet> dependencysets = modulepath.getDependencySets();
@@ -216,38 +225,39 @@ public class JlinkMojoTest {
     assertFalse("", depset.isAutomaticExcluded());
     assertEquals(
       "",
-      buildStringFromNames(depset.getIncludes()),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(depset.getIncludes()),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "glob:**/*.jar",
         "regex:foo-(bar|baz)-.*?\\.jar"
       ))
     );
     assertEquals(
       "",
-      buildStringFromNames(depset.getExcludes()),
-      buildStringFromNames(Arrays.asList("glob:**/javafx.*Empty"))
+      TestUtils.buildStringFromNames(depset.getExcludes()),
+      TestUtils.buildStringFromNames(Arrays.asList("glob:**/javafx.*Empty"))
     );
     assertEquals(
       "",
-      buildStringFromNames(depset.getIncludeNames()),
-      buildStringFromNames(Arrays.asList(".*"))
+      TestUtils.buildStringFromNames(depset.getIncludeNames()),
+      TestUtils.buildStringFromNames(Arrays.asList(".*"))
     );
     assertEquals(
       "",
-      buildStringFromNames(depset.getExcludeNames()),
-      buildStringFromNames(Arrays.asList("javafx\\..+Empty"))
+      TestUtils.buildStringFromNames(depset.getExcludeNames()),
+      TestUtils.buildStringFromNames(Arrays.asList("javafx\\..+Empty"))
     );
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasAddModules() throws Exception {
     List<String> addmodules =
-        (List) rule.getVariableValueFromObject(mojo, "addmodules");
+        (List<String>) rule.getVariableValueFromObject(mojo, "addmodules");
     assertNotNull("", addmodules);
     assertEquals(
       "",
-      buildStringFromNames(addmodules),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(addmodules),
+      TestUtils.buildStringFromNames(Arrays.asList(
           "java.base", "org.example.rootmodule"))
     );
   }
@@ -259,34 +269,36 @@ public class JlinkMojoTest {
     assertNotNull("", output);
     assertEquals(
       "",
-      getCanonicalPath(output),
-      getCanonicalPath(new File(project.getBuild().getDirectory(),
+      TestUtils.getCanonicalPath(output),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
           "jlink/image"))
     );
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasLimitModules() throws Exception {
     List<String> limitmodules =
-        (List) rule.getVariableValueFromObject(mojo, "limitmodules");
+        (List<String>) rule.getVariableValueFromObject(mojo, "limitmodules");
     assertNotNull("", limitmodules);
     assertEquals(
       "",
-      buildStringFromNames(limitmodules),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(limitmodules),
+      TestUtils.buildStringFromNames(Arrays.asList(
           "java.base", "org.example.limitmodule"))
     );
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasSuggestProviders() throws Exception {
     List<String> suggestproviders =
-        (List) rule.getVariableValueFromObject(mojo, "suggestproviders");
+        (List<String>) rule.getVariableValueFromObject(mojo, "suggestproviders");
     assertNotNull("", suggestproviders);
     assertEquals(
       "",
-      buildStringFromNames(suggestproviders),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(suggestproviders),
+      TestUtils.buildStringFromNames(Arrays.asList(
           "provider.name"))
     );
   }
@@ -298,8 +310,9 @@ public class JlinkMojoTest {
     assertNotNull("", saveopts);
     assertEquals(
       "",
-      getCanonicalPath(saveopts),
-      getCanonicalPath(new File(project.getBuild().getDirectory(), "jlink-opts"))
+      TestUtils.getCanonicalPath(saveopts),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
+          "jlink-opts"))
     );
   }
 
@@ -317,8 +330,9 @@ public class JlinkMojoTest {
     assertNotNull("", postprocesspath);
     assertEquals(
       "",
-      getCanonicalPath(postprocesspath),
-      getCanonicalPath(new File(project.getBuild().getDirectory(), "imagefile"))
+      TestUtils.getCanonicalPath(postprocesspath),
+      TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
+          "imagefile"))
     );
   }
 
@@ -351,16 +365,16 @@ public class JlinkMojoTest {
     assertNotNull("", nixtemplate);
     assertEquals(
       "",
-      getCanonicalPath(nixtemplate),
-      getCanonicalPath(new File(project.getBasedir(),
+      TestUtils.getCanonicalPath(nixtemplate),
+      TestUtils.getCanonicalPath(new File(project.getBasedir(),
           "config/jlink/nix.template"))
     );
     File wintemplate = launcher.getWinTemplate();
     assertNotNull("", wintemplate);
     assertEquals(
       "",
-      getCanonicalPath(wintemplate),
-      getCanonicalPath(new File(project.getBasedir(),
+      TestUtils.getCanonicalPath(wintemplate),
+      TestUtils.getCanonicalPath(new File(project.getBasedir(),
           "config/jlink/win.template"))
     );
   }
@@ -395,14 +409,15 @@ public class JlinkMojoTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasDisablePlugins() throws Exception {
     List<String> disableplugins =
-        (List) rule.getVariableValueFromObject(mojo, "disableplugins");
+        (List<String>) rule.getVariableValueFromObject(mojo, "disableplugins");
     assertNotNull("", disableplugins);
     assertEquals(
       "",
-      buildStringFromNames(disableplugins),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(disableplugins),
+      TestUtils.buildStringFromNames(Arrays.asList(
           "compress", "dedup-legal-notices"))
     );
   }
@@ -418,8 +433,8 @@ public class JlinkMojoTest {
     assertNotNull("", filters);
     assertEquals(
       "",
-      buildStringFromNames(filters),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(filters),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "**/*-info.class",
         "glob:**/module-info.class",
         "regex:/java[a-z]+$",
@@ -429,26 +444,28 @@ public class JlinkMojoTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasIncludeLocales() throws Exception {
     List<String> includelocales =
-        (List) rule.getVariableValueFromObject(mojo, "includelocales");
+        (List<String>) rule.getVariableValueFromObject(mojo, "includelocales");
     assertNotNull("", includelocales);
     assertEquals(
       "",
-      buildStringFromNames(includelocales),
-      buildStringFromNames(Arrays.asList("en", "ja", "*-IN"))
+      TestUtils.buildStringFromNames(includelocales),
+      TestUtils.buildStringFromNames(Arrays.asList("en", "ja", "*-IN"))
     );
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasOrderResources() throws Exception {
     List<String> orderresources =
-        (List) rule.getVariableValueFromObject(mojo, "orderresources");
+        (List<String>) rule.getVariableValueFromObject(mojo, "orderresources");
     assertNotNull("", orderresources);
     assertEquals(
       "",
-      buildStringFromNames(orderresources),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(orderresources),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "**/*-info.class",
         "glob:**/module-info.class",
         "regex:/java[a-z]+$",
@@ -458,14 +475,15 @@ public class JlinkMojoTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasExcludeResources() throws Exception {
     List<String> excluderesources =
-        (List) rule.getVariableValueFromObject(mojo, "excluderesources");
+        (List<String>) rule.getVariableValueFromObject(mojo, "excluderesources");
     assertNotNull("", excluderesources);
     assertEquals(
       "",
-      buildStringFromNames(excluderesources),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(excluderesources),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "**/*-info.class",
         "glob:**/META-INF/**",
         "regex:/java[a-z]+$",
@@ -504,14 +522,15 @@ public class JlinkMojoTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
   public void testMojoHasExcludeFiles() throws Exception {
     List<String> excludefiles =
-        (List) rule.getVariableValueFromObject(mojo, "excludefiles");
+        (List<String>) rule.getVariableValueFromObject(mojo, "excludefiles");
     assertNotNull("", excludefiles);
     assertEquals(
       "",
-      buildStringFromNames(excludefiles),
-      buildStringFromNames(Arrays.asList(
+      TestUtils.buildStringFromNames(excludefiles),
+      TestUtils.buildStringFromNames(Arrays.asList(
         "**/*-info.class",
         "glob:**/META-INF/**",
         "regex:/java[a-z]+$",
@@ -533,8 +552,8 @@ public class JlinkMojoTest {
         (File) rule.getVariableValueFromObject(mojo, "generatejliclasses");
     assertEquals(
       "",
-      getCanonicalPath(generatejliclasses),
-      getCanonicalPath(new File(PROJECT_DIR, "jli-classes"))
+      TestUtils.getCanonicalPath(generatejliclasses),
+      TestUtils.getCanonicalPath(new File(PROJECT_DIR, "jli-classes"))
     );
   }
 
@@ -547,8 +566,8 @@ public class JlinkMojoTest {
     assertNotNull("", releaseinfofile);
     assertEquals(
       "",
-      getCanonicalPath(releaseinfofile),
-      getCanonicalPath(new File(PROJECT_DIR, "file"))
+      TestUtils.getCanonicalPath(releaseinfofile),
+      TestUtils.getCanonicalPath(new File(PROJECT_DIR, "file"))
     );
     Map<String, String> adds = releaseinfo.getAdds();
     assertNotNull("", adds);
@@ -568,18 +587,11 @@ public class JlinkMojoTest {
     );
   }
 
-  // @Test
-  // public void testMojoHasSystemModules() throws Exception {
-  //   boolean systemmodules =
-  //       (boolean) rule.getVariableValueFromObject(mojo, "systemmodules");
-  //   assertFalse("", systemmodules);
-  // }
-
   @Test
   public void testMojoHasVM() throws Exception {
-    HotSpotVM vm =
-        (HotSpotVM) rule.getVariableValueFromObject(mojo, "vm");
-    assertEquals("", vm, HotSpotVM.SERVER);
+    HotSpot vm =
+        (HotSpot) rule.getVariableValueFromObject(mojo, "vm");
+    assertEquals("", vm, HotSpot.SERVER);
   }
 
 }
