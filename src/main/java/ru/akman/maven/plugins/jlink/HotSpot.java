@@ -17,7 +17,7 @@
 package ru.akman.maven.plugins.jlink;
 
 /**
- * HotSpot
+ * HotSpot VM.
  */
 public enum HotSpot {
   CLIENT,

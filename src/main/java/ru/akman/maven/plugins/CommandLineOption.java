@@ -24,24 +24,46 @@ import org.codehaus.plexus.util.cli.Arg;
 import org.codehaus.plexus.util.cli.Commandline;
 
 /**
- * CommandLineOption
+ * Command line option (group of arguments).
  */
 public class CommandLineOption {
 
-  private Commandline cmdLine = null;
-  private List<Arg> args = null;
+  /**
+   * Command line.
+   */
+  private final Commandline cmdLine;
 
-  public CommandLineOption(Commandline cmdLine) {
+  /**
+   * List of the option arguments.
+   */
+  private final List<Arg> args;
+
+  /**
+   * Create an option.
+   *
+   * @param cmdLine command line
+   */
+  public CommandLineOption(final Commandline cmdLine) {
     this.cmdLine = cmdLine;
     this.args = new ArrayList<>();
   }
 
+  /**
+   * Create argument as part of the option.
+   *
+   * @return the created argument
+   */
   public Arg createArg() {
-    Arg arg = cmdLine.createArg();
+    final Arg arg = cmdLine.createArg();
     args.add(arg);
     return arg;
   }
 
+  /**
+   * Create the option string representation as arguments joined with space.
+   *
+   * @return the created string representation
+   */
   public String toString() {
     return args.stream()
       .flatMap(arg -> Arrays.stream(arg.getParts()))

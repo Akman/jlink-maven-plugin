@@ -17,7 +17,7 @@
 package ru.akman.maven.plugins.jlink;
 
 /**
- * JMOD Section
+ * JMOD section.
  */
 public enum Section {
   MAN,

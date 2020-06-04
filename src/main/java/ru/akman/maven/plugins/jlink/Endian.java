@@ -17,7 +17,7 @@
 package ru.akman.maven.plugins.jlink;
 
 /**
- * Byte order
+ * Byte order (endian).
  */
 public enum Endian {
   NATIVE,

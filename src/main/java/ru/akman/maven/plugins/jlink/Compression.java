@@ -17,7 +17,7 @@
 package ru.akman.maven.plugins.jlink;
 
 /**
- * Compression
+ * Compression type.
  */
 public enum Compression {
 
@@ -25,9 +25,12 @@ public enum Compression {
   CONSTANT_STRING_SHARING(1),
   ZIP(2);
   
+  /**
+   * Compression level.
+   */
   private final int value;
   
-  Compression(int value) {
+  Compression(final int value) {
     this.value = value;
   }
 

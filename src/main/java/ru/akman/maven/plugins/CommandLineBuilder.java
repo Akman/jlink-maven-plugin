@@ -23,37 +23,75 @@ import org.codehaus.plexus.util.cli.Arg;
 import org.codehaus.plexus.util.cli.Commandline;
 
 /**
- * CommandLineBuilder
+ * CommandLine builder is a wrapper added group of agruments to an option.
  */
 public class CommandLineBuilder {
 
-  private Commandline cmdLine = null;
-  private List<CommandLineOption> options = null;
+  /**
+   * Building command line.
+   */
+  private final Commandline cmdLine;
 
+  /**
+   * List of command line options.
+   */
+  private final List<CommandLineOption> options;
+
+  /**
+   * Default constructor.
+   */
   public CommandLineBuilder() {
     cmdLine = new Commandline();
     options = new ArrayList<>();
   }
 
-  public CommandLineBuilder setExecutable(String executable) {
+  /**
+   * Set executable.
+   *
+   * @param executable the executable path
+   *
+   * @return current command line builder
+   */
+  public CommandLineBuilder setExecutable(final String executable) {
     cmdLine.setExecutable(executable);
     return this;
   }
 
+  /**
+   * Create a new option (group of arguments).
+   *
+   * @return created empty option
+   */
   public CommandLineOption createOpt() {
-    CommandLineOption opt = new CommandLineOption(cmdLine);
+    final CommandLineOption opt = new CommandLineOption(cmdLine);
     options.add(opt);
     return opt;
   }
 
+  /**
+   * Create a new agrument and a new option for it, then
+   * add created argument to this option.
+   *
+   * @return created option with added argument
+   */
   public Arg createArg() {
     return createOpt().createArg();
   }
 
+  /**
+   * Build command line.
+   *
+   * @return builded command line
+   */
   public Commandline buildCommandLine() {
     return cmdLine;
   }
 
+  /**
+   * Build list of options.
+   *
+   * @return builded option list
+   */
   public List<String> buildOptionList() {
     return options.stream()
         .map(opt -> opt.toString())

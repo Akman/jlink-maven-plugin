@@ -14,10 +14,10 @@
   limitations under the License.
 */
 
-package ru.akman.maven.plugins;
+package ru.akman.maven.plugins.jlink;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,14 +28,14 @@ import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
 import ru.akman.maven.plugins.jlink.DependencySet;
 
 /**
- * Helper class for utilities
+ * Helper class for utilities.
  */
-public final class Utils {
+public final class PluginUtils {
 
   /**
    * Private constructor.
    */
-  private Utils() {
+  private PluginUtils() {
     // not called
     throw new UnsupportedOperationException();
   }
@@ -48,15 +48,14 @@ public final class Utils {
    * @return the cause error message
    */
   public static String getThrowableCause(Throwable throwable) {
-    while (throwable.getCause() != null) {
-      throwable = throwable.getCause();
-    }
-    return throwable.getMessage();
+    return throwable.getCause() == null
+        ? throwable.getMessage()
+        : getThrowableCause(throwable.getCause());
   }
 
   /**
    * Fix base directory of the fileset by resolving it
-   * relative to the specified base directory
+   * relative to the specified base directory.
    *
    * @param baseDir base directory
    * @param fileSet fileset
@@ -232,14 +231,13 @@ public final class Utils {
    */
   public static String getDependencyDebugInfo(File file,
       JavaModuleDescriptor descriptor, boolean isIncluded) {
-    StringBuilder result =
-      new StringBuilder()
-          .append(System.lineSeparator())
-          .append("included: " + isIncluded)
-          .append(System.lineSeparator())
-          .append("file: " + file.getName())
-          .append(System.lineSeparator())
-          .append("path: " + file.toString());
+    StringBuilder result = new StringBuilder()
+        .append(System.lineSeparator())
+        .append("included: " + isIncluded)
+        .append(System.lineSeparator())
+        .append("file: " + file.getName())
+        .append(System.lineSeparator())
+        .append("path: " + file.toString());
     if (descriptor != null) {
       result
           .append(System.lineSeparator())

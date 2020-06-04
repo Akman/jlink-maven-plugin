@@ -19,7 +19,7 @@ package ru.akman.maven.plugins.jlink;
 import java.io.File;
 
 /**
- * JLink runtime image launcher
+ * Launcher script.
  */
 public class Launcher {
 

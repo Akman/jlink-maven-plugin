@@ -19,19 +19,25 @@ package ru.akman.maven.plugins.jlink;
 import java.util.List;
 
 /**
- * Compress
+ * Compress option.
  */
 public class Compress {
 
+  /**
+   * Compression level.
+   */
   private Compression compression = Compression.NO_COMPRESSION;
 
-  private List<String> filters = null;
+  /**
+   * List of filters.
+   */
+  private List<String> filters;
   
   public Compression getCompression() {
     return this.compression;
   }
 
-  public void setCompression(Compression compression) {
+  public void setCompression(final Compression compression) {
     this.compression = compression;
   }
 
@@ -39,7 +45,7 @@ public class Compress {
     return this.filters;
   }
 
-  public void setFilters(List<String> filters) {
+  public void setFilters(final List<String> filters) {
     this.filters = filters;
   }
 

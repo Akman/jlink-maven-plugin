@@ -21,7 +21,7 @@ import java.util.List;
 import org.apache.maven.shared.model.fileset.FileSet;
 
 /**
- * ModulePath
+ * Module path.
  */
 public class ModulePath {
 

@@ -19,27 +19,49 @@ package ru.akman.maven.plugins.jlink;
 import java.util.List;
 
 /**
- * DependencySet
+ * Set of dependencies.
  */
 public class DependencySet {
 
+  /**
+   * Should output directory be included into dependencyset.
+   *
+   * <p>Default value: false</p>
+   */
   private boolean includeoutput = false;
 
+  /**
+   * Should automatic modules be excluded from dependencyset.
+   *
+   * <p>Default value: false</p>
+   */
   private boolean excludeautomatic = false;
 
+  /**
+   * List of included dependencies (filename patterns).
+   */
   private List<String> includes;
 
+  /**
+   * List of included dependencies (module name patterns).
+   */
   private List<String> includenames;
 
+  /**
+   * List of excluded dependencies (filename patterns).
+   */
   private List<String> excludes;
 
+  /**
+   * List of excluded dependencies (module name patterns).
+   */
   private List<String> excludenames;
 
   public boolean isOutputIncluded() {
     return this.includeoutput;
   }
 
-  public void setOutputIncluded(boolean includeoutput) {
+  public void setOutputIncluded(final boolean includeoutput) {
     this.includeoutput = includeoutput;
   }
 
@@ -47,7 +69,7 @@ public class DependencySet {
     return this.excludeautomatic;
   }
 
-  public void setAutomaticExcluded(boolean excludeautomatic) {
+  public void setAutomaticExcluded(final boolean excludeautomatic) {
     this.excludeautomatic = excludeautomatic;
   }
 
@@ -55,7 +77,7 @@ public class DependencySet {
     return this.includes;
   }
 
-  public void setIncludes(List<String> includes) {
+  public void setIncludes(final List<String> includes) {
     this.includes = includes;
   }
 
@@ -63,7 +85,7 @@ public class DependencySet {
     return this.excludes;
   }
 
-  public void setExcludes(List<String> excludes) {
+  public void setExcludes(final List<String> excludes) {
     this.excludes = excludes;
   }
 
@@ -71,7 +93,7 @@ public class DependencySet {
     return this.includenames;
   }
 
-  public void setIncludeNames(List<String> includenames) {
+  public void setIncludeNames(final List<String> includenames) {
     this.includenames = includenames;
   }
 
@@ -79,7 +101,7 @@ public class DependencySet {
     return this.excludenames;
   }
 
-  public void setExcludeNames(List<String> excludenames) {
+  public void setExcludeNames(final List<String> excludenames) {
     this.excludenames = excludenames;
   }
 

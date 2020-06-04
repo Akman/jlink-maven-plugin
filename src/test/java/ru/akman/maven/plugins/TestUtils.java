@@ -16,12 +16,12 @@
 
 package ru.akman.maven.plugins;
 
-import java.io.IOException;
+import static org.junit.Assert.fail;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.junit.Assert.fail;
 
 /**
  * Test helper class.
@@ -49,10 +49,9 @@ public final class TestUtils {
     try {
       path = file.getCanonicalPath();
     } catch (IOException ex) {
-      fail(
-        "Error: Unable to obtain canonical path [" + file.getPath() + "]." +
-            System.lineSeparator() +
-            ex.toString());
+      fail("Error: Unable to obtain canonical path [" + file.getPath() + "]."
+          + System.lineSeparator()
+          + ex.toString());
     }
     return path;
   }
