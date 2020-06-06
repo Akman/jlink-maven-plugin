@@ -33,18 +33,38 @@ public class Compress {
    */
   private List<String> filters;
   
+  /**
+   * Get compression level.
+   *
+   * @return compression level
+   */
   public Compression getCompression() {
     return this.compression;
   }
 
+  /**
+   * Set compression level.
+   *
+   * @param compression compression level
+   */
   public void setCompression(final Compression compression) {
     this.compression = compression;
   }
 
+  /**
+   * Get list of filters.
+   *
+   * @return the list of filters
+   */
   public List<String> getFilters() {
     return this.filters;
   }
 
+  /**
+   * Set the list of filters.
+   *
+   * @param filters filter list
+   */
   public void setFilters(final List<String> filters) {
     this.filters = filters;
   }

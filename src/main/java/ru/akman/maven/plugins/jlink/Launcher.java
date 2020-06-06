@@ -23,73 +23,164 @@ import java.io.File;
  */
 public class Launcher {
 
-  private String command = null;
+  /**
+   * Launcher command (script) name.
+   */
+  private String command;
 
-  private String mainmodule = null;
+  /**
+   * Main module name.
+   */
+  private String mainmodule;
 
-  private String mainclass = null;
+  /**
+   * Main class name.
+   */
+  private String mainclass;
   
-  private String jvmargs = null;
+  /**
+   * Java runtime arguments.
+   */
+  private String jvmargs;
 
-  private String args = null;
+  /**
+   * Command arguments.
+   */
+  private String args;
 
-  private File nixtemplate = null;
+  /**
+   * Template file for *nix script.
+   */
+  private File nixtemplate;
 
-  private File wintemplate = null;
+  /**
+   * Template file for windows script.
+   */
+  private File wintemplate;
   
+  /**
+   * Get command (script) name.
+   *
+   * @return the command (script) name without extension
+   */
   public String getCommand() {
     return this.command;
   }
   
-  public void setCommand(String command) {
+  /**
+   * Set command (script) name.
+   *
+   * @param command the name of command (script)
+   */
+  public void setCommand(final String command) {
     this.command = command;
   }
   
+  /**
+   * Get main module name.
+   *
+   * @return the main module name
+   */
   public String getMainModule() {
     return this.mainmodule;
   }
   
-  public void setMainModule(String mainmodule) {
+  /**
+   * Set main module name.
+   *
+   * @param mainmodule the name of main module
+   */
+  public void setMainModule(final String mainmodule) {
     this.mainmodule = mainmodule;
   }
   
+  /**
+   * Get main class name.
+   *
+   * @return the main class name
+   */
   public String getMainClass() {
     return this.mainclass;
   }
   
-  public void setMainClass(String mainclass) {
+  /**
+   * Set main class name.
+   *
+   * @param mainclass the name of main class
+   */
+  public void setMainClass(final String mainclass) {
     this.mainclass = mainclass;
   }
 
+  /**
+   * Get Java runtime arguments.
+   *
+   * @return the Java runtime arguments
+   */
   public String getJvmArgs() {
     return this.jvmargs;
   }
   
-  public void setJvmArgs(String jvmargs) {
+  /**
+   * Set Java runtime arguments.
+   *
+   * @param jvmargs Java runtime arguments
+   */
+  public void setJvmArgs(final String jvmargs) {
     this.jvmargs = jvmargs;
   }
 
+  /**
+   * Get command (script) argument.
+   *
+   * @return the command (script) arguments
+   */
   public String getArgs() {
     return this.args;
   }
   
-  public void setArgs(String args) {
+  /**
+   * Set command (script) arguments.
+   *
+   * @param args the command (script) arguments
+   */
+  public void setArgs(final String args) {
     this.args = args;
   }
 
+  /**
+   * Get *nix template file.
+   *
+   * @return the *nix template file
+   */
   public File getNixTemplate() {
     return this.nixtemplate;
   }
   
-  public void setNixTemplate(File nixtemplate) {
+  /**
+   * Set *nix template file.
+   *
+   * @param nixtemplate the *nix template file
+   */
+  public void setNixTemplate(final File nixtemplate) {
     this.nixtemplate = nixtemplate;
   }
 
+  /**
+   * Get windows template file.
+   *
+   * @return the windows template file
+   */
   public File getWinTemplate() {
     return this.wintemplate;
   }
   
-  public void setWinTemplate(File wintemplate) {
+  /**
+   * Set windows template file.
+   *
+   * @param wintemplate the windows template file
+   */
+  public void setWinTemplate(final File wintemplate) {
     this.wintemplate = wintemplate;
   }
 

@@ -44,7 +44,7 @@ public final class TestUtils {
    *
    * @return canonical path
    */
-  public static String getCanonicalPath(File file) {
+  public static String getCanonicalPath(final File file) {
     String path = null;
     try {
       path = file.getCanonicalPath();
@@ -64,7 +64,7 @@ public final class TestUtils {
    *
    * @return path contains all file paths from a list
    */
-  public static String buildPathFromFiles(List<File> files) {
+  public static String buildPathFromFiles(final List<File> files) {
     return buildPathFromFiles(files, File.pathSeparator);
   }
 
@@ -77,7 +77,8 @@ public final class TestUtils {
    *
    * @return path contains all file paths from a list
    */
-  public static String buildPathFromFiles(List<File> files, String separator) {
+  public static String buildPathFromFiles(final List<File> files,
+      final String separator) {
     return files
       .stream()
       .map(TestUtils::getCanonicalPath)
@@ -93,7 +94,8 @@ public final class TestUtils {
    *
    * @return path contains all resolved file paths from a list
    */
-  public static String buildPathFromNames(String base, List<String> names) {
+  public static String buildPathFromNames(final String base,
+      final List<String> names) {
     return buildPathFromNames(base, names, File.pathSeparator);
   }
 
@@ -107,8 +109,8 @@ public final class TestUtils {
    *
    * @return path contains all resolved file paths from a list
    */
-  public static String buildPathFromNames(String base, List<String> names,
-      String separator) {
+  public static String buildPathFromNames(final String base,
+      final List<String> names, final String separator) {
     return names
       .stream()
       .map(name -> {
@@ -125,7 +127,7 @@ public final class TestUtils {
    *
    * @return one string contains all the specified strings from the list
    */
-  public static String buildStringFromNames(List<String> names) {
+  public static String buildStringFromNames(final List<String> names) {
     return buildStringFromNames(names, System.lineSeparator());
   }
 
@@ -138,8 +140,8 @@ public final class TestUtils {
    *
    * @return one string contains all the specified strings from the list
    */
-  public static String buildStringFromNames(List<String> names,
-      String separator) {
+  public static String buildStringFromNames(final List<String> names,
+      final String separator) {
     return names
       .stream()
       .collect(Collectors.joining(separator));

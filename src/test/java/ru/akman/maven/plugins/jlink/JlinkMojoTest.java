@@ -27,23 +27,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.testing.MojoRule;
-import org.apache.maven.plugin.testing.WithoutMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
-import org.apache.maven.shared.model.fileset.util.FileSetManager;
-import org.apache.maven.toolchain.Toolchain;
 import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.PlexusContainer;
 import org.junit.Rule;
 import org.junit.Test;
 import ru.akman.maven.plugins.TestUtils;
-import ru.akman.maven.plugins.jlink.PluginUtils;
 
 /**
  * JlinkMojo Test Class.
@@ -60,18 +54,40 @@ public class JlinkMojoTest {
    */
   private static final String MOJO_EXECUTION = "jlink";
 
+  /**
+   * Plexus DI container.
+   */
   private PlexusContainer container;
 
+  /**
+   * Toolchain manager.
+   */
   private ToolchainManager toolchainManager;
 
+  /**
+   * Maven project.
+   */
   private MavenProject project;
 
+  /**
+   * Maven session.
+   */
   private MavenSession session;
   
+  /**
+   * Mojo execution.
+   */
   private MojoExecution execution;
 
+  /**
+   * JLink Mojo.
+   */
   private JlinkMojo mojo;
   
+  /**
+   * AbstractMojoTestCase wrapper.
+   * All protected methods of the TestCase are exhibited as public in the rule.
+   */
   @Rule
   public MojoRule rule = new MojoRule() {
 
@@ -85,7 +101,7 @@ public class JlinkMojoTest {
           ToolchainManager.class.getName());
       assertNotNull("Can get the toolchain manager", toolchainManager);
       // Project directory
-      File pom = new File(PROJECT_DIR);
+      final File pom = new File(PROJECT_DIR);
       assertNotNull("Project directory path is valid", pom);
       assertTrue("Project directory exists", pom.exists());
       // Maven project
@@ -104,44 +120,67 @@ public class JlinkMojoTest {
 
     @Override
     protected void after() {
+      // skip
     }
     
   };
 
-  // parameters
-
+  /**
+   * Parameter 'modsdir' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasModsDir() throws Exception {
-    File modsdir =
+    final File modsdir =
         (File) rule.getVariableValueFromObject(mojo, "modsdir");
-    assertNotNull(modsdir);
-    assertEquals(
+    assertEquals("modsdir",
         TestUtils.getCanonicalPath(modsdir),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
             "jlink/mods"))
     );
   }
 
+  /**
+   * Parameter 'libsdir' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasLibsDir() throws Exception {
-    File libsdir =
+    final File libsdir =
         (File) rule.getVariableValueFromObject(mojo, "libsdir");
-    assertNotNull(libsdir);
-    assertEquals(
+    assertEquals("libsdir",
         TestUtils.getCanonicalPath(libsdir),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
             "jlink/libs"))
     );
   }
 
+  /**
+   * Parameter 'modulepath' exists.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasModulePath() throws Exception {
-    ModulePath modulepath =
+    final ModulePath modulepath =
         (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
-    assertNotNull(modulepath);
-    List<File> pathelements = modulepath.getPathElements();
-    assertNotNull(pathelements);
-    assertEquals(
+    assertNotNull("modulepath",
+        modulepath);
+  }
+  
+  /**
+   * Parameter 'modulepath/pathelements' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasPathElements() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<File> pathelements = modulepath.getPathElements();
+    assertEquals("modulepath/pathelements",
         TestUtils.buildPathFromFiles(pathelements),
         TestUtils.buildPathFromNames(PROJECT_DIR, Arrays.asList(
             "mod.jar",
@@ -149,17 +188,67 @@ public class JlinkMojoTest {
             "mods/exploded/mod"
         ))
     );
-    // filesets
-    List<FileSet> filesets = modulepath.getFileSets();
-    assertNotNull(filesets);
-    assertEquals(filesets.size(), 1);
-    FileSet fileset = filesets.get(0);
-    assertFalse(fileset.isFollowSymlinks());
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/filesets' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasFilesets() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> filesets = modulepath.getFileSets();
+    assertEquals("modulepath/filesets",
+        filesets.size(), 1);
+  }
+    
+  /**
+   * Parameter 'modulepath/filesets/fileset/isfollowsymlinks' exists
+   * and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasFilesetFollowSymlinks() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> filesets = modulepath.getFileSets();
+    final FileSet fileset = filesets.get(0);
+    assertFalse("modulepath/filesets/fileset/isfollowsymlinks",
+        fileset.isFollowSymlinks());
+  }
+
+  /**
+   * Parameter 'modulepath/filesets/fileset/includes' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasFilesetIncludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> filesets = modulepath.getFileSets();
+    final FileSet fileset = filesets.get(0);
+    assertEquals("modulepath/filesets/fileset/includes",
         TestUtils.buildStringFromNames(fileset.getIncludes()),
         TestUtils.buildStringFromNames(Arrays.asList("**/*"))
     );
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/filesets/fileset/excludes' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasFilesetExcludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> filesets = modulepath.getFileSets();
+    final FileSet fileset = filesets.get(0);
+    assertEquals("modulepath/filesets/fileset/excludes",
         TestUtils.buildStringFromNames(fileset.getExcludes()),
         TestUtils.buildStringFromNames(Arrays.asList(
             "**/*Empty.jar",
@@ -167,6 +256,19 @@ public class JlinkMojoTest {
             "jlink-opts"
         ))
     );
+  }
+
+  /**
+   * Parameter 'modulepath/filesets/fileset/directory' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasFilesetDirectory() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> filesets = modulepath.getFileSets();
+    final FileSet fileset = filesets.get(0);
     try {
       PluginUtils.normalizeFileSetBaseDir(project.getBasedir(), fileset);
     } catch (IOException ex) {
@@ -176,24 +278,87 @@ public class JlinkMojoTest {
           + ex.toString()
       );
     }
-    assertEquals(
+    assertEquals("modulepath/filesets/fileset/directory",
         TestUtils.getCanonicalPath(new File(fileset.getDirectory())),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
-    // dirsets
-    List<FileSet> dirsets = modulepath.getDirSets();
-    assertNotNull(dirsets);
-    assertEquals(dirsets.size(), 1);
-    FileSet dirset = dirsets.get(0);
-    assertTrue(dirset.isFollowSymlinks());
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/dirsets' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDirsets() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> dirsets = modulepath.getDirSets();
+    assertEquals("modulepath/dirsets",
+        dirsets.size(), 1);
+  }
+
+  /**
+   * Parameter 'modulepath/dirsets/dirset/isfollowsymlinks' exists
+   * and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDirsetFollowSymlinks() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> dirsets = modulepath.getDirSets();
+    final FileSet dirset = dirsets.get(0);
+    assertTrue("modulepath/dirsets/dirset/isfollowsymlinks",
+        dirset.isFollowSymlinks());
+  }
+
+  /**
+   * Parameter 'modulepath/dirsets/dirset/includes' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDirsetIncludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> dirsets = modulepath.getDirSets();
+    final FileSet dirset = dirsets.get(0);
+    assertEquals("modulepath/dirsets/dirset/includes",
         TestUtils.buildStringFromNames(dirset.getIncludes()),
         TestUtils.buildStringFromNames(Arrays.asList("**/*"))
     );
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/dirsets/dirset/excludes' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDirsetExcludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> dirsets = modulepath.getDirSets();
+    final FileSet dirset = dirsets.get(0);
+    assertEquals("modulepath/dirsets/dirset/excludes",
         TestUtils.buildStringFromNames(dirset.getExcludes()),
         TestUtils.buildStringFromNames(Arrays.asList("**/*Test"))
     );
+  }
+
+  /**
+   * Parameter 'modulepath/dirsets/dirset/directory' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDirsetDirectory() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<FileSet> dirsets = modulepath.getDirSets();
+    final FileSet dirset = dirsets.get(0);
     try {
       PluginUtils.normalizeFileSetBaseDir(project.getBasedir(), dirset);
     } catch (IOException ex) {
@@ -203,213 +368,509 @@ public class JlinkMojoTest {
           + ex.toString()
       );
     }
-    assertEquals(
+    assertEquals("modulepath/dirsets/dirset/directory",
         TestUtils.getCanonicalPath(new File(dirset.getDirectory())),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory()))
     );
-    // dependencysets
-    List<DependencySet> dependencysets = modulepath.getDependencySets();
-    assertNotNull(dependencysets);
-    assertEquals(dependencysets.size(), 1);
-    DependencySet depset = dependencysets.get(0);
-    assertFalse(depset.isOutputIncluded());
-    assertFalse(depset.isAutomaticExcluded());
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysets() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    assertEquals("modulepath/dependencysets",
+        dependencysets.size(), 1);
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/outputincluded' exists
+   * and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetOutputIncluded() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertFalse("modulepath/dependencysets/dependencyset/outputincluded",
+        depset.isOutputIncluded());
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/automaticexcluded'
+   * exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetAutomaticExcluded() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertFalse("modulepath/dependencysets/dependencyset/automaticexcluded",
+        depset.isAutomaticExcluded());
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/includes' exists and
+   * has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetIncludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertEquals("modulepath/dependencysets/dependencyset/includes",
         TestUtils.buildStringFromNames(depset.getIncludes()),
         TestUtils.buildStringFromNames(Arrays.asList(
             "glob:**/*.jar",
             "regex:foo-(bar|baz)-.*?\\.jar"
         ))
     );
-    assertEquals(
+  }    
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/excludes' exists and
+   * has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetExcludes() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertEquals("modulepath/dependencysets/dependencyset/excludes",
         TestUtils.buildStringFromNames(depset.getExcludes()),
         TestUtils.buildStringFromNames(Arrays.asList("glob:**/javafx.*Empty"))
     );
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/includenames' exists
+   * and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetIncludeNames() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertEquals("modulepath/dependencysets/dependencyset/includenames",
         TestUtils.buildStringFromNames(depset.getIncludeNames()),
         TestUtils.buildStringFromNames(Arrays.asList(".*"))
     );
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'modulepath/dependencysets/dependencyset/excludenames' exists
+   * and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasDependencysetExcludeNames() throws Exception {
+    final ModulePath modulepath =
+        (ModulePath) rule.getVariableValueFromObject(mojo, "modulepath");
+    final List<DependencySet> dependencysets = modulepath.getDependencySets();
+    final DependencySet depset = dependencysets.get(0);
+    assertEquals("modulepath/dependencysets/dependencyset/excludenames",
         TestUtils.buildStringFromNames(depset.getExcludeNames()),
         TestUtils.buildStringFromNames(Arrays.asList("javafx\\..+Empty"))
     );
   }
 
+  /**
+   * Parameter 'addmodules' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasAddModules() throws Exception {
-    List<String> addmodules =
+    final List<String> addmodules =
         (List<String>) rule.getVariableValueFromObject(mojo, "addmodules");
-    assertNotNull(addmodules);
-    assertEquals(
+    assertEquals("addmodules",
         TestUtils.buildStringFromNames(addmodules),
         TestUtils.buildStringFromNames(Arrays.asList(
             "java.base", "org.example.rootmodule"))
     );
   }
 
+  /**
+   * Parameter 'output' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasOutput() throws Exception {
-    File output =
+    final File output =
         (File) rule.getVariableValueFromObject(mojo, "output");
-    assertNotNull(output);
-    assertEquals(
+    assertEquals("output",
         TestUtils.getCanonicalPath(output),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
             "jlink/image"))
     );
   }
 
+  /**
+   * Parameter 'limitmodules' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasLimitModules() throws Exception {
-    List<String> limitmodules =
+    final List<String> limitmodules =
         (List<String>) rule.getVariableValueFromObject(mojo, "limitmodules");
-    assertNotNull(limitmodules);
-    assertEquals(
+    assertEquals("limitmodules",
         TestUtils.buildStringFromNames(limitmodules),
         TestUtils.buildStringFromNames(Arrays.asList(
             "java.base", "org.example.limitmodule"))
     );
   }
 
+  /**
+   * Parameter 'suggestproviders' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasSuggestProviders() throws Exception {
-    List<String> suggestproviders =
-        (List<String>) rule.getVariableValueFromObject(mojo, "suggestproviders");
-    assertNotNull(suggestproviders);
-    assertEquals(
+    final List<String> suggestproviders =
+        (List<String>) rule.getVariableValueFromObject(mojo,
+            "suggestproviders");
+    assertEquals("suggestproviders",
         TestUtils.buildStringFromNames(suggestproviders),
         TestUtils.buildStringFromNames(Arrays.asList(
             "provider.name"))
     );
   }
 
+  /**
+   * Parameter 'saveopts' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasSaveOpts() throws Exception {
-    File saveopts =
+    final File saveopts =
         (File) rule.getVariableValueFromObject(mojo, "saveopts");
-    assertNotNull(saveopts);
-    assertEquals(
+    assertEquals("saveopts",
         TestUtils.getCanonicalPath(saveopts),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
             "jlink-opts"))
     );
   }
 
+  /**
+   * Parameter 'resourceslastsorter' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasResourcesLastSorter() throws Exception {
-    String resourceslastsorter =
+    final String resourceslastsorter =
         (String) rule.getVariableValueFromObject(mojo, "resourceslastsorter");
-    assertEquals(resourceslastsorter, "resource-sorter-name");
+    assertEquals("resourceslastsorter",
+        resourceslastsorter,
+        "resource-sorter-name"
+    );
   }
 
+  /**
+   * Parameter 'postprocesspath' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasPostProcessPath() throws Exception {
-    File postprocesspath =
+    final File postprocesspath =
         (File) rule.getVariableValueFromObject(mojo, "postprocesspath");
-    assertNotNull(postprocesspath);
-    assertEquals(
+    assertEquals("postprocesspath",
         TestUtils.getCanonicalPath(postprocesspath),
         TestUtils.getCanonicalPath(new File(project.getBuild().getDirectory(),
             "imagefile"))
     );
   }
 
+  /**
+   * Parameter 'verbose' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasVerbose() throws Exception {
-    boolean verbose =
+    final boolean verbose =
         (boolean) rule.getVariableValueFromObject(mojo, "verbose");
-    assertTrue(verbose);
+    assertTrue("verbose",
+        verbose);
   }
 
+  /**
+   * Parameter 'bindservices' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasBindServices() throws Exception {
-    boolean bindservices =
+    final boolean bindservices =
         (boolean) rule.getVariableValueFromObject(mojo, "bindservices");
-    assertTrue(bindservices);
+    assertTrue("bindservices",
+        bindservices);
   }
 
+  /**
+   * Parameter 'launcher' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasLauncher() throws Exception {
-    Launcher launcher =
+    final Launcher launcher =
         (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
-    assertNotNull(launcher);
-    assertEquals(launcher.getCommand(), "myLauncher");
-    assertEquals(launcher.getMainModule(), "mainModule");
-    assertEquals(launcher.getMainClass(), "mainClass");
-    assertEquals(launcher.getJvmArgs(),
-        "-Dfile.encoding=UTF-8 -Xms256m -Xmx512m");
-    assertEquals(launcher.getArgs(), "--debug");
-    File nixtemplate = launcher.getNixTemplate();
-    assertNotNull(nixtemplate);
-    assertEquals(
+    assertNotNull("launcher",
+        launcher);
+  }
+
+  /**
+   * Parameter 'launcher/command' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherCommand() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertEquals("launcher/command",
+        launcher.getCommand(),
+        "myLauncher"
+    );
+  }
+
+  /**
+   * Parameter 'launcher/mainmodule' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherMainModule() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertEquals("launcher/mainmodule",
+        launcher.getMainModule(),
+        "mainModule"
+    );
+  }
+
+
+  /**
+   * Parameter 'launcher/mainclass' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherMainClass() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertEquals("launcher/mainclass",
+        launcher.getMainClass(),
+        "mainClass"
+    );
+  }
+
+  /**
+   * Parameter 'launcher/jvmargs' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherJvmArgs() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertEquals("launcher/jvmargs",
+        launcher.getJvmArgs(),
+        "-Dfile.encoding=UTF-8 -Xms256m -Xmx512m"
+    );
+  }
+
+  /**
+   * Parameter 'launcher/args' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherArgs() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    assertEquals("launcher/args",
+        launcher.getArgs(),
+        "--debug"
+    );
+  }
+
+  /**
+   * Parameter 'launcher/nixtemplate' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherNixTemplate() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    final File nixtemplate = launcher.getNixTemplate();
+    assertEquals("launcher/nixtemplate",
         TestUtils.getCanonicalPath(nixtemplate),
         TestUtils.getCanonicalPath(new File(project.getBasedir(),
             "config/jlink/nix.template"))
     );
-    File wintemplate = launcher.getWinTemplate();
-    assertNotNull(wintemplate);
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'launcher/wintemplate' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasLauncherWinTemplate() throws Exception {
+    final Launcher launcher =
+        (Launcher) rule.getVariableValueFromObject(mojo, "launcher");
+    final File wintemplate = launcher.getWinTemplate();
+    assertEquals("launcher/wintemplate",
         TestUtils.getCanonicalPath(wintemplate),
         TestUtils.getCanonicalPath(new File(project.getBasedir(),
             "config/jlink/win.template"))
     );
   }
 
+  /**
+   * Parameter 'noheaderfiles' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasNoHeaderFiles() throws Exception {
-    boolean noheaderfiles =
+    final boolean noheaderfiles =
         (boolean) rule.getVariableValueFromObject(mojo, "noheaderfiles");
-    assertTrue(noheaderfiles);
+    assertTrue("noheaderfiles",
+        noheaderfiles);
   }
 
+  /**
+   * Parameter 'nomanpages' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasNoManPages() throws Exception {
-    boolean nomanpages =
+    final boolean nomanpages =
         (boolean) rule.getVariableValueFromObject(mojo, "nomanpages");
-    assertTrue(nomanpages);
+    assertTrue("nomanpages",
+        nomanpages);
   }
 
+  /**
+   * Parameter 'endian' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasEndian() throws Exception {
-    Endian endian =
+    final Endian endian =
         (Endian) rule.getVariableValueFromObject(mojo, "endian");
-    assertEquals(endian, Endian.LITTLE);
+    assertEquals("endian",
+        endian,
+        Endian.LITTLE
+    );
   }
 
+  /**
+   * Parameter 'ignoresigninginformation' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasIgnoreSigningInformation() throws Exception {
-    boolean ignoresigninginformation =
+    final boolean ignoresigninginformation =
         (boolean) rule.getVariableValueFromObject(mojo,
             "ignoresigninginformation");
-    assertTrue(ignoresigninginformation);
+    assertTrue("ignoresigninginformation",
+        ignoresigninginformation);
   }
 
+  /**
+   * Parameter 'disableplugins' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasDisablePlugins() throws Exception {
-    List<String> disableplugins =
+    final List<String> disableplugins =
         (List<String>) rule.getVariableValueFromObject(mojo, "disableplugins");
-    assertNotNull(disableplugins);
-    assertEquals(
+    assertEquals("disableplugins",
         TestUtils.buildStringFromNames(disableplugins),
         TestUtils.buildStringFromNames(Arrays.asList(
             "compress", "dedup-legal-notices"))
     );
   }
 
+  /**
+   * Parameter 'compress' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasCompress() throws Exception {
-    Compress compress =
+    final Compress compress =
         (Compress) rule.getVariableValueFromObject(mojo, "compress");
-    assertNotNull(compress);
-    Compression compression = compress.getCompression();
-    assertEquals(compression, Compression.ZIP);
-    List<String> filters = compress.getFilters();
-    assertNotNull(filters);
-    assertEquals(
+    assertNotNull("compress",
+        compress);
+  }
+
+  /**
+   * Parameter 'compress/compression' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasCompressCompression() throws Exception {
+    final Compress compress =
+        (Compress) rule.getVariableValueFromObject(mojo, "compress");
+    final Compression compression = compress.getCompression();
+    assertEquals("compress/compression",
+        compression,
+        Compression.ZIP
+    );
+  }
+
+  /**
+   * Parameter 'compress/filters' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasCompressFilters() throws Exception {
+    final Compress compress =
+        (Compress) rule.getVariableValueFromObject(mojo, "compress");
+    final List<String> filters = compress.getFilters();
+    assertEquals("compress/filters",
         TestUtils.buildStringFromNames(filters),
         TestUtils.buildStringFromNames(Arrays.asList(
             "**/*-info.class",
@@ -420,25 +881,33 @@ public class JlinkMojoTest {
     );
   }
 
+  /**
+   * Parameter 'includelocales' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasIncludeLocales() throws Exception {
-    List<String> includelocales =
+    final List<String> includelocales =
         (List<String>) rule.getVariableValueFromObject(mojo, "includelocales");
-    assertNotNull(includelocales);
-    assertEquals(
+    assertEquals("includelocales",
         TestUtils.buildStringFromNames(includelocales),
         TestUtils.buildStringFromNames(Arrays.asList("en", "ja", "*-IN"))
     );
   }
 
+  /**
+   * Parameter 'orderresources' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasOrderResources() throws Exception {
-    List<String> orderresources =
+    final List<String> orderresources =
         (List<String>) rule.getVariableValueFromObject(mojo, "orderresources");
-    assertNotNull(orderresources);
-    assertEquals(
+    assertEquals("orderresources",
         TestUtils.buildStringFromNames(orderresources),
         TestUtils.buildStringFromNames(Arrays.asList(
             "**/*-info.class",
@@ -449,13 +918,18 @@ public class JlinkMojoTest {
     );
   }
 
+  /**
+   * Parameter 'excluderesources' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasExcludeResources() throws Exception {
-    List<String> excluderesources =
-        (List<String>) rule.getVariableValueFromObject(mojo, "excluderesources");
-    assertNotNull(excluderesources);
-    assertEquals(
+    final List<String> excluderesources =
+        (List<String>) rule.getVariableValueFromObject(mojo,
+            "excluderesources");
+    assertEquals("excluderesources",
         TestUtils.buildStringFromNames(excluderesources),
         TestUtils.buildStringFromNames(Arrays.asList(
             "**/*-info.class",
@@ -466,42 +940,70 @@ public class JlinkMojoTest {
     );
   }
 
+  /**
+   * Parameter 'stripdebug' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasStripDebug() throws Exception {
-    boolean stripdebug =
+    final boolean stripdebug =
         (boolean) rule.getVariableValueFromObject(mojo, "stripdebug");
-    assertTrue(stripdebug);
+    assertTrue("stripdebug",
+        stripdebug);
   }
 
+  /**
+   * Parameter 'stripjavadebugattributes' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasStripJavaDebugAttributes() throws Exception {
-    boolean stripjavadebugattributes =
+    final boolean stripjavadebugattributes =
         (boolean) rule.getVariableValueFromObject(mojo,
             "stripjavadebugattributes");
-    assertTrue(stripjavadebugattributes);
+    assertTrue("stripjavadebugattributes",
+        stripjavadebugattributes);
   }
 
+  /**
+   * Parameter 'stripnativecommands' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasStripNativeCommands() throws Exception {
-    boolean stripnativecommands =
+    final boolean stripnativecommands =
         (boolean) rule.getVariableValueFromObject(mojo, "stripnativecommands");
-    assertTrue(stripnativecommands);
+    assertTrue("stripnativecommands",
+        stripnativecommands);
   }
 
+  /**
+   * Parameter 'deduplegalnotices' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasDedupLegalNotices() throws Exception {
-    boolean deduplegalnotices =
+    final boolean deduplegalnotices =
         (boolean) rule.getVariableValueFromObject(mojo, "deduplegalnotices");
-    assertTrue(deduplegalnotices);
+    assertTrue("deduplegalnotices",
+        deduplegalnotices);
   }
 
+  /**
+   * Parameter 'excludefiles' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
-  @SuppressWarnings("unchecked") // rule.getVariableValueFromObject()
+  @SuppressWarnings("unchecked") // unchecked cast
   public void testMojoHasExcludeFiles() throws Exception {
-    List<String> excludefiles =
+    final List<String> excludefiles =
         (List<String>) rule.getVariableValueFromObject(mojo, "excludefiles");
-    assertNotNull(excludefiles);
-    assertEquals(
+    assertEquals("excludefiles",
         TestUtils.buildStringFromNames(excludefiles),
         TestUtils.buildStringFromNames(Arrays.asList(
             "**/*-info.class",
@@ -512,55 +1014,112 @@ public class JlinkMojoTest {
     );
   }
 
+  /**
+   * Parameter 'excludejmodsection' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasExcludeJmodSection() throws Exception {
-    Section excludejmodsection =
+    final Section excludejmodsection =
         (Section) rule.getVariableValueFromObject(mojo, "excludejmodsection");
-    assertEquals(excludejmodsection, Section.MAN);
+    assertEquals("excludejmodsection",
+        excludejmodsection,
+        Section.MAN
+    );
   }
 
+  /**
+   * Parameter 'generatejliclasses' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasGenerateJliClasses() throws Exception {
-    File generatejliclasses =
+    final File generatejliclasses =
         (File) rule.getVariableValueFromObject(mojo, "generatejliclasses");
-    assertEquals(
+    assertEquals("generatejliclasses",
         TestUtils.getCanonicalPath(generatejliclasses),
         TestUtils.getCanonicalPath(new File(PROJECT_DIR, "jli-classes"))
     );
   }
 
+  /**
+   * Parameter 'releaseinfo' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasReleaseInfo() throws Exception {
-    ReleaseInfo releaseinfo =
+    final ReleaseInfo releaseinfo =
         (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
-    assertNotNull(releaseinfo);
-    File releaseinfofile = releaseinfo.getFile();
-    assertNotNull(releaseinfofile);
-    assertEquals(
+    assertNotNull("releaseinfo",
+        releaseinfo);
+  }
+
+  /**
+   * Parameter 'releaseinfo/file' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasReleaseInfoFile() throws Exception {
+    final ReleaseInfo releaseinfo =
+        (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
+    final File releaseinfofile = releaseinfo.getFile();
+    assertEquals("releaseinfo/file",
         TestUtils.getCanonicalPath(releaseinfofile),
         TestUtils.getCanonicalPath(new File(PROJECT_DIR, "file"))
     );
-    Map<String, String> adds = releaseinfo.getAdds();
-    assertNotNull(adds);
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'releaseinfo/adds' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasReleaseInfoAdds() throws Exception {
+    final ReleaseInfo releaseinfo =
+        (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
+    final Map<String, String> adds = releaseinfo.getAdds();
+    assertEquals("releaseinfo/adds",
         adds.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
             .collect(Collectors.joining(":")),
         "key1=value1:key2=value2"
     );
-    Map<String, String> dels = releaseinfo.getDels();
-    assertNotNull(dels);
-    assertEquals(
+  }
+
+  /**
+   * Parameter 'releaseinfo/dels' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasReleaseInfoDels() throws Exception {
+    final ReleaseInfo releaseinfo =
+        (ReleaseInfo) rule.getVariableValueFromObject(mojo, "releaseinfo");
+    final Map<String, String> dels = releaseinfo.getDels();
+    assertEquals("releaseinfo/dels",
         dels.entrySet().stream().map(e -> e.getKey())
             .collect(Collectors.joining(":")),
         "key1:key2"
     );
   }
 
+  /**
+   * Parameter 'vm' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
   @Test
   public void testMojoHasVM() throws Exception {
-    HotSpot vm =
+    final HotSpot vm =
         (HotSpot) rule.getVariableValueFromObject(mojo, "vm");
-    assertEquals(vm, HotSpot.SERVER);
+    assertEquals("vm",
+        vm,
+        HotSpot.SERVER
+    );
   }
 
 }

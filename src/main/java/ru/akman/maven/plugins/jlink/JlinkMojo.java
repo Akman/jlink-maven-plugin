@@ -22,9 +22,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -55,7 +57,6 @@ import org.codehaus.plexus.util.cli.Commandline;
 import ru.akman.maven.plugins.BaseToolMojo;
 import ru.akman.maven.plugins.CommandLineBuilder;
 import ru.akman.maven.plugins.CommandLineOption;
-import ru.akman.maven.plugins.jlink.PluginUtils;
 
 /**
  * The `jlink` goal lets you create a custom runtime image with
@@ -744,15 +745,15 @@ public class JlinkMojo extends BaseToolMojo {
 
     // add the project system dependencies
     paths.addAll(project.getDependencies().stream()
-        .filter(Objects::nonNull)
-        .filter(d -> !StringUtils.isBlank(d.getSystemPath()))
-        .map(d -> new File(d.getSystemPath()))
+        .filter(d -> d != null && !StringUtils.isBlank(d.getSystemPath()))
+        .map(d -> new File(StringUtils.stripToEmpty(d.getSystemPath())))
         .collect(Collectors.toList()));
 
     // create request contains all information
     // required to analyze the project
     // TODO: only RUNTIME dependencies
-    final ResolvePathsRequest<File> request = ResolvePathsRequest.ofFiles(paths);
+    final ResolvePathsRequest<File> request =
+        ResolvePathsRequest.ofFiles(paths);
 
     // this is used to resolve main module descriptor
     final File descriptorFile =
@@ -785,7 +786,7 @@ public class JlinkMojo extends BaseToolMojo {
    * @return main module descriptor or null if it not exists
    */
   private JavaModuleDescriptor fetchMainModuleDescriptor() {
-    JavaModuleDescriptor descriptor =
+    final JavaModuleDescriptor descriptor =
         projectDependencies.getMainModuleDescriptor();
     if (descriptor == null) {
       // detected that the project is non modular
@@ -794,8 +795,8 @@ public class JlinkMojo extends BaseToolMojo {
       }
     } else {
       if (getLog().isInfoEnabled()) {
-        getLog().info("Found the main module descriptor: ["
-            + descriptor.name() + "]");
+        getLog().info(MessageFormat.format(
+            "Found the main module descriptor: [{0}]", descriptor.name()));
       }
     }
     return descriptor;
@@ -807,14 +808,13 @@ public class JlinkMojo extends BaseToolMojo {
    * @return pairs of path exception file and cause
    */
   private Map<File, String> fetchPathExceptions() {
-    Map<File, String> result = projectDependencies.getPathExceptions()
+    return projectDependencies.getPathExceptions()
         .entrySet().stream()
         .filter(entry -> entry != null && entry.getKey() != null)
         .collect(Collectors.toMap(
             entry -> entry.getKey(),
             entry -> PluginUtils.getThrowableCause(entry.getValue())
         ));
-    return result;
   }
 
   /**
@@ -823,7 +823,7 @@ public class JlinkMojo extends BaseToolMojo {
    * @return classpath elements
    */
   private List<File> fetchClasspathElements() {
-    List<File> result = projectDependencies.getClasspathElements()
+    final List<File> result = projectDependencies.getClasspathElements()
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
@@ -843,7 +843,8 @@ public class JlinkMojo extends BaseToolMojo {
    * @return modulepath elements
    */
   private List<File> fetchModulepathElements() {
-    List<File> result = projectDependencies.getModulepathElements().keySet()
+    final List<File> result = projectDependencies.getModulepathElements()
+        .keySet()
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
@@ -863,7 +864,7 @@ public class JlinkMojo extends BaseToolMojo {
                           + System.lineSeparator()
                           + (mainModuleDescriptor != null
                               && mainModuleDescriptor.exports().isEmpty()
-                                  ? "[*] APPLICATION"
+                                  ? "[!] APPLICATION"
                                   : "[!] LIBRARY")
                       : ""))
               .collect(Collectors.joining(System.lineSeparator())));
@@ -879,7 +880,7 @@ public class JlinkMojo extends BaseToolMojo {
   private String getPathElements() {
     String result = null;
     if (modulepath != null) {
-      List<File> pathelements = modulepath.getPathElements();
+      final List<File> pathelements = modulepath.getPathElements();
       if (pathelements != null && !pathelements.isEmpty()) {
         result = pathelements.stream()
             .filter(Objects::nonNull)
@@ -906,9 +907,9 @@ public class JlinkMojo extends BaseToolMojo {
   private String getFileSets() throws MojoExecutionException {
     String result = null;
     if (modulepath != null) {
-      List<FileSet> filesets = modulepath.getFileSets();
+      final List<FileSet> filesets = modulepath.getFileSets();
       if (filesets != null && !filesets.isEmpty()) {
-        for (FileSet fileSet : filesets) {
+        for (final FileSet fileSet : filesets) {
           final File fileSetDir;
           try {
             fileSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, fileSet);
@@ -920,9 +921,9 @@ public class JlinkMojo extends BaseToolMojo {
                 "Error: Unable to resolve fileset", ex);
           }
           result = Stream.of(fileSetManager.getIncludedFiles(fileSet))
-              .filter(Objects::nonNull)
               .filter(fileName -> !StringUtils.isBlank(fileName))
-              .map(fileName -> fileSetDir.toPath().resolve(fileName).toString())
+              .map(fileName -> fileSetDir.toPath().resolve(
+                  StringUtils.stripToEmpty(fileName)).toString())
               .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
             getLog().debug(PluginUtils.getFileSetDebugInfo("FILESET",
@@ -945,9 +946,9 @@ public class JlinkMojo extends BaseToolMojo {
   private String getDirSets() throws MojoExecutionException {
     String result = null;
     if (modulepath != null) {
-      List<FileSet> dirsets = modulepath.getDirSets();
+      final List<FileSet> dirsets = modulepath.getDirSets();
       if (dirsets != null && !dirsets.isEmpty()) {
-        for (FileSet dirSet : dirsets) {
+        for (final FileSet dirSet : dirsets) {
           final File dirSetDir;
           try {
             dirSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, dirSet);
@@ -956,11 +957,12 @@ public class JlinkMojo extends BaseToolMojo {
               getLog().error("Unable to resolve dirset", ex);
             }
             throw new MojoExecutionException(
-              "Error: Unable to resolve dirset", ex);
+                "Error: Unable to resolve dirset", ex);
           }
           result = Stream.of(fileSetManager.getIncludedDirectories(dirSet))
               .filter(dirName -> !StringUtils.isBlank(dirName))
-              .map(dirName -> dirSetDir.toPath().resolve(dirName).toString())
+              .map(dirName -> dirSetDir.toPath().resolve(
+                  StringUtils.stripToEmpty(dirName)).toString())
               .collect(Collectors.joining(File.pathSeparator));
           if (getLog().isDebugEnabled()) {
             getLog().debug(PluginUtils.getFileSetDebugInfo("DIRSET",
@@ -980,9 +982,10 @@ public class JlinkMojo extends BaseToolMojo {
   private String getDependencySets() {
     String result = null;
     if (modulepath != null) {
-      List<DependencySet> dependencysets = modulepath.getDependencySets();
+      final List<DependencySet> dependencysets =
+          modulepath.getDependencySets();
       if (dependencysets != null && !dependencysets.isEmpty()) {
-        for (DependencySet dependencySet : dependencysets) {
+        for (final DependencySet dependencySet : dependencysets) {
           result = getIncludedDependencies(dependencySet)
               .stream()
               .collect(Collectors.joining(File.pathSeparator));
@@ -1004,7 +1007,7 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return the set of the included project dependencies
    */
-  private Set<String> getIncludedDependencies(DependencySet depSet) {
+  private Set<String> getIncludedDependencies(final DependencySet depSet) {
     return projectDependencies.getPathElements().entrySet().stream()
         .filter(entry -> entry != null
             && entry.getKey() != null
@@ -1021,11 +1024,7 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return the set of the excluded project dependencies
    */
-  private Set<String> getExcludedDependencies(DependencySet depSet) {
-    if (depSet == null) {
-      throw new IllegalArgumentException(
-          "The depSet cannot be null");
-    }
+  private Set<String> getExcludedDependencies(final DependencySet depSet) {
     return projectDependencies.getPathElements().entrySet().stream()
         .filter(entry -> entry != null
             && entry.getKey() != null
@@ -1047,23 +1046,16 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return will the dependency be accepted
    */
-  private boolean filterDependency(DependencySet depSet, File file,
-      JavaModuleDescriptor descriptor) {
-
-    if (file == null) {
-      throw new IllegalArgumentException(
-          "The file cannot be null");
-    }
+  private boolean filterDependency(final DependencySet depSet, final File file,
+      final JavaModuleDescriptor descriptor) {
 
     if (descriptor == null) {
       if (getLog().isWarnEnabled()) {
         getLog().warn("Missing module descriptor: " + file);
       }
     } else {
-      if (descriptor.isAutomatic()) {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Found automatic module: " + file);
-        }
+      if (descriptor.isAutomatic() && getLog().isInfoEnabled()) {
+        getLog().info("Found automatic module: " + file);
       }
     }
 
@@ -1073,10 +1065,9 @@ public class JlinkMojo extends BaseToolMojo {
       // include module by default
       isIncluded = true;
       // include automatic module by default
-      if (descriptor != null && descriptor.isAutomatic()) {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Included automatic module: " + file);
-        }
+      if (descriptor != null && descriptor.isAutomatic()
+          && getLog().isInfoEnabled()) {
+        getLog().info("Included automatic module: " + file);
       }
       // exclude output module by default
       if (file.compareTo(outputDir) == 0) {
@@ -1129,24 +1120,24 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return should the dependency be included
    */
-  private boolean matchesIncludes(DependencySet depSet, File file,
-      JavaModuleDescriptor descriptor) {
+  private boolean matchesIncludes(final DependencySet depSet, final File file,
+      final JavaModuleDescriptor descriptor) {
 
-    String name = descriptor == null ? "" : descriptor.name();
+    final String name = descriptor == null ? "" : descriptor.name();
 
-    List<String> includes = depSet.getIncludes();
-    List<String> includenames = depSet.getIncludeNames();
+    final List<String> includes = depSet.getIncludes();
+    final List<String> includenames = depSet.getIncludeNames();
 
     boolean result = true;
 
-    if (includenames == null || includenames.size() == 0) {
-      if (includes == null || includes.size() == 0) {
+    if (includenames == null || includenames.isEmpty()) {
+      if (includes == null || includes.isEmpty()) {
         result = true;
       } else {
         result = pathMatches(includes, file.toPath());
       }
     } else {
-      if (includes == null || includes.size() == 0) {
+      if (includes == null || includes.isEmpty()) {
         result = nameMatches(includenames, name);
       } else {
         result = pathMatches(includes, file.toPath())
@@ -1167,24 +1158,24 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return should the dependency be excluded
    */
-  private boolean matchesExcludes(DependencySet depSet, File file,
-      JavaModuleDescriptor descriptor) {
+  private boolean matchesExcludes(final DependencySet depSet, final File file,
+      final JavaModuleDescriptor descriptor) {
 
-    String name = descriptor == null ? "" : descriptor.name();
+    final String name = descriptor == null ? "" : descriptor.name();
 
-    List<String> excludes = depSet.getExcludes();
-    List<String> excludenames = depSet.getExcludeNames();
+    final List<String> excludes = depSet.getExcludes();
+    final List<String> excludenames = depSet.getExcludeNames();
 
     boolean result = false;
 
-    if (excludenames == null || excludenames.size() == 0) {
-      if (excludes == null || excludes.size() == 0) {
+    if (excludenames == null || excludenames.isEmpty()) {
+      if (excludes == null || excludes.isEmpty()) {
         result = false;
       } else {
         result = pathMatches(excludes, file.toPath());
       }
     } else {
-      if (excludes == null || excludes.size() == 0) {
+      if (excludes == null || excludes.isEmpty()) {
         result = nameMatches(excludenames, name);
       } else {
         result = pathMatches(excludes, file.toPath())
@@ -1205,17 +1196,9 @@ public class JlinkMojo extends BaseToolMojo {
    * @return true if the path matches at least one of the patterns or
    *              if no patterns are specified
    */
-  private boolean pathMatches(List<String> patterns, Path path) {
-    if (patterns == null || patterns.size() == 0) {
-      throw new IllegalArgumentException(
-          "The patterns cannot be null or empty");
-    }
-    if (path == null) {
-      throw new IllegalArgumentException(
-          "The path cannot be null");
-    }
-    for (String pattern : patterns) {
-      PathMatcher pathMatcher =
+  private boolean pathMatches(final List<String> patterns, final Path path) {
+    for (final String pattern : patterns) {
+      final PathMatcher pathMatcher =
           FileSystems.getDefault().getPathMatcher(pattern);
       if (pathMatcher.matches(path)) {
         return true;
@@ -1234,18 +1217,10 @@ public class JlinkMojo extends BaseToolMojo {
    * @return true if the name matches at least one of the patterns or
    *              if no patterns are specified
    */
-  private boolean nameMatches(List<String> patterns, String name) {
-    if (patterns == null || patterns.size() == 0) {
-      throw new IllegalArgumentException(
-          "The patterns cannot be null or empty");
-    }
-    if (name == null) {
-      throw new IllegalArgumentException(
-          "The name cannot be null");
-    }
-    for (String pattern : patterns) {
-      Pattern regexPattern = Pattern.compile(pattern);
-      Matcher nameMatcher = regexPattern.matcher(name);
+  private boolean nameMatches(final List<String> patterns, final String name) {
+    for (final String pattern : patterns) {
+      final Pattern regexPattern = Pattern.compile(pattern);
+      final Matcher nameMatcher = regexPattern.matcher(name);
       if (nameMatcher.matches()) {
         return true;
       }
@@ -1260,36 +1235,36 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @throws MojoExecutionException if any errors occurred
    */
-  private void processModules(CommandLineBuilder cmdLine)
+  private void processModules(final CommandLineBuilder cmdLine)
       throws MojoExecutionException {
     CommandLineOption opt = null;
     // modulepath
     if (modulepath != null) {
-      StringBuilder path = new StringBuilder();
-      String pathElements = getPathElements();
+      final StringBuilder path = new StringBuilder();
+      final String pathElements = getPathElements();
       if (!StringUtils.isBlank(pathElements)) {
-        path.append(pathElements);
+        path.append(StringUtils.stripToEmpty(pathElements));
       }
-      String fileSets = getFileSets();
+      final String fileSets = getFileSets();
       if (!StringUtils.isBlank(fileSets)) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
-        path.append(fileSets);
+        path.append(StringUtils.stripToEmpty(fileSets));
       }
-      String dirSets = getDirSets();
+      final String dirSets = getDirSets();
       if (!StringUtils.isBlank(dirSets)) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
-        path.append(dirSets);
+        path.append(StringUtils.stripToEmpty(dirSets));
       }
-      String dependencySets = getDependencySets();
+      final String dependencySets = getDependencySets();
       if (!StringUtils.isBlank(dependencySets)) {
         if (path.length() != 0) {
           path.append(File.pathSeparator);
         }
-        path.append(dependencySets);
+        path.append(StringUtils.stripToEmpty(dependencySets));
       }
       if (path.length() != 0) {
         opt = cmdLine.createOpt();
@@ -1300,7 +1275,7 @@ public class JlinkMojo extends BaseToolMojo {
     // addmodules
     if (includelocales != null && !includelocales.isEmpty()) {
       if (addmodules == null) {
-        addmodules = new ArrayList<String>();
+        addmodules = new ArrayList<>();
       }
       addmodules.add("jdk.localedata");
     }
@@ -1317,7 +1292,7 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @param cmdLine the command line builder
    */
-  private void processOptions(CommandLineBuilder cmdLine) {
+  private void processOptions(final CommandLineBuilder cmdLine) {
     CommandLineOption opt = null;
     // output
     opt = cmdLine.createOpt();
@@ -1339,7 +1314,7 @@ public class JlinkMojo extends BaseToolMojo {
     if (!StringUtils.isBlank(resourceslastsorter)) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--resources-last-sorter");
-      opt.createArg().setValue(resourceslastsorter.trim());
+      opt.createArg().setValue(StringUtils.stripToEmpty(resourceslastsorter));
     }
     // verbose
     if (verbose) {
@@ -1373,15 +1348,17 @@ public class JlinkMojo extends BaseToolMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      if (!toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {
-        stripjavadebugattributes = false;
-        if (getLog().isWarnEnabled()) {
-          getLog().warn("Parameter [--strip-java-debug-attributes] skiped, "
-              + "at least " + JavaVersion.JAVA_13 + " is required to use it");
-        }
-      } else {
+      if (toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {
         opt = cmdLine.createOpt();
         opt.createArg().setValue("--strip-java-debug-attributes");
+      } else {
+        stripjavadebugattributes = false;
+        if (getLog().isWarnEnabled()) {
+          getLog().warn(MessageFormat.format(
+              "Parameter [{0}] skiped, at least {1} is required to use it",
+              "--strip-java-debug-attributes",
+              JavaVersion.JAVA_13));
+        }
       }
     }
     // stripnativecommands
@@ -1413,11 +1390,11 @@ public class JlinkMojo extends BaseToolMojo {
     if (endian != null && !endian.equals(Endian.NATIVE)) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--endian");
-      opt.createArg().setValue(endian.toString().toLowerCase());
+      opt.createArg().setValue(endian.toString().toLowerCase(Locale.ROOT));
     }
     // disableplugins
     if (disableplugins != null) {
-      for (String plugin : disableplugins) {
+      for (final String plugin : disableplugins) {
         opt = cmdLine.createOpt();
         opt.createArg().setValue("--disable-plugin");
         opt.createArg().setValue(plugin);
@@ -1434,7 +1411,7 @@ public class JlinkMojo extends BaseToolMojo {
     if (excludejmodsection != null) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--exclude-jmod-section="
-          + excludejmodsection.toString().toLowerCase());
+          + excludejmodsection.toString().toLowerCase(Locale.ROOT));
     }
     // generatejliclasses
     if (generatejliclasses != null) {
@@ -1445,24 +1422,25 @@ public class JlinkMojo extends BaseToolMojo {
     // vm
     if (vm != null) {
       opt = cmdLine.createOpt();
-      opt.createArg().setValue("--vm=" + vm.toString().toLowerCase());
+      opt.createArg().setValue("--vm="
+          + vm.toString().toLowerCase(Locale.ROOT));
     }
     // launcher
     if (launcher != null) {
-      String launcherCommand = launcher.getCommand();
+      final String launcherCommand =
+          StringUtils.stripToEmpty(launcher.getCommand());
       if (!StringUtils.isBlank(launcherCommand)) {
-        launcherCommand = launcherCommand.trim();
-        String launcherModule = launcher.getMainModule();
+        final String launcherModule =
+            StringUtils.stripToEmpty(launcher.getMainModule());
         if (!StringUtils.isBlank(launcherModule)) {
-          launcherModule = launcherModule.trim();
           opt = cmdLine.createOpt();
           opt.createArg().setValue("--launcher");
-          String launcherClass = launcher.getMainClass();
+          final String launcherClass =
+              StringUtils.stripToEmpty(launcher.getMainClass());
           if (StringUtils.isBlank(launcherClass)) {
             opt.createArg().setValue(launcherCommand + "="
                 + launcherModule);
           } else {
-            launcherClass = launcherClass.trim();
             opt.createArg().setValue(launcherCommand + "="
                 + launcherModule + "/" + launcherClass);
           }
@@ -1471,10 +1449,10 @@ public class JlinkMojo extends BaseToolMojo {
     }
     // compress
     if (compress != null) {
-      Compression compression = compress.getCompression();
-      List<String> filters = compress.getFilters();
+      final Compression compression = compress.getCompression();
+      final List<String> filters = compress.getFilters();
       if (compression != null) {
-        StringBuilder option = new StringBuilder("--compress=");
+        final StringBuilder option = new StringBuilder("--compress=");
         option.append(compression.getValue());
         if (filters != null) {
           option.append(filters.stream()
@@ -1504,30 +1482,30 @@ public class JlinkMojo extends BaseToolMojo {
     }
     // releaseinfo
     if (releaseinfo != null) {
-      StringBuilder option = new StringBuilder();
-      File releaseinfofile = releaseinfo.getFile();
+      final StringBuilder option = new StringBuilder();
+      final File releaseinfofile = releaseinfo.getFile();
       if (releaseinfofile != null) {
         option.append(releaseinfofile.toString());
       }
-      Map<String, String> adds = releaseinfo.getAdds();
+      final Map<String, String> adds = releaseinfo.getAdds();
       if (adds != null && !adds.entrySet().isEmpty()) {
         if (option.length() != 0) {
-          option.append(":");
+          option.append(':');
         }
         option.append(adds.entrySet().stream()
             .filter(add -> add != null && !StringUtils.isBlank(add.getKey()))
-            .map(add -> add.getKey().trim() + "="
+            .map(add -> StringUtils.stripToEmpty(add.getKey()) + "="
                 + StringUtils.stripToEmpty(add.getValue()))
             .collect(Collectors.joining(":", "add:", "")));
       }
-      Map<String, String> dels = releaseinfo.getDels();
+      final Map<String, String> dels = releaseinfo.getDels();
       if (dels != null && !dels.entrySet().isEmpty()) {
         if (option.length() != 0) {
-          option.append(":");
+          option.append(':');
         }
         option.append(dels.entrySet().stream()
             .filter(del -> del != null && !StringUtils.isBlank(del.getKey()))
-            .map(del -> del.getKey().trim())
+            .map(del -> StringUtils.stripToEmpty(del.getKey()))
             .collect(Collectors.joining(":", "del:", "")));
       }
       opt = cmdLine.createOpt();
@@ -1543,31 +1521,33 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @throws MojoExecutionException if any errors occurred while copying a file
    */
-  private void copyFiles(List<File> files, File dir)
+  private void copyFiles(final List<File> files, final File dir)
       throws MojoExecutionException {
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Copy files to: [" + dir + "]");
+      getLog().debug(MessageFormat.format("Copy files to: [{0}]", dir));
     }
-    for (File file : files) {
+    for (final File file : files) {
       try {
         if (file.exists()) {
           if (file.isDirectory()) {
             if (getLog().isDebugEnabled()) {
-              getLog().debug("Skiped directory: [" + file + "]");
+              getLog().debug(MessageFormat.format("Skiped directory: [{0}]",
+                  file));
             }
           } else {
             FileUtils.copyFileToDirectory(file, dir);
             if (getLog().isDebugEnabled()) {
-              getLog().debug("Copied file: [" + file + "]");
+              getLog().debug(MessageFormat.format("Copied file: [{0}]", file));
             }
           }
         }
       } catch (IOException | IllegalArgumentException ex) {
         if (getLog().isErrorEnabled()) {
-          getLog().error("Unable to copy file: [" + file + "]", ex);
+          getLog().error(MessageFormat.format("Unable to copy file: [{0}]",
+              file), ex);
         }
-        throw new MojoExecutionException(
-            "Error: Unable to copy file: [" + file + "]", ex);
+        throw new MojoExecutionException(MessageFormat.format(
+            "Error: Unable to copy file: [{0}]", file), ex);
       }
     }
   }
@@ -1578,14 +1558,18 @@ public class JlinkMojo extends BaseToolMojo {
    * @throws MojoExecutionException if any errors occurred
    */
   private void processLauncherScripts() throws MojoExecutionException {
-    if (launcher == null || StringUtils.isBlank(launcher.getCommand())) {
+    if (launcher == null) {
       return;
     }
 
-    final String scriptName = launcher.getCommand().trim();
+    final String scriptName = StringUtils.stripToEmpty(launcher.getCommand());
+    if (StringUtils.isBlank(scriptName)) {
+      return;
+    }
 
-    Path nixScript = output.toPath().resolve("bin/" + scriptName);
-    Path winScript = output.toPath().resolve("bin/" + scriptName + ".bat");
+    final Path nixScript = output.toPath().resolve("bin/" + scriptName);
+    final Path winScript = output.toPath().resolve("bin/" + scriptName
+        + ".bat");
 
     if (stripnativecommands) {
       if (Files.exists(nixScript) && !Files.isDirectory(nixScript)) {
@@ -1593,8 +1577,8 @@ public class JlinkMojo extends BaseToolMojo {
           FileUtils.forceDelete(nixScript.toFile());
         } catch (IOException ex) {
           if (getLog().isWarnEnabled()) {
-            getLog().warn("Unable to delete launcher script: ["
-                + nixScript + "]");
+            getLog().warn(MessageFormat.format(
+                "Unable to delete launcher script: [{0}]", nixScript));
           }
         }
       }
@@ -1603,8 +1587,8 @@ public class JlinkMojo extends BaseToolMojo {
           FileUtils.forceDelete(winScript.toFile());
         } catch (IOException ex) {
           if (getLog().isWarnEnabled()) {
-            getLog().warn("Unable to delete launcher script: ["
-                + winScript + "]");
+            getLog().warn(MessageFormat.format(
+                "Unable to delete launcher script: [{0}]", winScript));
           }
         }
       }
@@ -1620,9 +1604,11 @@ public class JlinkMojo extends BaseToolMojo {
     final String mainClassName = StringUtils.stripToEmpty(
         launcher.getMainClass());
 
-    String mainName = moduleName;
+    final StringBuilder mainName = new StringBuilder(moduleName);
     if (!StringUtils.isEmpty(mainClassName)) {
-      mainName += "/" + mainClassName;
+      mainName
+          .append('/')
+          .append(mainClassName);
     }
 
     final String args = StringUtils.stripToEmpty(launcher.getArgs());
@@ -1633,21 +1619,21 @@ public class JlinkMojo extends BaseToolMojo {
       getLog().debug(System.lineSeparator()
           + "Processing launcher scripts with following variables:"
           + System.lineSeparator()
-          + "  - moduleName = [" + moduleName + "]"
+          + MessageFormat.format("  - moduleName = [{0}]", moduleName)
           + System.lineSeparator()
-          + "  - mainClassName = [" + mainClassName + "]"
+          + MessageFormat.format("  - mainClassName = [{0}]", mainClassName)
           + System.lineSeparator()
-          + "  - mainName = [" + mainName + "]"
+          + MessageFormat.format("  - mainName = [{0}]", mainName.toString())
           + System.lineSeparator()
-          + "  - args = [" + args + "]"
+          + MessageFormat.format("  - args = [{0}]", args)
           + System.lineSeparator()
-          + "  - jvmArgs = [" + jvmArgs + "]");
+          + MessageFormat.format("  - jvmArgs = [{0}]", jvmArgs));
     }
 
-    Map<String, String> data = new HashMap<>();
+    final Map<String, String> data = new HashMap<>();
     data.put("moduleName", moduleName);
     data.put("mainClassName", mainClassName);
-    data.put("mainName", mainName);
+    data.put("mainName", mainName.toString());
     data.put("args", args);
     data.put("jvmArgs", jvmArgs);
 
@@ -1675,15 +1661,15 @@ public class JlinkMojo extends BaseToolMojo {
    * @throws MojoExecutionException if any errors occurred while processing
    *                                launcher script files
    */
-  private void createLauncherScript(Path script, Path template,
-      Map<String, String> data) throws MojoExecutionException {
+  private void createLauncherScript(final Path script, final Path template,
+      final Map<String, String> data) throws MojoExecutionException {
     if (getLog().isDebugEnabled()) {
       getLog().debug(System.lineSeparator()
-          + "Fixing launcher script: [" + script + "]"
+          + MessageFormat.format("Fixing launcher script: [{0}]", script)
           + System.lineSeparator()
-          + "with template: [" + template + "]");
+          + MessageFormat.format("with template: [{0}]", template));
     }
-    StringSubstitutor engine = new StringSubstitutor(data)
+    final StringSubstitutor engine = new StringSubstitutor(data)
         .setEnableUndefinedVariableException(true)
         .setPreserveEscapes(true)
         .setEscapeChar('\\');
@@ -1695,20 +1681,20 @@ public class JlinkMojo extends BaseToolMojo {
           sourceEncoding);
     } catch (IllegalArgumentException ex) {
       if (getLog().isErrorEnabled()) {
-        getLog().error("Variable not found in the launcher template file: ["
-            + template + "]", ex);
+        getLog().error(MessageFormat.format(
+            "Variable not found in the launcher template file: [{0}]",
+            template), ex);
       }
-      throw new MojoExecutionException(
-          "Variable not found in the launcher template file: ["
-          + template + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Variable not found in the launcher template file: [{0}]", template),
+          ex);
     } catch (IOException ex) {
       if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to write to the launcher script file: ["
-            + script + "]", ex);
+        getLog().error(MessageFormat.format(
+            "Unable to write to the launcher script file: [{0}]", script), ex);
       }
-      throw new MojoExecutionException(
-          "Unable to write to the launcher script file: ["
-          + script + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Unable to write to the launcher script file: [{0}]", script), ex);
     }
   }
 
@@ -1717,6 +1703,7 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @throws MojoExecutionException if any errors occurred
    */
+  @Override
   public void execute() throws MojoExecutionException {
 
     // Init
@@ -1724,40 +1711,39 @@ public class JlinkMojo extends BaseToolMojo {
 
     // Check version
     if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {
-      throw new MojoExecutionException(
-          "Error: At least " + JavaVersion.JAVA_9
-          + " is required to use [" + TOOL_NAME + "]");
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: At least {0} is required to use [{1}]", JavaVersion.JAVA_9,
+          TOOL_NAME));
     }
 
     // Create mods directory
     try {
       FileUtils.forceMkdir(modsdir);
     } catch (IOException | IllegalArgumentException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to create mods directory: ["
-          + modsdir + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to create mods directory: [{0}]", modsdir), ex);
     }
 
     // Create libs directory
     try {
       FileUtils.forceMkdir(libsdir);
     } catch (IOException | IllegalArgumentException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to create libs directory: ["
-          + libsdir + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to create libs directory: [{0}]", libsdir), ex);
     }
 
     // Delete image output directory if it exists
     if (getLog().isInfoEnabled()) {
-      getLog().info("Set image output directory to: [" + output + "]");
+      getLog().info(MessageFormat.format(
+          "Set image output directory to: [{0}]", output));
     }
     if (output.exists() && output.isDirectory()) {
       try {
         FileUtils.deleteDirectory(output);
       } catch (IOException ex) {
-        throw new MojoExecutionException(
-            "Error: Unable to delete image output directory: ["
-            + output + "]", ex);
+        throw new MojoExecutionException(MessageFormat.format(
+            "Error: Unable to delete image output directory: [{0}]", output),
+            ex);
       }
     }
 
@@ -1767,7 +1753,7 @@ public class JlinkMojo extends BaseToolMojo {
     classpathElements = fetchClasspathElements();
     modulepathElements = fetchModulepathElements();
     pathExceptions = fetchPathExceptions();
-    if (pathExceptions.size() != 0 && getLog().isWarnEnabled()) {
+    if (!pathExceptions.isEmpty() && getLog().isWarnEnabled()) {
       getLog().warn("Found path exceptions: " + pathExceptions.size()
           + System.lineSeparator()
           + pathExceptions.entrySet().stream()
@@ -1782,11 +1768,11 @@ public class JlinkMojo extends BaseToolMojo {
     copyFiles(classpathElements, libsdir);
 
     // Build command line and populate the list of the command options
-    CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
+    final CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
     cmdLineBuilder.setExecutable(toolExecutable.toString());
     processOptions(cmdLineBuilder);
     processModules(cmdLineBuilder);
-    List<String> optsLines = new ArrayList<String>();
+    final List<String> optsLines = new ArrayList<>();
     optsLines.add("# " + TOOL_NAME);
     optsLines.addAll(cmdLineBuilder.buildOptionList());
     if (getLog().isDebugEnabled()) {
@@ -1797,19 +1783,19 @@ public class JlinkMojo extends BaseToolMojo {
 
     // Save the list of command options to the file
     // will be used in the tool command line
-    Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);
+    final Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);
     try {
       Files.write(cmdOptsPath, optsLines, sourceEncoding);
-    } catch (Exception ex) {
+    } catch (IOException ex) {
       if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to write command options to file: ["
-            + cmdOptsPath + "]", ex);
+        getLog().error(MessageFormat.format(
+            "Unable to write command options to file: [{0}]", cmdOptsPath), ex);
       }
     }
 
     // Prepare command line with command options
     // specified in the file created early
-    Commandline cmdLine = new Commandline();
+    final Commandline cmdLine = new Commandline();
     cmdLine.setExecutable(toolExecutable.toString());
     cmdLine.createArg().setValue("@" + cmdOptsPath.toString());
 
@@ -1818,8 +1804,8 @@ public class JlinkMojo extends BaseToolMojo {
     try {
       exitCode = execCmdLine(cmdLine); // from BaseToolMojo
     } catch (CommandLineException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to execute [" + TOOL_NAME + "] tool", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to execute [{0}] tool", TOOL_NAME), ex);
     }
     if (exitCode != 0) {
       if (getLog().isErrorEnabled()) {
@@ -1829,9 +1815,9 @@ public class JlinkMojo extends BaseToolMojo {
             + optsLines.stream()
                 .collect(Collectors.joining(System.lineSeparator())));
       }
-      throw new MojoExecutionException(
-          "Error: Tool execution failed [" + TOOL_NAME + "] with exit code: "
-          + exitCode);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Tool execution failed [{0}] with exit code: {1}", TOOL_NAME,
+          exitCode));
     }
 
     // Process launcher scripts
@@ -1841,9 +1827,8 @@ public class JlinkMojo extends BaseToolMojo {
     try {
       FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());
     } catch (IOException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to delete temporary file: ["
-          + cmdOptsPath + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to delete temporary file: [{0}]", cmdOptsPath), ex);
     }
 
   }

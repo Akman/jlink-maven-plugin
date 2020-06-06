@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.codehaus.plexus.languages.java.jpms.JavaModuleDescriptor;
-import ru.akman.maven.plugins.jlink.DependencySet;
 
 /**
  * Helper class for utilities.
@@ -47,7 +46,7 @@ public final class PluginUtils {
    *
    * @return the cause error message
    */
-  public static String getThrowableCause(Throwable throwable) {
+  public static String getThrowableCause(final Throwable throwable) {
     return throwable.getCause() == null
         ? throwable.getMessage()
         : getThrowableCause(throwable.getCause());
@@ -64,8 +63,8 @@ public final class PluginUtils {
    *
    * @throws IOException if error occurred while resolving a canonical path
    */
-  public static File normalizeFileSetBaseDir(File baseDir, FileSet fileSet)
-      throws IOException {
+  public static File normalizeFileSetBaseDir(final File baseDir,
+      final FileSet fileSet) throws IOException {
     String dir = fileSet.getDirectory();
     if (dir == null) {
       dir = baseDir.getCanonicalPath();
@@ -85,7 +84,7 @@ public final class PluginUtils {
    *
    * @return formatted string contains info about the artifacts
    */
-  public static String getArtifactSetDebugInfo(Set<Artifact> artifacts) {
+  public static String getArtifactSetDebugInfo(final Set<Artifact> artifacts) {
     return new StringBuilder(System.lineSeparator())
         .append("ARTIFACTS")
         .append(System.lineSeparator())
@@ -105,8 +104,8 @@ public final class PluginUtils {
    *
    * @return formatted string contains info about the path elements
    */
-  public static String getPathElementsDebugInfo(String title,
-      List<File> pathelements) {
+  public static String getPathElementsDebugInfo(final String title,
+      final List<File> pathelements) {
     return new StringBuilder(System.lineSeparator())
         .append(title)
         .append(System.lineSeparator())
@@ -126,8 +125,8 @@ public final class PluginUtils {
    *
    * @return formatted string contains info about the fileset
    */
-  public static String getFileSetDebugInfo(String title, FileSet fileSet,
-      String data) {
+  public static String getFileSetDebugInfo(final String title,
+      final FileSet fileSet, final String data) {
     return new StringBuilder(System.lineSeparator())
         .append(title)
         .append(System.lineSeparator())
@@ -162,9 +161,9 @@ public final class PluginUtils {
    *
    * @return formatted string contains info about the dependencyset
    */
-  public static String getDependencySetDebugInfo(String title,
-      DependencySet depSet, String data) {
-    StringBuilder result = new StringBuilder(System.lineSeparator());
+  public static String getDependencySetDebugInfo(final String title,
+      final DependencySet depSet, final String data) {
+    final StringBuilder result = new StringBuilder(System.lineSeparator());
     result
         .append(title)
         .append(System.lineSeparator())
@@ -175,7 +174,7 @@ public final class PluginUtils {
         .append(depSet.isAutomaticExcluded())
         .append(System.lineSeparator())
         .append("includes:");
-    List<String> includes = depSet.getIncludes();
+    final List<String> includes = depSet.getIncludes();
     if (includes != null) {
       result
           .append(System.lineSeparator())
@@ -185,7 +184,7 @@ public final class PluginUtils {
     result
         .append(System.lineSeparator())
         .append("includenames:");
-    List<String> includenames = depSet.getIncludeNames();
+    final List<String> includenames = depSet.getIncludeNames();
     if (includenames != null) {
       result
           .append(System.lineSeparator())
@@ -195,7 +194,7 @@ public final class PluginUtils {
     result
         .append(System.lineSeparator())
         .append("excludes:");
-    List<String> excludes = depSet.getExcludes();
+    final List<String> excludes = depSet.getExcludes();
     if (excludes != null) {
       result  
           .append(System.lineSeparator())
@@ -205,7 +204,7 @@ public final class PluginUtils {
     result
         .append(System.lineSeparator())
         .append("excludenames:");
-    List<String> excludenames = depSet.getExcludeNames();
+    final List<String> excludenames = depSet.getExcludeNames();
     if (excludenames != null) {
       result  
           .append(System.lineSeparator())
@@ -229,21 +228,26 @@ public final class PluginUtils {
    *
    * @return formatted string contains info about the dependency
    */
-  public static String getDependencyDebugInfo(File file,
-      JavaModuleDescriptor descriptor, boolean isIncluded) {
-    StringBuilder result = new StringBuilder()
+  public static String getDependencyDebugInfo(final File file,
+      final JavaModuleDescriptor descriptor, final boolean isIncluded) {
+    final StringBuilder result = new StringBuilder()
         .append(System.lineSeparator())
-        .append("included: " + isIncluded)
+        .append("included: ")
+        .append(isIncluded)
         .append(System.lineSeparator())
-        .append("file: " + file.getName())
+        .append("file: ")
+        .append(file.getName())
         .append(System.lineSeparator())
-        .append("path: " + file.toString());
+        .append("path: ")
+        .append(file.toString());
     if (descriptor != null) {
       result
           .append(System.lineSeparator())
-          .append("name: " + descriptor.name())
+          .append("name: ")
+          .append(descriptor.name())
           .append(System.lineSeparator())
-          .append("automatic: " + descriptor.isAutomatic())
+          .append("automatic: ")
+          .append(descriptor.isAutomatic())
           .append(System.lineSeparator())
           .append("requires: ")
           .append(System.lineSeparator())

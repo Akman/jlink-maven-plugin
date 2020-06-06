@@ -28,14 +28,14 @@ public class DependencySet {
    *
    * <p>Default value: false</p>
    */
-  private boolean includeoutput = false;
+  private boolean includeoutput;
 
   /**
    * Should automatic modules be excluded from dependencyset.
    *
    * <p>Default value: false</p>
    */
-  private boolean excludeautomatic = false;
+  private boolean excludeautomatic;
 
   /**
    * List of included dependencies (filename patterns).
@@ -57,50 +57,110 @@ public class DependencySet {
    */
   private List<String> excludenames;
 
+  /**
+   * Should output directory be included into dependencyset.
+   *
+   * @return true if output directory be included into dependencyset
+   */
   public boolean isOutputIncluded() {
     return this.includeoutput;
   }
 
+  /**
+   * Setter for includeoutput.
+   *
+   * @param includeoutput should output directory be included
+   */
   public void setOutputIncluded(final boolean includeoutput) {
     this.includeoutput = includeoutput;
   }
 
+  /**
+   * Should automatic modules be excluded from dependencyset.
+   *
+   * @return true if automatic modules be excluded from dependencyset
+   */
   public boolean isAutomaticExcluded() {
     return this.excludeautomatic;
   }
 
+  /**
+   * Setter for excludeautomatic.
+   *
+   * @param excludeautomatic should automatic modules be excluded
+   */
   public void setAutomaticExcluded(final boolean excludeautomatic) {
     this.excludeautomatic = excludeautomatic;
   }
 
+  /**
+   * Get list of included dependencies by filename.
+   *
+   * @return the list of included dependency filenames (patterns)
+   */
   public List<String> getIncludes() {
     return this.includes;
   }
 
+  /**
+   * Set the list of included dependencies by filename.
+   *
+   * @param includes included dependency filenames list (patterns)
+   */
   public void setIncludes(final List<String> includes) {
     this.includes = includes;
   }
 
+  /**
+   * Get list of excluded dependencies by filename.
+   *
+   * @return the list of excluded dependency filenames (patterns)
+   */
   public List<String> getExcludes() {
     return this.excludes;
   }
 
+  /**
+   * Set the list of excluded dependencies by filename.
+   *
+   * @param excludes excluded dependency filenames list (patterns)
+   */
   public void setExcludes(final List<String> excludes) {
     this.excludes = excludes;
   }
 
+  /**
+   * Get list of included dependencies by name.
+   *
+   * @return the list of included dependency names (patterns)
+   */
   public List<String> getIncludeNames() {
     return this.includenames;
   }
 
+  /**
+   * Set the list of included dependencies by name.
+   *
+   * @param includenames included dependency names list (patterns)
+   */
   public void setIncludeNames(final List<String> includenames) {
     this.includenames = includenames;
   }
 
+  /**
+   * Get list of excluded dependencies by name.
+   *
+   * @return the list of excluded dependency names (patterns)
+   */
   public List<String> getExcludeNames() {
     return this.excludenames;
   }
 
+  /**
+   * Set the list of excluded dependencies by name.
+   *
+   * @param excludenames excluded dependency names list (patterns)
+   */
   public void setExcludeNames(final List<String> excludenames) {
     this.excludenames = excludenames;
   }

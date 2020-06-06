@@ -24,33 +24,72 @@ import java.util.Map;
  */
 public class ReleaseInfo {
 
-  private File file = null;
+  /**
+   * File contains release info.
+   */
+  private File file;
 
-  private Map<String, String> adds = null;
+  /**
+   * Pairs of key and its value used to add release info.
+   */
+  private Map<String, String> adds;
 
-  private Map<String, String> dels = null;
+  /**
+   * Keys used to delete release info.
+   */
+  private Map<String, String> dels;
 
+  /**
+   * Get file contains release info.
+   *
+   * @return the file contains release info 
+   */
   public File getFile() {
     return this.file;
   }
 
-  public void setFile(File file) {
+  /**
+   * Set file contains release info.
+   *
+   * @param file the file contains release info
+   */
+  public void setFile(final File file) {
     this.file = file;
   }
 
+  /**
+   * Get pairs of key and its value used to add release info.
+   *
+   * @return the pairs of key and its value used to add release info
+   */
   public Map<String, String> getAdds() {
     return this.adds;
   }
 
-  public void setAdds(Map<String, String> adds) {
+  /**
+   * Set pairs of key and its value used to add release info.
+   *
+   * @param adds the pairs of key and its value used to add release info
+   */
+  public void setAdds(final Map<String, String> adds) {
     this.adds = adds;
   }
 
+  /**
+   * Get keys used to delete release info.
+   *
+   * @return the keys used to delete release info
+   */
   public Map<String, String> getDels() {
     return this.dels;
   }
 
-  public void setDels(Map<String, String> dels) {
+  /**
+   * Set keys used to delete release info.
+   *
+   * @param dels the keys used to delete release info
+   */
+  public void setDels(final Map<String, String> dels) {
     this.dels = dels;
   }
 

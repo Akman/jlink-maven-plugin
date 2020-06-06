@@ -64,6 +64,7 @@ public class CommandLineOption {
    *
    * @return the created string representation
    */
+  @Override
   public String toString() {
     return args.stream()
       .flatMap(arg -> Arrays.stream(arg.getParts()))

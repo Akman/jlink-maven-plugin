@@ -25,43 +25,95 @@ import org.apache.maven.shared.model.fileset.FileSet;
  */
 public class ModulePath {
 
-  private List<File> pathelements = null;
+  /**
+   * Path elements.
+   */
+  private List<File> pathelements;
   
-  private List<FileSet> filesets = null;
+  /**
+   * File sets.
+   */
+  private List<FileSet> filesets;
 
-  private List<FileSet> dirsets = null;
+  /**
+   * Directory sets.
+   */
+  private List<FileSet> dirsets;
 
-  private List<DependencySet> dependencysets = null;
+  /**
+   * Dependency sets.
+   */
+  private List<DependencySet> dependencysets;
 
+  /**
+   * Get path elements.
+   *
+   * @return the list of path elements
+   */
   public List<File> getPathElements() {
     return this.pathelements;
   }
 
-  public void setPathElements(List<File> pathelements) {
+  /**
+   * Set path elements.
+   *
+   * @param pathelements the list of path elements
+   */
+  public void setPathElements(final List<File> pathelements) {
     this.pathelements = pathelements;
   }
 
+  /**
+   * Get file sets.
+   *
+   * @return the list of file sets
+   */
   public List<FileSet> getFileSets() {
     return this.filesets;
   }
 
-  public void setFileSets(List<FileSet> filesets) {
+  /**
+   * Set file sets.
+   *
+   * @param filesets the list of file sets
+   */
+  public void setFileSets(final List<FileSet> filesets) {
     this.filesets = filesets;
   }
 
+  /**
+   * Get directory sets.
+   *
+   * @return the list of directory sets
+   */
   public List<FileSet> getDirSets() {
     return this.dirsets;
   }
 
-  public void setDirSets(List<FileSet> dirsets) {
+  /**
+   * Set directory sets.
+   *
+   * @param dirsets the list of directory sets
+   */
+  public void setDirSets(final List<FileSet> dirsets) {
     this.dirsets = dirsets;
   }
 
+  /**
+   * Get dependency sets.
+   *
+   * @return the list of dependency sets
+   */
   public List<DependencySet> getDependencySets() {
     return this.dependencysets;
   }
 
-  public void setDependencySets(List<DependencySet> dependencysets) {
+  /**
+   * Set dependency sets.
+   *
+   * @param dependencysets the list of dependency sets
+   */
+  public void setDependencySets(final List<DependencySet> dependencysets) {
     this.dependencysets = dependencysets;
   }
 

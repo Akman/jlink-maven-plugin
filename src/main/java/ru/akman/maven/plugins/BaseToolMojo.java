@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -60,6 +61,16 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * The name of the system environment JAVA_HOME variable.
    */
   private static final String JAVA_HOME = "JAVA_HOME";
+
+  /**
+   * The value for older major versions of Java.
+   */
+  private static final int OLD_MAJOR = 1;
+
+  /**
+   * The value from which new major versions of Java begin.
+   */
+  private static final int NEW_MAJOR = 9;
 
   /**
    * The name of the subdirectory under JAVA_HOME where executables live.
@@ -199,25 +210,26 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   private Path getExecutableFromToolHome(final String toolName,
       final String toolBinDirName) {
-    if (toolhome == null) {
-      return null;
-    }
-    Path executablePath =
-        resolveToolPath(toolName, toolhome.toPath(), toolBinDirName);
+    Path executablePath = toolhome == null
+        ? null
+        : resolveToolPath(toolName, toolhome.toPath(), toolBinDirName);
     if (executablePath != null) {
       try {
         executablePath = executablePath.toRealPath();
         toolHomeDir = toolhome;
         if (getLog().isInfoEnabled()) {
-          getLog().info("Executable (toolhome) for [" + toolName
-              + "]: " + executablePath);
-          getLog().info("Home directory (toolhome) for [" + toolName
-              + "]: " + toolHomeDir);
+          getLog().info(MessageFormat.format(
+              "Executable (toolhome) for [{0}]: {1}", toolName,
+              executablePath));
+          getLog().info(MessageFormat.format(
+              "Home directory (toolhome) for [{0}]: {1}", toolName,
+              toolHomeDir));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
-          getLog().error("Unable to resolve executable (toolhome) for ["
-              + toolName + "]: " + executablePath, ex);
+          getLog().error(MessageFormat.format(
+              "Unable to resolve executable (toolhome) for [{0}]: {1}",
+              toolName, executablePath), ex);
         }
       }
     }
@@ -234,33 +246,33 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   @SuppressWarnings("deprecation") // DefaultJavaToolChain
   private Path getExecutableFromToolchain(final String toolName) {
-    if (toolchain == null) {
-      return null;
-    }
-    final String tcJavaHome =
-        org.apache.maven.toolchain.java.DefaultJavaToolChain.class.cast(
+    final String tcJavaHome = toolchain == null
+        ? null
+        : org.apache.maven.toolchain.java.DefaultJavaToolChain.class.cast(
             toolchain).getJavaHome();
-    if (StringUtils.isBlank(tcJavaHome)) {
-      return null;
-    }
-    final String tcToolExecutable = toolchain.findTool(toolName);
-    if (tcToolExecutable == null) {
-      return null;
-    }
+    final String tcToolExecutable = toolchain == null
+        ? null
+        : toolchain.findTool(toolName);
     Path executablePath = null;
-    try {
-      executablePath = Paths.get(tcToolExecutable).toRealPath();
-      toolHomeDir = new File(tcJavaHome);
-      if (getLog().isInfoEnabled()) {
-        getLog().info("Executable (toolchain) for [" + toolName
-            + "]: " + executablePath);
-        getLog().info("Home directory (toolchain) for [" + toolName
-            + "]: " + toolHomeDir);
-      }
-    } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to resolve executable (toolchain) for ["
-            + toolName + "]: " + executablePath, ex);
+    if (!StringUtils.isBlank(tcJavaHome)
+        && !StringUtils.isBlank(tcToolExecutable)) {
+      try {
+        executablePath = Paths.get(tcToolExecutable).toRealPath();
+        toolHomeDir = new File(tcJavaHome);
+        if (getLog().isInfoEnabled()) {
+          getLog().info(MessageFormat.format(
+              "Executable (toolchain) for [{0}]: {1}", toolName,
+              executablePath));
+          getLog().info(MessageFormat.format(
+              "Home directory (toolchain) for [{0}]: {1}", toolName,
+              toolHomeDir));
+        }
+      } catch (IOException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error(MessageFormat.format(
+              "Unable to resolve executable (toolchain) for [{0}]: {1}",
+              toolName, executablePath), ex);
+        }
       }
     }
     return executablePath;
@@ -276,27 +288,27 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   private Path getExecutableFromJavaHome(final String toolName) {
     final File javaHomeDir = getJavaHome();
-    if (javaHomeDir == null) {
-      return null;
-    }
-    Path executablePath =
-        resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
-    if (executablePath == null) {
-      return null;
-    }
-    try {
-      executablePath = executablePath.toRealPath();
-      toolHomeDir = javaHomeDir;
-      if (getLog().isInfoEnabled()) {
-        getLog().info("Executable (javahome) for [" + toolName
-            + "]: " + executablePath);
-        getLog().info("Home directory (javahome) for [" + toolName
-            + "]: " + toolHomeDir);
-      }
-    } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to resolve executable (javahome) for ["
-            + toolName + "]: " + executablePath, ex);
+    Path executablePath = javaHomeDir == null
+        ? null
+        : resolveToolPath(toolName, javaHomeDir.toPath(), JAVA_HOME_BIN);
+    if (executablePath != null) {
+      try {
+        executablePath = executablePath.toRealPath();
+        toolHomeDir = javaHomeDir;
+        if (getLog().isInfoEnabled()) {
+          getLog().info(MessageFormat.format(
+              "Executable (javahome) for [{0}]: {1}", toolName,
+              executablePath));
+          getLog().info(MessageFormat.format(
+              "Home directory (javahome) for [{0}]: {1}", toolName,
+              toolHomeDir));
+        }
+      } catch (IOException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error(MessageFormat.format(
+              "Unable to resolve executable (javahome) for [{0}]: {1}",
+              toolName, executablePath), ex);
+        }
       }
     }
     return executablePath;
@@ -319,24 +331,26 @@ public abstract class BaseToolMojo extends AbstractMojo {
         break;
       }
     }
-    if (executablePath == null) {
-      return null;
-    }
-    try {
-      final Path toolHomePath = executablePath.getParent();
-      toolHomeDir = toolHomePath == null
-          ? null : toolHomePath.toRealPath().toFile();
-      executablePath = executablePath.toRealPath();
-      if (getLog().isInfoEnabled()) {
-        getLog().info("Executable (systempath) for [" + toolName
-            + "]: " + executablePath);
-        getLog().info("Home directory (systempath) for [" + toolName
-            + "]: " + toolHomeDir);
-      }
-    } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to resolve executable (systempath) for ["
-            + toolName + "]: " + executablePath, ex);
+    if (executablePath != null) {
+      try {
+        final Path toolHomePath = executablePath.getParent();
+        toolHomeDir = toolHomePath == null
+            ? null : toolHomePath.toRealPath().toFile();
+        executablePath = executablePath.toRealPath();
+        if (getLog().isInfoEnabled()) {
+          getLog().info(MessageFormat.format(
+              "Executable (systempath) for [{0}]: {1}", toolName,
+              executablePath));
+          getLog().info(MessageFormat.format(
+              "Home directory (systempath) for [{0}]: {1}", toolName,
+              toolHomeDir));
+        }
+      } catch (IOException ex) {
+        if (getLog().isErrorEnabled()) {
+          getLog().error(MessageFormat.format(
+              "Unable to resolve executable (systempath) for [{0}]: {1}",
+              toolName, executablePath), ex);
+        }
       }
     }
     return executablePath;
@@ -367,32 +381,32 @@ public abstract class BaseToolMojo extends AbstractMojo {
       return executablePath;
     }
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (toolhome) for [" + toolName
-          + "] not found");
+      getLog().debug(MessageFormat.format(
+          "Executable (toolhome) for [{0}] not found", toolName));
     }
     executablePath = getExecutableFromToolchain(toolName);
     if (executablePath != null) {
       return executablePath;
     }
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (toolchain) for [" + toolName
-          + "] not found");
+      getLog().debug(MessageFormat.format(
+          "Executable (toolchain) for [{0}] not found", toolName));
     }
     executablePath = getExecutableFromJavaHome(toolName);
     if (executablePath != null) {
       return executablePath;
     }
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (javahome) for [" + toolName
-          + "] not found");
+      getLog().debug(MessageFormat.format(
+          "Executable (javahome) for [{0}] not found", toolName));
     }
     executablePath = getExecutableFromSystemPath(toolName);
     if (executablePath != null) {
       return executablePath;
     }
     if (getLog().isDebugEnabled()) {
-      getLog().debug("Executable (systempath) for [" + toolName
-          + "] not found");
+      getLog().debug(MessageFormat.format(
+          "Executable (systempath) for [{0}] not found", toolName));
     }
     return executablePath;
   }
@@ -462,8 +476,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * @return path from the system environment variable JAVA_HOME
    */
   private File getJavaHome() {
-    final String javaHome = System.getenv(JAVA_HOME);
-    return StringUtils.isBlank(javaHome) ? null : new File(javaHome.trim());
+    final String javaHome = StringUtils.stripToEmpty(System.getenv(JAVA_HOME));
+    return StringUtils.isBlank(javaHome) ? null : new File(javaHome);
   }
 
   /**
@@ -473,13 +487,13 @@ public abstract class BaseToolMojo extends AbstractMojo {
    *         environment variable PATH.
    */
   private List<Path> getSystemPath() {
-    String systemPath = System.getenv(PATH);
+    final String systemPath = StringUtils.stripToEmpty(System.getenv(PATH));
     if (StringUtils.isBlank(systemPath)) {
       return new ArrayList<Path>();
     }
     return Stream.of(systemPath.split(File.pathSeparator))
         .filter(s -> !StringUtils.isBlank(s))
-        .map(s -> Paths.get(s))
+        .map(s -> Paths.get(StringUtils.stripToEmpty(s)))
         .collect(Collectors.toList());
   }
 
@@ -492,10 +506,12 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   private List<String> getPathExt() {
     if (SystemUtils.IS_OS_WINDOWS) {
-      String systemPathExt = System.getenv(PATHEXT);
+      final String systemPathExt =
+          StringUtils.stripToEmpty(System.getenv(PATHEXT));
       if (!StringUtils.isBlank(systemPathExt)) {
         return Stream.of(systemPathExt.split(File.pathSeparator))
             .filter(s -> !StringUtils.isBlank(s))
+            .map(s -> StringUtils.stripToEmpty(s))
             .collect(Collectors.toList());
       }
     }
@@ -512,7 +528,6 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   private String getToolVersion(final Path executablePath)
       throws CommandLineException {
-    String version = null;
     final Commandline cmdLine = new Commandline();
     cmdLine.setExecutable(executablePath.toString());
     cmdLine.createArg().setValue(VERSION_OPTION);
@@ -523,7 +538,9 @@ public abstract class BaseToolMojo extends AbstractMojo {
     final int exitCode =
         CommandLineUtils.executeCommandLine(cmdLine, out, err);
     return exitCode == 0
-        ? out.getOutput().trim() + err.getOutput().trim() : null;
+        ? StringUtils.stripToEmpty(out.getOutput())
+            + StringUtils.stripToEmpty(err.getOutput())
+        : null;
   }
 
   /**
@@ -547,13 +564,18 @@ public abstract class BaseToolMojo extends AbstractMojo {
     } catch (NumberFormatException ex) {
       throw new IllegalArgumentException("Invalid version format", ex);
     }
-    if (majorVersion < 2) {
-      return JavaVersion.valueOf("JAVA_" + majorVersion + "_" + minorVersion);
+    JavaVersion resolvedVersion = null;
+    if (majorVersion >= NEW_MAJOR) {
+      resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
+    } else {
+      if (majorVersion == OLD_MAJOR) {
+        resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
+            + "_" + minorVersion);
+      } else {
+        throw new IllegalArgumentException("Invalid version format");
+      }
     }
-    if (majorVersion > 8) {
-      return JavaVersion.valueOf("JAVA_" + majorVersion);
-    }
-    throw new IllegalArgumentException("Invalid version format");
+    return resolvedVersion;
   }
 
   /**
@@ -610,6 +632,21 @@ public abstract class BaseToolMojo extends AbstractMojo {
   }
 
   /**
+   * Get JDK toolchain specified in toolchains-plugin for
+   * current build context.
+   *
+   * @return JDK toolchain
+   */
+  @SuppressWarnings("deprecation") // DefaultJavaToolChain
+  private Toolchain getDefaultJavaToolchain() {
+    final Toolchain ctxToolchain =
+        toolchainManager.getToolchainFromBuildContext(JDK, session);
+    return ctxToolchain == null || !(ctxToolchain
+        instanceof org.apache.maven.toolchain.java.DefaultJavaToolChain)
+        ? null : ctxToolchain;
+  }
+
+  /**
    * Init Mojo.
    *
    * @param toolName the name of the tool (without extension)
@@ -618,10 +655,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * @throws MojoExecutionException if any errors occurred while processing
    *                                configuration parameters
    */
-  @SuppressWarnings("deprecation") // DefaultJavaToolChain
   protected void init(final String toolName, final String toolBinDirName)
       throws MojoExecutionException {
-
     if (project == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project} is not defined");
@@ -663,17 +698,18 @@ public abstract class BaseToolMojo extends AbstractMojo {
     }
 
     // Get charset to write files
+    final String encoding =
+        properties.getProperty("project.build.sourceEncoding");
     try {
-      sourceEncoding = Charset.forName(
-          properties.getProperty("project.build.sourceEncoding"));
-    } catch (Exception ex) {
+      sourceEncoding = Charset.forName(encoding);
+    } catch (IllegalArgumentException ex) {
       if (getLog().isWarnEnabled()) {
         getLog().warn("Unable to read ${project.build.sourceEncoding}");
       }
     }
     if (getLog().isInfoEnabled()) {
-      getLog().info("Using source encoding: [" + sourceEncoding
-          + "] to write files");
+      getLog().info(MessageFormat.format(
+          "Using source encoding: [{0}] to write files", sourceEncoding));
     }
 
     // Resolve all available jdk toolchains
@@ -692,31 +728,22 @@ public abstract class BaseToolMojo extends AbstractMojo {
 
     // Retrieve jdk toolchain from build context,
     // i.e. the toolchain selected by maven-toolchains-plugin
-    toolchain = toolchainManager.getToolchainFromBuildContext(JDK, session);
+    toolchain = getDefaultJavaToolchain();
     if (toolchain == null) {
       if (getLog().isDebugEnabled()) {
         getLog().debug("Toolchain not specified");
       }
     } else {
-      if (toolchain
-          instanceof org.apache.maven.toolchain.java.DefaultJavaToolChain) {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Using toolchain: " + toolchain);
-        }
-      } else {
-        if (getLog().isDebugEnabled()) {
-          getLog().debug("Found toolchain: " + toolchain
-              + ", but it is not default Java toolchain");
-        }
-        toolchain = null;
+      if (getLog().isInfoEnabled()) {
+        getLog().info("Using toolchain: " + toolchain);
       }
     }
 
     // Resolve the tool home directory and executable file
-    Path executablePath = getToolExecutable(toolName, toolBinDirName);
+    final Path executablePath = getToolExecutable(toolName, toolBinDirName);
     if (executablePath == null) {
-      throw new MojoExecutionException(
-          "Error: Executable for [" + toolName + "] not found");
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Executable for [{0}] not found", toolName));
     }
     toolExecutable = executablePath.toFile();
 
@@ -724,28 +751,30 @@ public abstract class BaseToolMojo extends AbstractMojo {
     try {
       toolVersion = getToolVersion(executablePath);
     } catch (CommandLineException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain version of [" + toolName + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to obtain version of [{0}]", toolName), ex);
     }
     if (toolVersion == null) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain version of [" + toolName + "]");
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to obtain version of [{0}]", toolName));
     }
     if (getLog().isInfoEnabled()) {
-      getLog().info("Version of [" + toolName + "]: " + toolVersion);
+      getLog().info(MessageFormat.format("Version of [{0}]: {1}", toolName,
+          toolVersion));
     }
 
     // Obtain the corresponding java version matching the tool version
     try {
       toolJavaVersion = getCorrespondingJavaVersion(toolVersion);
     } catch (IllegalArgumentException ex) {
-      throw new MojoExecutionException(
-          "Error: Unable to obtain corresponding java version of ["
-              + toolName + "]", ex);
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to obtain corresponding java version of [{0}]",
+          toolName), ex);
     }
     if (getLog().isInfoEnabled()) {
-      getLog().info("Version (corresponding java version) of [" + toolName
-          + "]: " + toolJavaVersion);
+      getLog().info(MessageFormat.format(
+          "Version (corresponding java version) of [{0}]: {1}", toolName,
+          toolJavaVersion));
     }
 
   }

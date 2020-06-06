@@ -49,12 +49,9 @@ public class CommandLineBuilder {
    * Set executable.
    *
    * @param executable the executable path
-   *
-   * @return current command line builder
    */
-  public CommandLineBuilder setExecutable(final String executable) {
+  public void setExecutable(final String executable) {
     cmdLine.setExecutable(executable);
-    return this;
   }
 
   /**
