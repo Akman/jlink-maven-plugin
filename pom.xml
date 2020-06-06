@@ -450,6 +450,11 @@
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <releaseProfiles>release</releaseProfiles>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -714,11 +719,10 @@
       </roles>
     </developer>
   </developers>
-
   <scm>
-    <url>https://github.com/akman/jlink-maven-plugin</url>
-    <connection>scm:git:git://github.com/akman/jlink-maven-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:akman/jlink-maven-plugin.git</developerConnection>
+    <url>https://github.com/Akman/jlink-maven-plugin</url>
+    <connection>scm:git:git@github.com:Akman/jlink-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:Akman/jlink-maven-plugin.git</developerConnection>
   </scm>
 
 </project>

@@ -21,7 +21,7 @@
 #     CAUTION: For tags, git does not store the branch from which a commit
 #     was tagged, so TRAVIS_BRANCH = TRAVIS_TAG
 
-if: branch =~ /^\d+\.\d+\.\d+(-SNAPSHOT.*)?$/
+if: branch =~ /^v\d+\.\d+\.\d+(-SNAPSHOT.*)?$/
 
 git:
 
