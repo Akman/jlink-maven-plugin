@@ -453,7 +453,6 @@
         <configuration>
           <tagNameFormat>v@{project.version}</tagNameFormat>
           <autoVersionSubmodules>true</autoVersionSubmodules>
-          <releaseProfiles>release</releaseProfiles>
         </configuration>
       </plugin>
       <plugin>
@@ -719,6 +718,7 @@
       </roles>
     </developer>
   </developers>
+
   <scm>
     <url>https://github.com/Akman/jlink-maven-plugin</url>
     <connection>scm:git:git@github.com:Akman/jlink-maven-plugin.git</connection>
