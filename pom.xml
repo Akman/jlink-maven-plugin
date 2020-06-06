@@ -156,6 +156,13 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.6</version>
+          <configuration>
+            <useAgent>true</useAgent>
+          </configuration>
+        </plugin>      
+        <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
