@@ -30,6 +30,6 @@ GNU General Public License, version 2 (GPL2), with the classpath exception: Chec
 
 MIT license: Animal Sniffer Annotations
 
-The Apache Software License, Version 2.0: Commons IO, FindBugs-jsr305, Google Guice - Core Library, Guava: Google Core Libraries for Java, J2ObjC Annotations, Plexus Archiver Component, Plexus IO Components, QDox, javax.inject, jlink-maven-plugin Mojo
+The Apache Software License, Version 2.0: Commons IO, FindBugs-jsr305, Google Guice - Core Library, Guava: Google Core Libraries for Java, J2ObjC Annotations, JLink maven plugin, Plexus Archiver Component, Plexus IO Components, QDox, javax.inject
 
 Eclipse Public License - v 1.0: Logback Classic Module, Logback Core Module
