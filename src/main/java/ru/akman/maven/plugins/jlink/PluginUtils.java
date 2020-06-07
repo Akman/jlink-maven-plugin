@@ -85,14 +85,53 @@ public final class PluginUtils {
    * @return formatted string contains info about the artifacts
    */
   public static String getArtifactSetDebugInfo(final Set<Artifact> artifacts) {
-    return new StringBuilder(System.lineSeparator())
-        .append("ARTIFACTS")
+    return new StringBuilder("ARTIFACTS")
         .append(System.lineSeparator())
         .append(artifacts.stream()
             .filter(Objects::nonNull)
-            .map(a -> a.getGroupId() + ":" + a.getArtifactId() + ":"
-                + a.getVersion() + " - " + a.getFile().getName())
+            .map(PluginUtils::getArtifactDebugInfo)
             .collect(Collectors.joining(System.lineSeparator())))
+        .append(System.lineSeparator())
+        .toString();
+  }
+
+  /**
+   * Get debug info about the artifact.
+   *
+   * @param artifact the artifact
+   *
+   * @return formatted string contains info about the artifact
+   */
+  public static String getArtifactDebugInfo(final Artifact artifact) {
+    return new StringBuilder(System.lineSeparator())
+        .append(artifact.getGroupId())
+        .append(':')
+        .append(artifact.getArtifactId())
+        .append(':')
+        .append(artifact.getVersion())
+        .append(" - ")
+        .append(artifact.getFile().getName())
+        .append(System.lineSeparator())
+        .append("  scope: ")
+        .append(artifact.getScope())
+        .append(System.lineSeparator())
+        .append("  type: ")
+        .append(artifact.getType())
+        .append(System.lineSeparator())
+        .append("  classifier: ")
+        .append(artifact.getClassifier())
+        .append(System.lineSeparator())
+        .append("  optional: ")
+        .append(artifact.isOptional())
+        .append(System.lineSeparator())
+        .append("  release: ")
+        .append(artifact.isRelease())
+        .append(System.lineSeparator())
+        .append("  snapshot: ")
+        .append(artifact.isSnapshot())
+        .append(System.lineSeparator())
+        .append("  resolved: ")
+        .append(artifact.isResolved())
         .toString();
   }
 

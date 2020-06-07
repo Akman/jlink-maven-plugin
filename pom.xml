@@ -376,7 +376,7 @@
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>
-          <nexusUrl>https://oss.sonatype.org</nexusUrl>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
           <!--skipStaging>true</skipStaging-->
         </configuration>
@@ -386,25 +386,9 @@
         <configuration>
           <tagNameFormat>v@{project.version}</tagNameFormat>
           <autoVersionSubmodules>true</autoVersionSubmodules>
-          <releaseProfiles>release</releaseProfiles>
-          <!--
           <useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
           <goals>deploy</goals>
-          -->
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <useAgent>true</useAgent>
         </configuration>
       </plugin>
       <plugin>
@@ -424,6 +408,32 @@
             <id>plugin-helpmojo</id>
             <goals>
               <goal>helpmojo</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <additionalOptions>-html5</additionalOptions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+          <encoding>${default.encoding}</encoding>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
@@ -500,19 +510,6 @@
         <artifactId>maven-install-plugin</artifactId>
       </plugin>
       <plugin>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <additionalOptions>-html5</additionalOptions>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <configuration>
           <encoding>${default.encoding}</encoding>
@@ -523,19 +520,6 @@
         <configuration>
           <locales>en</locales>
         </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-source-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -625,7 +609,45 @@
   <reporting>
     <plugins>
       <plugin>
+        <artifactId>maven-jxr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+          <encoding>${default.encoding}</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <additionalOptions>-html5</additionalOptions>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>index</report>
+              <report>summary</report>
+              <report>modules</report>
+              <report>dependency-management</report>
+              <report>dependencies</report>
+              <!--report>dependency-info</report-->
+              <!--report>dependency-convergence</report-->
+              <report>plugin-management</report>
+              <report>plugins</report>
+              <report>distribution-management</report>
+              <report>licenses</report>
+              <report>scm</report>
+              <report>issue-management</report>
+              <report>ci-management</report>
+              <report>mailing-lists</report>
+              <report>team</report>
+              <report>help</report>
+            </reports>
+          </reportSet>
+        </reportSets>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -633,9 +655,9 @@
         <reportSets>
           <reportSet>
             <reports>
-              <report>dependency-updates-report</report>
-              <report>plugin-updates-report</report>
               <report>property-updates-report</report>
+              <report>plugin-updates-report</report>
+              <report>dependency-updates-report</report>
             </reports>
           </reportSet>
         </reportSets>
@@ -649,9 +671,6 @@
             </reports>
           </reportSet>
         </reportSets>
-      </plugin>
-      <plugin>
-        <artifactId>maven-jxr-plugin</artifactId>
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -774,17 +793,11 @@
           <reportSet>
             <reports>
               <report>changelog</report>
-              <report>file-activity</report>
-              <report>dev-activity</report>
+              <!--report>file-activity</report-->
+              <!--report>dev-activity</report-->
             </reports>
           </reportSet>
         </reportSets>
-      </plugin>
-      <plugin>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <additionalOptions>-html5</additionalOptions>
-        </configuration>
       </plugin>
     </plugins>
   </reporting>
@@ -826,6 +839,27 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <useAgent>true</useAgent>
+            </configuration>
           </plugin>
         </plugins>
       </build>

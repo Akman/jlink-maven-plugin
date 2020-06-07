@@ -94,12 +94,12 @@ public class JlinkMojo extends BaseToolMojo {
    * The tool name.
    */
   private static final String TOOL_NAME = "jlink";
-  
+
   /**
    * Filename for temporary file contains the tool options.
    */
   private static final String OPTS_FILE = TOOL_NAME + ".opts";
-  
+
   /**
    * Filename of a module descriptor.
    */
@@ -738,8 +738,16 @@ public class JlinkMojo extends BaseToolMojo {
     paths.add(outputDir);
 
     // add the project artifacts files
+    // + SCOPE_COMPILE
+    // + SCOPE_COMPILE_PLUS_RUNTIME
+    // + SCOPE_IMPORT
+    // + SCOPE_PROVIDED
+    // + SCOPE_RUNTIME
+    // + SCOPE_RUNTIME_PLUS_SYSTEM
+    // + SCOPE_SYSTEM
+    // - SCOPE_TEST
     paths.addAll(artifacts.stream()
-        .filter(Objects::nonNull)
+        .filter(a -> a != null && !Artifact.SCOPE_TEST.equals(a.getScope()))
         .map(a -> a.getFile())
         .collect(Collectors.toList()));
 
@@ -751,7 +759,6 @@ public class JlinkMojo extends BaseToolMojo {
 
     // create request contains all information
     // required to analyze the project
-    // TODO: only RUNTIME dependencies
     final ResolvePathsRequest<File> request =
         ResolvePathsRequest.ofFiles(paths);
 
@@ -1600,7 +1607,7 @@ public class JlinkMojo extends BaseToolMojo {
     if (StringUtils.isEmpty(moduleName)) {
       return;
     }
-    
+
     final String mainClassName = StringUtils.stripToEmpty(
         launcher.getMainClass());
 
