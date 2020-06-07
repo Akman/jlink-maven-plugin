@@ -148,10 +148,6 @@
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.1.0</version>
         </plugin>
-        <plugin>
-          <artifactId>maven-toolchains-plugin</artifactId>
-          <version>3.0.0</version>
-        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -527,23 +523,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-toolchains-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <toolchains>
-            <jdk>
-              <id>${jdk.toolchain}</id>
-            </jdk>
-          </toolchains>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <encoding>${default.encoding}</encoding>
@@ -552,20 +531,8 @@
           <release>${java.release.version}</release>
           <fork>true</fork>
           <compilerArgs>
-            <!--
-              Give more detail for unchecked conversion warnings
-              that are mandated by the Java Language Specification.
-            -->
             <arg>-Xlint:unchecked</arg>
-            <!--
-              Show a description of each use or override of a deprecated member
-              or class. Without this, javac shows a summary of the source files
-              that use or override deprecated members or classes.
-            -->
             <arg>-Xlint:deprecation</arg>
-            <!--
-              Terminate compilation if warnings occur.
-            -->
             <arg>-Werror</arg>
             <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
           </compilerArgs>

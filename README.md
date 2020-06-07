@@ -3,12 +3,11 @@
 [![License](https://img.shields.io/github/license/akman/jlink-maven-plugin.svg)](https://github.com/akman/jlink-maven-plugin/blob/master/LICENSE)
 
 The maven jlink plugin lets you create a custom runtime image with
-the jlink tool introduced in Java 9. It used to link a set of modules,
-along with their transitive dependences.
+the jlink tool introduced in Java 9.
 
-The main idea is to enable the creation of the runtime image without
-mandatory binding to project artifacts. However, you can of course
-customize the process using the project artifacts.
+The main idea is to avoid being tied to project artifacts and allow the user
+to fully control the process of creating an image. However, it is possible,
+of course, to customize the process using project artifacts.
 
 [The jlink tool official description][jlink]
 [JEP 220: Modular Run-Time Images][jep220]
