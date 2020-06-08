@@ -104,6 +104,9 @@ public final class PluginUtils {
    */
   public static String getArtifactDebugInfo(final Artifact artifact) {
     return new StringBuilder(System.lineSeparator())
+        .append("[ ")
+        .append(artifact.getScope())
+        .append(" ] ")
         .append(artifact.getGroupId())
         .append(':')
         .append(artifact.getArtifactId())
@@ -111,9 +114,6 @@ public final class PluginUtils {
         .append(artifact.getVersion())
         .append(" - ")
         .append(artifact.getFile().getName())
-        .append(System.lineSeparator())
-        .append("  scope: ")
-        .append(artifact.getScope())
         .append(System.lineSeparator())
         .append("  type: ")
         .append(artifact.getType())

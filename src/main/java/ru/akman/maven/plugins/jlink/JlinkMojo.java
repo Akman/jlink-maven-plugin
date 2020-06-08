@@ -737,21 +737,38 @@ public class JlinkMojo extends BaseToolMojo {
     // add the project output directory
     paths.add(outputDir);
 
-    // add the project artifacts files
-    // + SCOPE_COMPILE
-    // + SCOPE_COMPILE_PLUS_RUNTIME
-    // + SCOPE_IMPORT
-    // + SCOPE_PROVIDED
-    // + SCOPE_RUNTIME
-    // + SCOPE_RUNTIME_PLUS_SYSTEM
-    // + SCOPE_SYSTEM
-    // - SCOPE_TEST
+    // SCOPE_COMPILE  - This is the default scope, used if none is specified.
+    //                  Compile dependencies are available in all classpaths.
+    //                  Furthermore, those dependencies are propagated to
+    //                  dependent projects.
+    // SCOPE_PROVIDED - This is much like compile, but indicates you expect
+    //                  the JDK or a container to provide it at runtime.
+    //                  It is only available on the compilation and
+    //                  test classpath, and is not transitive.
+    // SCOPE_SYSTEM   - This scope is similar to provided except that you
+    //                  have to provide the JAR which contains it explicitly.
+    //                  The artifact is always available and is not looked up
+    //                  in a repository.    
+    // SCOPE_RUNTIME  - This scope indicates that the dependency is not
+    //                  required for compilation, but is for execution.
+    //                  It is in the runtime and test classpaths, but not
+    //                  the compile classpath.
+    // SCOPE_TEST     - This scope indicates that the dependency is not
+    //                  required for normal use of the application, and is
+    //                  only available for the test compilation and execution
+    //                  phases. It is not transitive.
+    // SCOPE_IMPORT   - This scope indicates that the dependency is a managed
+    //                  POM dependency i.e. only other POM into
+    //                  the dependencyManagement section.
+
+    // [ !SCOPE_TEST ] add the project artifacts files
     paths.addAll(artifacts.stream()
         .filter(a -> a != null && !Artifact.SCOPE_TEST.equals(a.getScope()))
         .map(a -> a.getFile())
         .collect(Collectors.toList()));
 
-    // add the project system dependencies
+    // [ SCOPE_SYSTEM ] add the project system dependencies
+    // getSystemPath() is used only if the dependency scope is system
     paths.addAll(project.getDependencies().stream()
         .filter(d -> d != null && !StringUtils.isBlank(d.getSystemPath()))
         .map(d -> new File(StringUtils.stripToEmpty(d.getSystemPath())))

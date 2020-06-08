@@ -31,6 +31,22 @@
     <maven>${maven.version}</maven>
   </prerequisites>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>snapshots</id>
+      <name>OSS Sonatype Snapshots Repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+
   <properties>
 
     <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
@@ -72,24 +88,8 @@
     <maven.compiler.release>11</maven.compiler.release>
 
     <checkstyle.tool.version>8.33</checkstyle.tool.version>
-    <checkstyle.config.location>config/checkstyle/google_checks.xml</checkstyle.config.location>
-    <checkstyle.excludes>**/HelpMojo.java</checkstyle.excludes>
-    <checkstyle.consoleOutput>true</checkstyle.consoleOutput>
-    <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
-    <checkstyle.maxAllowedViolations>0</checkstyle.maxAllowedViolations>
-    <checkstyle.console>true</checkstyle.console>
-
     <pmd.tool.version>6.24.0</pmd.tool.version>
-    <pmd.failOnViolation>false</pmd.failOnViolation>
-    <pmd.printFailingErrors>false</pmd.printFailingErrors>
-
     <spotbugs.tool.version>4.0.3</spotbugs.tool.version>
-    <spotbugs.threshold>low</spotbugs.threshold>
-    <spotbugs.effort>max</spotbugs.effort>
-    <spotbugs.nested>false</spotbugs.nested>
-    <spotbugs.failOnError>false</spotbugs.failOnError>
-    <spotbugs.xmlOutput>true</spotbugs.xmlOutput>
-    <spotbugs.excludeFilterFile>config/spotbugs/excludeFilter.xml</spotbugs.excludeFilterFile>
 
     <maven.version>3.6.3</maven.version>
     <maven.plugin.annotations.version>3.6.0</maven.plugin.annotations.version>
@@ -221,6 +221,17 @@
               <version>${checkstyle.tool.version}</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <configLocation>config/checkstyle/google_checks.xml</configLocation>
+            <excludes>**/HelpMojo.java</excludes>
+            <consoleOutput>true</consoleOutput>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <failsOnError>false</failsOnError>
+            <!-- check -->
+            <failOnViolation>false</failOnViolation>
+            <maxAllowedViolations>0</maxAllowedViolations>
+            <logViolationsToConsole>true</logViolationsToConsole>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
@@ -229,6 +240,14 @@
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${version.maven-compiler-plugin}</version>
+          <configuration>
+            <fork>true</fork>
+            <compilerArgs>
+              <arg>-Xlint:unchecked</arg>
+              <arg>-Xlint:deprecation</arg>
+              <arg>-Werror</arg>
+            </compilerArgs>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -258,6 +277,9 @@
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${version.maven-javadoc-plugin}</version>
+          <configuration>
+            <additionalOptions>-html5</additionalOptions>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jxr-plugin</artifactId>
@@ -292,6 +314,23 @@
               <version>${pmd.tool.version}</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <rulesets>config/pmd/ruleset.xml</rulesets>
+            <excludes>
+              <exclude>**/HelpMojo.java</exclude>
+            </excludes>
+            <linkXref>true</linkXref>
+            <analysisCache>true</analysisCache>
+            <minimumTokens>50</minimumTokens>
+            <maxAllowedViolations>0</maxAllowedViolations>
+            <ignoreAnnotations>false</ignoreAnnotations>
+            <ignoreIdentifiers>false</ignoreIdentifiers>
+            <ignoreLiterals>false</ignoreLiterals>
+            <includeTests>true</includeTests>
+            <!-- check -->
+            <failOnViolation>false</failOnViolation>
+            <printFailingErrors>false</printFailingErrors>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
@@ -328,6 +367,14 @@
               <version>${spotbugs.tool.version}</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <threshold>low</threshold>
+            <effort>max</effort>
+            <nested>false</nested>
+            <failOnError>false</failOnError>
+            <excludeFilterFile>config/spotbugs/excludeFilter.xml</excludeFilterFile>
+            <xmlOutput>true</xmlOutput>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>com.mycila</groupId>
@@ -418,15 +465,9 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <additionalOptions>-html5</additionalOptions>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-source-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-        </configuration>
         <executions>
           <execution>
             <goals>
@@ -437,10 +478,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <configuration>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-          <failsOnError>false</failsOnError>
-        </configuration>
         <executions>
           <execution>
             <phase>process-test-classes</phase>
@@ -452,20 +489,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
-        <configuration>
-          <rulesets>config/pmd/ruleset.xml</rulesets>
-          <excludes>
-            <exclude>**/HelpMojo.java</exclude>
-          </excludes>
-          <linkXref>true</linkXref>
-          <analysisCache>true</analysisCache>
-          <minimumTokens>50</minimumTokens>
-          <maxAllowedViolations>0</maxAllowedViolations>
-          <ignoreAnnotations>false</ignoreAnnotations>
-          <ignoreIdentifiers>false</ignoreIdentifiers>
-          <ignoreLiterals>false</ignoreLiterals>
-          <includeTests>true</includeTests>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -473,15 +496,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-          <fork>true</fork>
-          <compilerArgs>
-            <arg>-Xlint:unchecked</arg>
-            <arg>-Xlint:deprecation</arg>
-            <arg>-Werror</arg>
-          </compilerArgs>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -508,9 +522,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-site-plugin</artifactId>
@@ -528,7 +539,6 @@
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
         <configuration>
-          <encoding>${default.encoding}</encoding>
           <header>config/license/LICENSE</header>
           <strictCheck>true</strictCheck>
           <skipExistingHeaders>false</skipExistingHeaders>
@@ -610,15 +620,9 @@
       </plugin>
       <plugin>
         <artifactId>maven-source-plugin</artifactId>
-        <configuration>
-          <encoding>${default.encoding}</encoding>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <additionalOptions>-html5</additionalOptions>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
@@ -627,7 +631,7 @@
             <reports>
               <report>index</report>
               <report>summary</report>
-              <report>modules</report>
+              <!--report>modules</report-->
               <report>dependency-management</report>
               <report>dependencies</report>
               <!--report>dependency-info</report-->
@@ -635,13 +639,12 @@
               <report>plugin-management</report>
               <report>plugins</report>
               <report>distribution-management</report>
-              <report>licenses</report>
               <report>scm</report>
               <report>issue-management</report>
               <report>ci-management</report>
-              <report>mailing-lists</report>
+              <!--report>mailing-lists</report-->
+              <report>licenses</report>
               <report>team</report>
-              <report>help</report>
             </reports>
           </reportSet>
         </reportSets>
@@ -671,10 +674,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <configuration>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-          <failsOnError>false</failsOnError>
-        </configuration>
         <reportSets>
           <reportSet>
             <reports>
@@ -685,20 +684,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
-        <configuration>
-          <rulesets>config/pmd/ruleset.xml</rulesets>
-          <excludes>
-            <exclude>**/HelpMojo.java</exclude>
-          </excludes>
-          <linkXref>true</linkXref>
-          <analysisCache>true</analysisCache>
-          <minimumTokens>50</minimumTokens>
-          <maxAllowedViolations>0</maxAllowedViolations>
-          <ignoreAnnotations>false</ignoreAnnotations>
-          <ignoreIdentifiers>false</ignoreIdentifiers>
-          <ignoreLiterals>false</ignoreLiterals>
-          <includeTests>true</includeTests>
-        </configuration>
         <reportSets>
           <reportSet>
             <reports>
@@ -731,7 +716,6 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>taglist-maven-plugin</artifactId>
         <configuration>
-          <encoding>${default.encoding}</encoding>
           <tagListOptions>
             <tagClasses>
               <tagClass>
@@ -890,9 +874,9 @@
   </developers>
 
   <scm>
-    <url>https://github.com/Akman/jlink-maven-plugin</url>
-    <connection>scm:git:git@github.com:Akman/jlink-maven-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:Akman/jlink-maven-plugin.git</developerConnection>
+    <url>https://github.com/akman/jlink-maven-plugin</url>
+    <connection>scm:git:git@github.com:akman/jlink-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:akman/jlink-maven-plugin.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -909,7 +893,7 @@
 
   <ciManagement>
     <system>Travis CI</system>
-    <url>https://travis-ci.com/github/Akman/jlink-maven-plugin</url>
+    <url>https://travis-ci.com/github/akman/jlink-maven-plugin</url>
   </ciManagement>
 
 </project>
