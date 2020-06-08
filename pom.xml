@@ -31,22 +31,6 @@
     <maven>${maven.version}</maven>
   </prerequisites>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>snapshots</id>
-      <name>OSS Sonatype Snapshots Repository</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>daily</updatePolicy>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </pluginRepository>
-  </pluginRepositories>
-
   <properties>
 
     <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
@@ -224,6 +208,7 @@
           <configuration>
             <configLocation>config/checkstyle/google_checks.xml</configLocation>
             <excludes>**/HelpMojo.java</excludes>
+            <resourceExcludes>target/it/**/*</resourceExcludes>
             <consoleOutput>true</consoleOutput>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <failsOnError>false</failsOnError>
