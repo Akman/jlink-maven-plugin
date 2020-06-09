@@ -32,6 +32,8 @@ mvn jlink:jlink
 
 ## Usage
 
+[The documentation for this plugin is available here][plugindoc]
+
 ```xml
 <project>
   ...
@@ -54,6 +56,8 @@ mvn jlink:jlink
 ```
 
 ## Configuration
+
+[Сonfiguration parameters can be found here.][mojodoc]
 
 ```xml
 <project>
@@ -440,6 +444,8 @@ mvn jlink:jlink
 </project>
 ```
 
+[plugindoc]: https://akman.github.io/jlink-maven-plugin/plugin-info.html
+[mojodoc]: https://akman.github.io/jlink-maven-plugin/jlink-mojo.html
 [src]: https://github.com/akman/jlink-maven-plugin
 [release]: https://github.com/akman/jlink-maven-plugin/releases/latest
 [jlink]: https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html
