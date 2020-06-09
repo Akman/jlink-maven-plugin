@@ -1,0 +1,16 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,HotSpot,0,44,0,0,0,5,0,1,0,1
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,Compress,0,20,0,0,0,8,0,5,0,5
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,Section,0,24,0,0,0,3,0,1,0,1
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,ReleaseInfo,0,24,0,0,0,10,0,7,0,7
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,Endian,0,34,0,0,0,4,0,1,0,1
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,JlinkMojo,2549,3,394,0,574,1,244,1,47,1
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,Compression,3,45,0,0,1,7,1,2,1,2
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,DependencySet,16,29,0,0,8,11,4,9,4,9
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,Launcher,20,32,0,0,10,12,5,10,5,10
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,HelpMojo,802,0,110,0,159,0,71,0,16,0
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,ModulePath,16,15,0,0,8,5,4,5,4,5
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,PluginUtils,490,25,15,3,181,7,21,2,13,1
+JLink Maven Plugin,ru.akman.maven.plugins,BaseToolMojo,1175,6,160,0,253,2,100,1,20,1
+JLink Maven Plugin,ru.akman.maven.plugins,CommandLineBuilder,50,0,0,0,14,0,7,0,7,0
+JLink Maven Plugin,ru.akman.maven.plugins,CommandLineOption,36,0,0,0,10,0,4,0,4,0
