@@ -1,6 +1,7 @@
 # JLink Maven Plugin v0.1.0
 
 [![Build Status](https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.0)](https://travis-ci.com/akman/jlink-maven-plugin)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin)](https://search.maven.org/artifact/com.github.akman/jlink-maven-plugin)
 [![License](https://img.shields.io/github/license/akman/jlink-maven-plugin.svg)](https://github.com/akman/jlink-maven-plugin/blob/master/LICENSE)
 
 The maven jlink plugin lets you create a custom runtime image with

@@ -59,9 +59,15 @@ import ru.akman.maven.plugins.CommandLineBuilder;
 import ru.akman.maven.plugins.CommandLineOption;
 
 /**
- * The `jlink` goal lets you create a custom runtime image with
+ * The jlink goal lets you create a custom runtime image with
  * the jlink tool introduced in Java 9. It used to link a set of modules,
  * along with their transitive dependences.
+ *
+ * <p>
+ * The main idea is to avoid being tied to project artifacts and allow the user
+ * to fully control the process of creating an image. However, it is possible,
+ * of course, to customize the process using project artifacts.
+ * </p>
  */
 @Mojo(
     name = "jlink",
