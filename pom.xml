@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright 2020 Alexander Kapitman
+  Copyright (C) 2020 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@
   <inceptionYear>2020</inceptionYear>
 
   <properties>
+
+    <!-- ${project.inceptionYear} - ${currentYear} -->
+    <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
 
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
@@ -293,8 +296,7 @@
             <failIfMissing>false</failIfMissing>
             <failIfUnknown>false</failIfUnknown>
             <properties>
-              <!-- ${project.inceptionYear} - ${currentYear} -->
-              <copyright>Copyright ${project.inceptionYear} Alexander Kapitman</copyright>
+              <copyright>${copyright.notice}</copyright>
             </properties>
             <headerDefinitions>
               <headerDefinition>config/license/xml_style.xml</headerDefinition>
@@ -312,6 +314,8 @@
               <exclude>**/LICENSE</exclude>
               <exclude>**/*.template</exclude>
               <exclude>**/*.properties</exclude>
+              <exclude>**/*.md</exclude>
+              <exclude>**/*.md.vm</exclude>
               <exclude>**/*.png</exclude>
               <exclude>**/*.ico</exclude>
             </excludes>
@@ -465,6 +469,20 @@
           </configuration>
         </plugin>
         <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${version.maven-clean-plugin}</version>
+          <configuration>
+            <filesets>
+              <fileset>
+                <directory>${project.basedir}</directory>
+                <includes>
+                  <include>*.log</include>
+                </includes>
+              </fileset>
+            </filesets>
+          </configuration>
+        </plugin>
+        <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>${version.maven-antrun-plugin}</version>
         </plugin>
@@ -483,10 +501,6 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>${version.maven-jar-plugin}</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>${version.maven-clean-plugin}</version>
         </plugin>
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>

@@ -13,3 +13,6 @@
 # general things to ignore
 target
 bin
+
+# ignore logs
+*.log

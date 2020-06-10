@@ -1,0 +1,4 @@
+# Plugin configuration example
+
+```xml
+```

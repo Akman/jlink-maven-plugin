@@ -1,5 +1,5 @@
 /*
-  Copyright 2020 Alexander Kapitman
+  Copyright (C) 2020 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -85,9 +85,19 @@ import ru.akman.maven.plugins.CommandLineOption;
 //    threadSafe = <false|true>
 )
 @Execute(
+    // This will fork an alternate build lifecycle up to the specified phase
+    // before continuing to execute the current one.
+    // If no lifecycle is specified, Maven will use the lifecycle
+    // of the current build.
     phase = LifecyclePhase.PACKAGE
-//    goal = "<goal-name>",
-//    lifecycle = "<lifecycle-id>"
+//
+//    This will execute the given goal before execution of this one.
+//    The goal name is specified using the prefix:goal notation.
+//    goal = "prefix:goal"
+//
+//    This will execute the given alternate lifecycle. A custom lifecycle
+//    can be defined in META-INF/maven/lifecycle.xml.
+//    lifecycle = "<lifecycle>", phase="<phase>"
 )
 public class JlinkMojo extends BaseToolMojo {
 
