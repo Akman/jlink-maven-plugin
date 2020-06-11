@@ -1,42 +1,67 @@
 ## Velocity treats double hashes as comments, so $H can be used instead
 #set( $H = '#' )
+# ${project.name}
 
-# Introduction
+The maven jlink plugin lets you create a custom runtime image with
+the jlink tool introduced in Java 9.
 
-$H$H ${project.name}
- 
-  Plugin introduction, description, and other relevant information.
- 
-$H$H Goals Overview
- 
-  General Information about the goals.
- 
-  * {{{goal.html}jlink:jlink}} short description for this plugin goal.
- 
+The main idea is to avoid being tied to project artifacts and allow the user
+to fully control the process of creating an image. However, it is possible,
+of course, to customize the process using project artifacts.
+
+$H$H Goals
+
+This plugin has two [goals][goals]:
+
+- [jlink:jlink][jlinkmojo] is already bound to *package* phase within the Maven
+lifecycle and is therefore, automatically executed.
+- [jlink:help][helpmojo] Display help information on the plugin.
+
+To create a custom runtime image manually you need only to execute:
+
+```console
+mvn jlink:jlink
+```
+
+To display parameter details execute:
+
+```console
+mvn jlink:help -Ddetail=true
+```
+
 $H$H Usage
- 
-  General instructions on how to use the Plugin Name can be found on the {{{usage.html}usage page}}. Some more
-  specific use cases are described in the examples given below. Last but not least, users occasionally contribute
-  additional examples, tips or errata to the
-  {{{http://docs.codehaus.org/display/MAVENUSER/Plugin+Name}plugin's wiki page}}.
- 
-  In case you still have questions regarding the plugin's usage, please have a look at the {{{faq.html}FAQ}} and feel
-  free to contact the {{{mail-lists.html}user mailing list}}. The posts to the mailing list are archived and could
-  already contain the answer to your question as part of an older thread. Hence, it is also worth browsing/searching
-  the {{{mail-lists.html}mail archive}}.
- 
-  If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in our
-  {{{issue-tracking.html}issue tracker}}. When creating a new issue, please provide a comprehensive description of your
-  concern. Especially for fixing bugs it is crucial that the developers can reproduce your problem. For this reason,
-  entire debug logs, POMs or most preferably little demo projects attached to the issue are very much appreciated.
-  Of course, patches are welcome, too. Contributors can check out the project from our
-  {{{source-repository.html}source repository}} and will find supplementary information in the
-  {{{http://maven.apache.org/guides/development/guide-helping.html}guide to helping with Maven}}.
- 
+
+General instructions on how to use the ${project.name} can be found on the
+[usage page][usage]. Some more specific use cases are described in the examples
+given below.
+
+In case you still have questions regarding the plugin's usage, please
+have a look at the [FAQ][faq].
+
+If you feel like the plugin is missing a feature or has a defect, you can fill
+a feature request or bug report in our [issue tracker][issue]. When creating
+a new issue, please provide a comprehensive description of your concern.
+Especially for fixing bugs it is crucial that the developers can reproduce
+your problem. For this reason, entire debug logs, POMs or most preferably
+little demo projects attached to the issue are very much appreciated.
+
+Of course, patches are welcome, too. Contributors can check out the project
+from our [source repository][src] and will find supplementary information
+in the [guide to helping with Maven][guide].
+
 $H$H Examples
- 
-  To provide you with better understanding on some usages of the Plugin Name,
-  you can take a look into the following examples:
- 
-  * {{{examples/example.html}Plugin configuration example}}
- 
+
+To provide you with better understanding on some usages of the ${project.name},
+you can take a look into the following examples:
+
+- [Plugin configuration example][example]
+
+[faq]: faq.html
+[usage]: usage.html
+[goals]: plugin-info.html
+[jlinkmojo]: jlink-mojo.html
+[helpmojo]: help-mojo.html
+[example]: examples/example.html
+[src]: ${project.scm.url}
+[issue]: ${project.issueManagement.url}
+[guide]: http://maven.apache.org/guides/development/guide-helping.html

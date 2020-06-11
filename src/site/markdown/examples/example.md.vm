@@ -1,0 +1,54 @@
+## Velocity treats double hashes as comments, so $H can be used instead
+#set( $H = '#' )
+# Plugin configuration example
+
+```xml
+  <project>
+    ...
+    <build>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+            <configuration>
+              <modulepath>
+                <dependencysets>
+                  <dependencyset>
+                    <includeoutput>true</includeoutput>
+                    <excludeautomatic>true</excludeautomatic>
+                  </dependencyset>
+                </dependencysets>
+              </modulepath>
+              <noheaderfiles>true</noheaderfiles>
+              <nomanpages>true</nomanpages>
+              <compress>
+                <compression>ZIP</compression>
+              </compress>
+              <stripdebug>true</stripdebug>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+      ...
+      <plugins>
+        ...
+          <plugin>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <executions>
+              <execution>
+                <!-- plugin is already bound to package phase -->
+                <goals>
+                  <goal>jlink</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        ...
+      </plugins>
+    </build>
+    ...
+  </project>
+```

@@ -1,5 +1,0 @@
-# FAQ
-
-## Question
-
-Answer

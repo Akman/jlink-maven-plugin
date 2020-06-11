@@ -1,65 +1,60 @@
 ## Velocity treats double hashes as comments, so $H can be used instead
 #set( $H = '#' )
-
 # Usage
-
-${JAVA_HOME}
 
 Add the plugin to your pom:
 
 ```xml
+  <project>
+    ...
     <build>
+      <pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>${project.artifactId}</artifactId>
-                <version>${project.version}</version>
-                <configuration>
-                    <releaseGoals>
-                        <releaseGoal>deploy</releaseGoal>
-                    </releaseGoals>
-                </configuration>
-            </plugin>
+          <plugin>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+            <configuration>
+
+              <!-- put your configurations here -->
+
+            </configuration>
+          </plugin>
         </plugins>
+      </pluginManagement>
+      ...
+      <plugins>
+        ...
+          <plugin>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <executions>
+              <execution>
+                <!-- plugin is already bound to package phase -->
+                <goals>
+                  <goal>jlink</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        ...
+      </plugins>
     </build>
+    ...
+  </project>
 ```
 
-And then call the plugin:
+And then package your project (as usual), *jlink* starts automatically.
 
-	mvn releaser:release
+```console
+mvn package
+```
 
-You can also optionally supply your own build numbers if you do not want an automatically incrementing number:
+Or you can start the plugin manually.
 
-    mvn releaser:release -DbuildNumber=1234
+```console
+mvn jlink:jlink
+```
 
-$H$H Running a partial release
-
-It is possible to release a single module (and any modules it depends on) by using the `modulesToRelease` parameter.
-For example:
-
-	mvn releaser:release -DmodulesToRelease=MyApp
-
-In this case the `MyApp` module will be built, released and tagged. If MyApp depends on another module, than that module will
-also be built and released (but there will be no Git tag for this).
-
-Note that this is not generally required as the plugin will only deploy changed modules by default anyway.
-
-$H$H Forcing a release
-
-It is possible to force the release of one or more specified modules, for example if the changes have not been picked up due to some issue.
-To do this, use the `forceRelease` parameter. For example:
-
-	mvn releaser:release -DforceRelease=MyApp
-
-In this case the `MyApp` module will be built, even if there where no changes found.
-
-$H$H Specify custom global/user Maven settings for release build
-
-Sometimes it's necessary to specify custom Maven settings for the release build. This can be done with the following
-standard maven command line parameters:
-
-	mvn releaser:release -s /path/to/custom/user/settings.xml -gs /path/to/custom/global/settings.xml
-
-$H$H Authentication
-
-Please see [SSH Authentication](ssh-authentication.html) or [HTTPS Authentication](https-authentication.html).
+It will fork (spawn a parallel) an alternate build lifecycle
+up to the *package* phase before continuing to execute the *jlink* goal.
