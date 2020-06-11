@@ -192,38 +192,31 @@ public abstract class BaseToolMojo extends AbstractMojo {
   protected MavenSession session;
 
   /**
-   * Specifies the path to the JDK providing the tool needed.
-   */
-  @Parameter(
-      readonly = true
-  )
-  protected File toolhome;
-
-  /**
    * Get tool executable path from tool home.
    *
    * @param toolName the name of the tool (without extension)
+   * @param toolHomeDir the tool home directory
    * @param toolBinDirName the name of subdirectory where the tool live
    *
    * @return tool executable path from tool home directory specified in
    *         configuration as toolhome parameter or null
    */
   private Path getExecutableFromToolHome(final String toolName,
-      final String toolBinDirName) {
-    Path executablePath = toolhome == null
+      final File toolHomeDir, final String toolBinDirName) {
+    Path executablePath = toolHomeDir == null
         ? null
-        : resolveToolPath(toolName, toolhome.toPath(), toolBinDirName);
+        : resolveToolPath(toolName, toolHomeDir.toPath(), toolBinDirName);
     if (executablePath != null) {
       try {
         executablePath = executablePath.toRealPath();
-        toolHomeDir = toolhome;
+        this.toolHomeDir = toolHomeDir;
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (toolhome) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (toolhome) for [{0}]: {1}", toolName,
-              toolHomeDir));
+              this.toolHomeDir));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -258,14 +251,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
         && !StringUtils.isBlank(tcToolExecutable)) {
       try {
         executablePath = Paths.get(tcToolExecutable).toRealPath();
-        toolHomeDir = new File(tcJavaHome);
+        this.toolHomeDir = new File(tcJavaHome);
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (toolchain) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (toolchain) for [{0}]: {1}", toolName,
-              toolHomeDir));
+              this.toolHomeDir));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -294,14 +287,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
     if (executablePath != null) {
       try {
         executablePath = executablePath.toRealPath();
-        toolHomeDir = javaHomeDir;
+        this.toolHomeDir = javaHomeDir;
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (javahome) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (javahome) for [{0}]: {1}", toolName,
-              toolHomeDir));
+              this.toolHomeDir));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -334,7 +327,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
     if (executablePath != null) {
       try {
         final Path toolHomePath = executablePath.getParent();
-        toolHomeDir = toolHomePath == null
+        this.toolHomeDir = toolHomePath == null
             ? null : toolHomePath.toRealPath().toFile();
         executablePath = executablePath.toRealPath();
         if (getLog().isInfoEnabled()) {
@@ -343,7 +336,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (systempath) for [{0}]: {1}", toolName,
-              toolHomeDir));
+              this.toolHomeDir));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -368,15 +361,17 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * </p>
    *
    * @param toolName the name of the tool (without extension)
+   * @param toolHomeDir the tool home directory
    * @param toolBinDirName the name of subdirectory where the tool live
    *
    * @return tool executable path from tool home directory specified in
    *         configuration or by toolchain plugin or by system variable
    *         JAVA_HOME or null
    */
-  private Path getToolExecutable(final String toolName,
+  private Path getToolExecutable(final String toolName, final File toolHomeDir,
       final String toolBinDirName) {
-    Path executablePath = getExecutableFromToolHome(toolName, toolBinDirName);
+    Path executablePath =
+        getExecutableFromToolHome(toolName, toolHomeDir, toolBinDirName);
     if (executablePath != null) {
       return executablePath;
     }
@@ -650,13 +645,15 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * Init Mojo.
    *
    * @param toolName the name of the tool (without extension)
+   * @param toolHomeDir the tool home directory
    * @param toolBinDirName the name of subdirectory where the tool live
+   *                       relative to the tool home directory
    *
    * @throws MojoExecutionException if any errors occurred while processing
    *                                configuration parameters
    */
-  protected void init(final String toolName, final String toolBinDirName)
-      throws MojoExecutionException {
+  protected void init(final String toolName, final File toolHomeDir,
+      final String toolBinDirName) throws MojoExecutionException {
     if (project == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project} is not defined");
@@ -740,7 +737,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
     }
 
     // Resolve the tool home directory and executable file
-    final Path executablePath = getToolExecutable(toolName, toolBinDirName);
+    final Path executablePath =
+        getToolExecutable(toolName, toolHomeDir, toolBinDirName);
     if (executablePath == null) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: Executable for [{0}] not found", toolName));

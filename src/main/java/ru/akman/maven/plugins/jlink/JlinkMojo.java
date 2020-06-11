@@ -208,6 +208,12 @@ public class JlinkMojo extends BaseToolMojo {
   private LocationManager locationManager;
 
   /**
+   * Specifies the path to the JDK home directory providing the tool needed.
+   */
+  @Parameter
+  private File toolhome;
+
+  /**
    * Specifies the location in which modular dependencies will be copied.
    *
    * <p>Default value: ${project.build.directory}/jlink/mods.</p>
@@ -1747,7 +1753,7 @@ public class JlinkMojo extends BaseToolMojo {
   public void execute() throws MojoExecutionException {
 
     // Init
-    init(TOOL_NAME, TOOL_HOME_BIN); // from BaseToolMojo
+    init(TOOL_NAME, toolhome, TOOL_HOME_BIN); // from BaseToolMojo
 
     // Check version
     if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {

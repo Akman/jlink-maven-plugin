@@ -208,6 +208,12 @@ import ru.akman.maven.plugins.CommandLineOption;
   private LocationManager locationManager;
 
   /**
+   * Specifies the path to the JDK home directory providing the tool needed.
+   */
+  @Parameter
+  private File toolhome;
+
+  /**
    * Specifies the location in which modular dependencies will be copied.
    *
    * &lt;p&gt;Default value: ${project.build.directory}/jlink/mods.&lt;/p&gt;
@@ -742,16 +748,16 @@ import ru.akman.maven.plugins.CommandLineOption;
 
     // get project artifacts - all dependencies that this project has,
     // including transitive ones (depends on what phases have run)
-<span class="nc" id="L745">    final Set&lt;Artifact&gt; artifacts = project.getArtifacts();</span>
-<span class="nc bnc" id="L746" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L747">      getLog().debug(PluginUtils.getArtifactSetDebugInfo(artifacts));</span>
+<span class="nc" id="L751">    final Set&lt;Artifact&gt; artifacts = project.getArtifacts();</span>
+<span class="nc bnc" id="L752" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L753">      getLog().debug(PluginUtils.getArtifactSetDebugInfo(artifacts));</span>
     }
 
     // create a list of the paths which will be resolved
-<span class="nc" id="L751">    final List&lt;File&gt; paths = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L757">    final List&lt;File&gt; paths = new ArrayList&lt;&gt;();</span>
 
     // add the project output directory
-<span class="nc" id="L754">    paths.add(outputDir);</span>
+<span class="nc" id="L760">    paths.add(outputDir);</span>
 
     // SCOPE_COMPILE  - This is the default scope, used if none is specified.
     //                  Compile dependencies are available in all classpaths.
@@ -778,43 +784,43 @@ import ru.akman.maven.plugins.CommandLineOption;
     //                  the dependencyManagement section.
 
     // [ !SCOPE_TEST ] add the project artifacts files
-<span class="nc" id="L781">    paths.addAll(artifacts.stream()</span>
-<span class="nc bnc" id="L782" title="All 4 branches missed.">        .filter(a -&gt; a != null &amp;&amp; !Artifact.SCOPE_TEST.equals(a.getScope()))</span>
-<span class="nc" id="L783">        .map(a -&gt; a.getFile())</span>
-<span class="nc" id="L784">        .collect(Collectors.toList()));</span>
+<span class="nc" id="L787">    paths.addAll(artifacts.stream()</span>
+<span class="nc bnc" id="L788" title="All 4 branches missed.">        .filter(a -&gt; a != null &amp;&amp; !Artifact.SCOPE_TEST.equals(a.getScope()))</span>
+<span class="nc" id="L789">        .map(a -&gt; a.getFile())</span>
+<span class="nc" id="L790">        .collect(Collectors.toList()));</span>
 
     // [ SCOPE_SYSTEM ] add the project system dependencies
     // getSystemPath() is used only if the dependency scope is system
-<span class="nc" id="L788">    paths.addAll(project.getDependencies().stream()</span>
-<span class="nc bnc" id="L789" title="All 4 branches missed.">        .filter(d -&gt; d != null &amp;&amp; !StringUtils.isBlank(d.getSystemPath()))</span>
-<span class="nc" id="L790">        .map(d -&gt; new File(StringUtils.stripToEmpty(d.getSystemPath())))</span>
-<span class="nc" id="L791">        .collect(Collectors.toList()));</span>
+<span class="nc" id="L794">    paths.addAll(project.getDependencies().stream()</span>
+<span class="nc bnc" id="L795" title="All 4 branches missed.">        .filter(d -&gt; d != null &amp;&amp; !StringUtils.isBlank(d.getSystemPath()))</span>
+<span class="nc" id="L796">        .map(d -&gt; new File(StringUtils.stripToEmpty(d.getSystemPath())))</span>
+<span class="nc" id="L797">        .collect(Collectors.toList()));</span>
 
     // create request contains all information
     // required to analyze the project
-<span class="nc" id="L795">    final ResolvePathsRequest&lt;File&gt; request =</span>
-<span class="nc" id="L796">        ResolvePathsRequest.ofFiles(paths);</span>
+<span class="nc" id="L801">    final ResolvePathsRequest&lt;File&gt; request =</span>
+<span class="nc" id="L802">        ResolvePathsRequest.ofFiles(paths);</span>
 
     // this is used to resolve main module descriptor
-<span class="nc" id="L799">    final File descriptorFile =</span>
-<span class="nc" id="L800">        outputDir.toPath().resolve(DESCRIPTOR_NAME).toFile();</span>
-<span class="nc bnc" id="L801" title="All 4 branches missed.">    if (descriptorFile.exists() &amp;&amp; !descriptorFile.isDirectory()) {</span>
-<span class="nc" id="L802">      request.setMainModuleDescriptor(descriptorFile);</span>
+<span class="nc" id="L805">    final File descriptorFile =</span>
+<span class="nc" id="L806">        outputDir.toPath().resolve(DESCRIPTOR_NAME).toFile();</span>
+<span class="nc bnc" id="L807" title="All 4 branches missed.">    if (descriptorFile.exists() &amp;&amp; !descriptorFile.isDirectory()) {</span>
+<span class="nc" id="L808">      request.setMainModuleDescriptor(descriptorFile);</span>
     }
 
     // this is used to extract the module name
-<span class="nc bnc" id="L806" title="All 2 branches missed.">    if (toolHomeDir != null) {</span>
-<span class="nc" id="L807">      request.setJdkHome(toolHomeDir);</span>
+<span class="nc bnc" id="L812" title="All 2 branches missed.">    if (toolHomeDir != null) {</span>
+<span class="nc" id="L813">      request.setJdkHome(toolHomeDir);</span>
     }
 
     // resolve project dependencies
     try {
-<span class="nc" id="L812">      return locationManager.resolvePaths(request);</span>
-<span class="nc" id="L813">    } catch (IOException ex) {</span>
-<span class="nc bnc" id="L814" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L815">        getLog().error(&quot;Unable to resolve project dependencies&quot;, ex);</span>
+<span class="nc" id="L818">      return locationManager.resolvePaths(request);</span>
+<span class="nc" id="L819">    } catch (IOException ex) {</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L821">        getLog().error(&quot;Unable to resolve project dependencies&quot;, ex);</span>
       }
-<span class="nc" id="L817">      throw new MojoExecutionException(</span>
+<span class="nc" id="L823">      throw new MojoExecutionException(</span>
           &quot;Error: Unable to resolve project dependencies&quot;, ex);
     }
 
@@ -826,20 +832,20 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return main module descriptor or null if it not exists
    */
   private JavaModuleDescriptor fetchMainModuleDescriptor() {
-<span class="nc" id="L829">    final JavaModuleDescriptor descriptor =</span>
-<span class="nc" id="L830">        projectDependencies.getMainModuleDescriptor();</span>
-<span class="nc bnc" id="L831" title="All 2 branches missed.">    if (descriptor == null) {</span>
+<span class="nc" id="L835">    final JavaModuleDescriptor descriptor =</span>
+<span class="nc" id="L836">        projectDependencies.getMainModuleDescriptor();</span>
+<span class="nc bnc" id="L837" title="All 2 branches missed.">    if (descriptor == null) {</span>
       // detected that the project is non modular
-<span class="nc bnc" id="L833" title="All 2 branches missed.">      if (getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L834">        getLog().warn(&quot;The main module descriptor not found&quot;);</span>
+<span class="nc bnc" id="L839" title="All 2 branches missed.">      if (getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L840">        getLog().warn(&quot;The main module descriptor not found&quot;);</span>
       }
     } else {
-<span class="nc bnc" id="L837" title="All 2 branches missed.">      if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L838">        getLog().info(MessageFormat.format(</span>
-<span class="nc" id="L839">            &quot;Found the main module descriptor: [{0}]&quot;, descriptor.name()));</span>
+<span class="nc bnc" id="L843" title="All 2 branches missed.">      if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L844">        getLog().info(MessageFormat.format(</span>
+<span class="nc" id="L845">            &quot;Found the main module descriptor: [{0}]&quot;, descriptor.name()));</span>
       }
     }
-<span class="nc" id="L842">    return descriptor;</span>
+<span class="nc" id="L848">    return descriptor;</span>
   }
 
   /**
@@ -848,12 +854,12 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return pairs of path exception file and cause
    */
   private Map&lt;File, String&gt; fetchPathExceptions() {
-<span class="nc" id="L851">    return projectDependencies.getPathExceptions()</span>
-<span class="nc" id="L852">        .entrySet().stream()</span>
-<span class="nc bnc" id="L853" title="All 4 branches missed.">        .filter(entry -&gt; entry != null &amp;&amp; entry.getKey() != null)</span>
-<span class="nc" id="L854">        .collect(Collectors.toMap(</span>
-<span class="nc" id="L855">            entry -&gt; entry.getKey(),</span>
-<span class="nc" id="L856">            entry -&gt; PluginUtils.getThrowableCause(entry.getValue())</span>
+<span class="nc" id="L857">    return projectDependencies.getPathExceptions()</span>
+<span class="nc" id="L858">        .entrySet().stream()</span>
+<span class="nc bnc" id="L859" title="All 4 branches missed.">        .filter(entry -&gt; entry != null &amp;&amp; entry.getKey() != null)</span>
+<span class="nc" id="L860">        .collect(Collectors.toMap(</span>
+<span class="nc" id="L861">            entry -&gt; entry.getKey(),</span>
+<span class="nc" id="L862">            entry -&gt; PluginUtils.getThrowableCause(entry.getValue())</span>
         ));
   }
 
@@ -863,18 +869,18 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return classpath elements
    */
   private List&lt;File&gt; fetchClasspathElements() {
-<span class="nc" id="L866">    final List&lt;File&gt; result = projectDependencies.getClasspathElements()</span>
-<span class="nc" id="L867">        .stream()</span>
-<span class="nc" id="L868">        .filter(Objects::nonNull)</span>
-<span class="nc" id="L869">        .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L870" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L871">      getLog().info(&quot;Found classpath elements: &quot; + result.size()</span>
-<span class="nc" id="L872">          + System.lineSeparator()</span>
-<span class="nc" id="L873">          + result.stream()</span>
-<span class="nc" id="L874">              .map(file -&gt; file.toString())</span>
-<span class="nc" id="L875">              .collect(Collectors.joining(System.lineSeparator())));</span>
+<span class="nc" id="L872">    final List&lt;File&gt; result = projectDependencies.getClasspathElements()</span>
+<span class="nc" id="L873">        .stream()</span>
+<span class="nc" id="L874">        .filter(Objects::nonNull)</span>
+<span class="nc" id="L875">        .collect(Collectors.toList());</span>
+<span class="nc bnc" id="L876" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L877">      getLog().info(&quot;Found classpath elements: &quot; + result.size()</span>
+<span class="nc" id="L878">          + System.lineSeparator()</span>
+<span class="nc" id="L879">          + result.stream()</span>
+<span class="nc" id="L880">              .map(file -&gt; file.toString())</span>
+<span class="nc" id="L881">              .collect(Collectors.joining(System.lineSeparator())));</span>
     }
-<span class="nc" id="L877">    return result;</span>
+<span class="nc" id="L883">    return result;</span>
   }
 
   /**
@@ -883,33 +889,33 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return modulepath elements
    */
   private List&lt;File&gt; fetchModulepathElements() {
-<span class="nc" id="L886">    final List&lt;File&gt; result = projectDependencies.getModulepathElements()</span>
-<span class="nc" id="L887">        .keySet()</span>
-<span class="nc" id="L888">        .stream()</span>
-<span class="nc" id="L889">        .filter(Objects::nonNull)</span>
-<span class="nc" id="L890">        .collect(Collectors.toList());</span>
-<span class="nc bnc" id="L891" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L892">      getLog().info(&quot;Found modulepath elements: &quot; + result.size()</span>
-<span class="nc" id="L893">          + System.lineSeparator()</span>
-<span class="nc" id="L894">          + projectDependencies.getModulepathElements().entrySet().stream()</span>
-<span class="nc bnc" id="L895" title="All 4 branches missed.">              .filter(entry -&gt; entry != null &amp;&amp; entry.getKey() != null)</span>
-<span class="nc" id="L896">              .map(entry -&gt; entry.getKey().toString()</span>
-<span class="nc bnc" id="L897" title="All 2 branches missed.">                  + (ModuleNameSource.FILENAME.equals(entry.getValue())</span>
-<span class="nc" id="L898">                      ? System.lineSeparator()</span>
+<span class="nc" id="L892">    final List&lt;File&gt; result = projectDependencies.getModulepathElements()</span>
+<span class="nc" id="L893">        .keySet()</span>
+<span class="nc" id="L894">        .stream()</span>
+<span class="nc" id="L895">        .filter(Objects::nonNull)</span>
+<span class="nc" id="L896">        .collect(Collectors.toList());</span>
+<span class="nc bnc" id="L897" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L898">      getLog().info(&quot;Found modulepath elements: &quot; + result.size()</span>
+<span class="nc" id="L899">          + System.lineSeparator()</span>
+<span class="nc" id="L900">          + projectDependencies.getModulepathElements().entrySet().stream()</span>
+<span class="nc bnc" id="L901" title="All 4 branches missed.">              .filter(entry -&gt; entry != null &amp;&amp; entry.getKey() != null)</span>
+<span class="nc" id="L902">              .map(entry -&gt; entry.getKey().toString()</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">                  + (ModuleNameSource.FILENAME.equals(entry.getValue())</span>
+<span class="nc" id="L904">                      ? System.lineSeparator()</span>
                           + &quot;[!] Detected 'requires' filename based &quot;
                           + &quot;automatic module&quot;
-<span class="nc" id="L901">                          + System.lineSeparator()</span>
+<span class="nc" id="L907">                          + System.lineSeparator()</span>
                           + &quot;[!] Please don't publish this project to &quot;
                           + &quot;a public artifact repository&quot;
-<span class="nc" id="L904">                          + System.lineSeparator()</span>
+<span class="nc" id="L910">                          + System.lineSeparator()</span>
                           + (mainModuleDescriptor != null
-<span class="nc bnc" id="L906" title="All 4 branches missed.">                              &amp;&amp; mainModuleDescriptor.exports().isEmpty()</span>
-<span class="nc" id="L907">                                  ? &quot;[!] APPLICATION&quot;</span>
-<span class="nc" id="L908">                                  : &quot;[!] LIBRARY&quot;)</span>
-<span class="nc" id="L909">                      : &quot;&quot;))</span>
-<span class="nc" id="L910">              .collect(Collectors.joining(System.lineSeparator())));</span>
+<span class="nc bnc" id="L912" title="All 4 branches missed.">                              &amp;&amp; mainModuleDescriptor.exports().isEmpty()</span>
+<span class="nc" id="L913">                                  ? &quot;[!] APPLICATION&quot;</span>
+<span class="nc" id="L914">                                  : &quot;[!] LIBRARY&quot;)</span>
+<span class="nc" id="L915">                      : &quot;&quot;))</span>
+<span class="nc" id="L916">              .collect(Collectors.joining(System.lineSeparator())));</span>
     }
-<span class="nc" id="L912">    return result;</span>
+<span class="nc" id="L918">    return result;</span>
   }
 
   /**
@@ -918,22 +924,22 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return path contains parameter elements
    */
   private String getPathElements() {
-<span class="nc" id="L921">    String result = null;</span>
-<span class="nc bnc" id="L922" title="All 2 branches missed.">    if (modulepath != null) {</span>
-<span class="nc" id="L923">      final List&lt;File&gt; pathelements = modulepath.getPathElements();</span>
-<span class="nc bnc" id="L924" title="All 4 branches missed.">      if (pathelements != null &amp;&amp; !pathelements.isEmpty()) {</span>
-<span class="nc" id="L925">        result = pathelements.stream()</span>
-<span class="nc" id="L926">            .filter(Objects::nonNull)</span>
-<span class="nc" id="L927">            .map(file -&gt; file.toString())</span>
-<span class="nc" id="L928">            .collect(Collectors.joining(File.pathSeparator));</span>
-<span class="nc bnc" id="L929" title="All 2 branches missed.">        if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L930">          getLog().debug(PluginUtils.getPathElementsDebugInfo(&quot;PATHELEMENTS&quot;,</span>
+<span class="nc" id="L927">    String result = null;</span>
+<span class="nc bnc" id="L928" title="All 2 branches missed.">    if (modulepath != null) {</span>
+<span class="nc" id="L929">      final List&lt;File&gt; pathelements = modulepath.getPathElements();</span>
+<span class="nc bnc" id="L930" title="All 4 branches missed.">      if (pathelements != null &amp;&amp; !pathelements.isEmpty()) {</span>
+<span class="nc" id="L931">        result = pathelements.stream()</span>
+<span class="nc" id="L932">            .filter(Objects::nonNull)</span>
+<span class="nc" id="L933">            .map(file -&gt; file.toString())</span>
+<span class="nc" id="L934">            .collect(Collectors.joining(File.pathSeparator));</span>
+<span class="nc bnc" id="L935" title="All 2 branches missed.">        if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L936">          getLog().debug(PluginUtils.getPathElementsDebugInfo(&quot;PATHELEMENTS&quot;,</span>
               pathelements));
-<span class="nc" id="L932">          getLog().debug(result);</span>
+<span class="nc" id="L938">          getLog().debug(result);</span>
         }
       }
     }
-<span class="nc" id="L936">    return result;</span>
+<span class="nc" id="L942">    return result;</span>
   }
 
   /**
@@ -945,34 +951,34 @@ import ru.akman.maven.plugins.CommandLineOption;
    *                                a fileset
    */
   private String getFileSets() throws MojoExecutionException {
-<span class="nc" id="L948">    String result = null;</span>
-<span class="nc bnc" id="L949" title="All 2 branches missed.">    if (modulepath != null) {</span>
-<span class="nc" id="L950">      final List&lt;FileSet&gt; filesets = modulepath.getFileSets();</span>
-<span class="nc bnc" id="L951" title="All 4 branches missed.">      if (filesets != null &amp;&amp; !filesets.isEmpty()) {</span>
-<span class="nc bnc" id="L952" title="All 2 branches missed.">        for (final FileSet fileSet : filesets) {</span>
+<span class="nc" id="L954">    String result = null;</span>
+<span class="nc bnc" id="L955" title="All 2 branches missed.">    if (modulepath != null) {</span>
+<span class="nc" id="L956">      final List&lt;FileSet&gt; filesets = modulepath.getFileSets();</span>
+<span class="nc bnc" id="L957" title="All 4 branches missed.">      if (filesets != null &amp;&amp; !filesets.isEmpty()) {</span>
+<span class="nc bnc" id="L958" title="All 2 branches missed.">        for (final FileSet fileSet : filesets) {</span>
           final File fileSetDir;
           try {
-<span class="nc" id="L955">            fileSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, fileSet);</span>
-<span class="nc" id="L956">          } catch (IOException ex) {</span>
-<span class="nc bnc" id="L957" title="All 2 branches missed.">            if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L958">              getLog().error(&quot;Unable to resolve fileset&quot;, ex);</span>
+<span class="nc" id="L961">            fileSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, fileSet);</span>
+<span class="nc" id="L962">          } catch (IOException ex) {</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">            if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L964">              getLog().error(&quot;Unable to resolve fileset&quot;, ex);</span>
             }
-<span class="nc" id="L960">            throw new MojoExecutionException(</span>
+<span class="nc" id="L966">            throw new MojoExecutionException(</span>
                 &quot;Error: Unable to resolve fileset&quot;, ex);
-<span class="nc" id="L962">          }</span>
-<span class="nc" id="L963">          result = Stream.of(fileSetManager.getIncludedFiles(fileSet))</span>
-<span class="nc bnc" id="L964" title="All 2 branches missed.">              .filter(fileName -&gt; !StringUtils.isBlank(fileName))</span>
-<span class="nc" id="L965">              .map(fileName -&gt; fileSetDir.toPath().resolve(</span>
-<span class="nc" id="L966">                  StringUtils.stripToEmpty(fileName)).toString())</span>
-<span class="nc" id="L967">              .collect(Collectors.joining(File.pathSeparator));</span>
-<span class="nc bnc" id="L968" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L969">            getLog().debug(PluginUtils.getFileSetDebugInfo(&quot;FILESET&quot;,</span>
+<span class="nc" id="L968">          }</span>
+<span class="nc" id="L969">          result = Stream.of(fileSetManager.getIncludedFiles(fileSet))</span>
+<span class="nc bnc" id="L970" title="All 2 branches missed.">              .filter(fileName -&gt; !StringUtils.isBlank(fileName))</span>
+<span class="nc" id="L971">              .map(fileName -&gt; fileSetDir.toPath().resolve(</span>
+<span class="nc" id="L972">                  StringUtils.stripToEmpty(fileName)).toString())</span>
+<span class="nc" id="L973">              .collect(Collectors.joining(File.pathSeparator));</span>
+<span class="nc bnc" id="L974" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L975">            getLog().debug(PluginUtils.getFileSetDebugInfo(&quot;FILESET&quot;,</span>
                 fileSet, result));
           }
-<span class="nc" id="L972">        }</span>
+<span class="nc" id="L978">        }</span>
       }
     }
-<span class="nc" id="L975">    return result;</span>
+<span class="nc" id="L981">    return result;</span>
   }
 
   /**
@@ -984,34 +990,34 @@ import ru.akman.maven.plugins.CommandLineOption;
    *                                a dirset
    */
   private String getDirSets() throws MojoExecutionException {
-<span class="nc" id="L987">    String result = null;</span>
-<span class="nc bnc" id="L988" title="All 2 branches missed.">    if (modulepath != null) {</span>
-<span class="nc" id="L989">      final List&lt;FileSet&gt; dirsets = modulepath.getDirSets();</span>
-<span class="nc bnc" id="L990" title="All 4 branches missed.">      if (dirsets != null &amp;&amp; !dirsets.isEmpty()) {</span>
-<span class="nc bnc" id="L991" title="All 2 branches missed.">        for (final FileSet dirSet : dirsets) {</span>
+<span class="nc" id="L993">    String result = null;</span>
+<span class="nc bnc" id="L994" title="All 2 branches missed.">    if (modulepath != null) {</span>
+<span class="nc" id="L995">      final List&lt;FileSet&gt; dirsets = modulepath.getDirSets();</span>
+<span class="nc bnc" id="L996" title="All 4 branches missed.">      if (dirsets != null &amp;&amp; !dirsets.isEmpty()) {</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">        for (final FileSet dirSet : dirsets) {</span>
           final File dirSetDir;
           try {
-<span class="nc" id="L994">            dirSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, dirSet);</span>
-<span class="nc" id="L995">          } catch (IOException ex) {</span>
-<span class="nc bnc" id="L996" title="All 2 branches missed.">            if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L997">              getLog().error(&quot;Unable to resolve dirset&quot;, ex);</span>
+<span class="nc" id="L1000">            dirSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, dirSet);</span>
+<span class="nc" id="L1001">          } catch (IOException ex) {</span>
+<span class="nc bnc" id="L1002" title="All 2 branches missed.">            if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1003">              getLog().error(&quot;Unable to resolve dirset&quot;, ex);</span>
             }
-<span class="nc" id="L999">            throw new MojoExecutionException(</span>
+<span class="nc" id="L1005">            throw new MojoExecutionException(</span>
                 &quot;Error: Unable to resolve dirset&quot;, ex);
-<span class="nc" id="L1001">          }</span>
-<span class="nc" id="L1002">          result = Stream.of(fileSetManager.getIncludedDirectories(dirSet))</span>
-<span class="nc bnc" id="L1003" title="All 2 branches missed.">              .filter(dirName -&gt; !StringUtils.isBlank(dirName))</span>
-<span class="nc" id="L1004">              .map(dirName -&gt; dirSetDir.toPath().resolve(</span>
-<span class="nc" id="L1005">                  StringUtils.stripToEmpty(dirName)).toString())</span>
-<span class="nc" id="L1006">              .collect(Collectors.joining(File.pathSeparator));</span>
-<span class="nc bnc" id="L1007" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1008">            getLog().debug(PluginUtils.getFileSetDebugInfo(&quot;DIRSET&quot;,</span>
+<span class="nc" id="L1007">          }</span>
+<span class="nc" id="L1008">          result = Stream.of(fileSetManager.getIncludedDirectories(dirSet))</span>
+<span class="nc bnc" id="L1009" title="All 2 branches missed.">              .filter(dirName -&gt; !StringUtils.isBlank(dirName))</span>
+<span class="nc" id="L1010">              .map(dirName -&gt; dirSetDir.toPath().resolve(</span>
+<span class="nc" id="L1011">                  StringUtils.stripToEmpty(dirName)).toString())</span>
+<span class="nc" id="L1012">              .collect(Collectors.joining(File.pathSeparator));</span>
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1014">            getLog().debug(PluginUtils.getFileSetDebugInfo(&quot;DIRSET&quot;,</span>
                 dirSet, result));
           }
-<span class="nc" id="L1011">        }</span>
+<span class="nc" id="L1017">        }</span>
       }
     }
-<span class="nc" id="L1014">    return result;</span>
+<span class="nc" id="L1020">    return result;</span>
   }
 
   /**
@@ -1020,23 +1026,23 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return path contains dependencysets
    */
   private String getDependencySets() {
-<span class="nc" id="L1023">    String result = null;</span>
-<span class="nc bnc" id="L1024" title="All 2 branches missed.">    if (modulepath != null) {</span>
-<span class="nc" id="L1025">      final List&lt;DependencySet&gt; dependencysets =</span>
-<span class="nc" id="L1026">          modulepath.getDependencySets();</span>
-<span class="nc bnc" id="L1027" title="All 4 branches missed.">      if (dependencysets != null &amp;&amp; !dependencysets.isEmpty()) {</span>
-<span class="nc bnc" id="L1028" title="All 2 branches missed.">        for (final DependencySet dependencySet : dependencysets) {</span>
-<span class="nc" id="L1029">          result = getIncludedDependencies(dependencySet)</span>
-<span class="nc" id="L1030">              .stream()</span>
-<span class="nc" id="L1031">              .collect(Collectors.joining(File.pathSeparator));</span>
-<span class="nc bnc" id="L1032" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1033">            getLog().debug(PluginUtils.getDependencySetDebugInfo(</span>
+<span class="nc" id="L1029">    String result = null;</span>
+<span class="nc bnc" id="L1030" title="All 2 branches missed.">    if (modulepath != null) {</span>
+<span class="nc" id="L1031">      final List&lt;DependencySet&gt; dependencysets =</span>
+<span class="nc" id="L1032">          modulepath.getDependencySets();</span>
+<span class="nc bnc" id="L1033" title="All 4 branches missed.">      if (dependencysets != null &amp;&amp; !dependencysets.isEmpty()) {</span>
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">        for (final DependencySet dependencySet : dependencysets) {</span>
+<span class="nc" id="L1035">          result = getIncludedDependencies(dependencySet)</span>
+<span class="nc" id="L1036">              .stream()</span>
+<span class="nc" id="L1037">              .collect(Collectors.joining(File.pathSeparator));</span>
+<span class="nc bnc" id="L1038" title="All 2 branches missed.">          if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1039">            getLog().debug(PluginUtils.getDependencySetDebugInfo(</span>
                 &quot;DEPENDENCYSET&quot;, dependencySet, result));
           }
-<span class="nc" id="L1036">        }</span>
+<span class="nc" id="L1042">        }</span>
       }
     }
-<span class="nc" id="L1039">    return result;</span>
+<span class="nc" id="L1045">    return result;</span>
   }
 
   /**
@@ -1048,12 +1054,12 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return the set of the included project dependencies
    */
   private Set&lt;String&gt; getIncludedDependencies(final DependencySet depSet) {
-<span class="nc" id="L1051">    return projectDependencies.getPathElements().entrySet().stream()</span>
-<span class="nc bnc" id="L1052" title="All 2 branches missed.">        .filter(entry -&gt; entry != null</span>
-<span class="nc bnc" id="L1053" title="All 2 branches missed.">            &amp;&amp; entry.getKey() != null</span>
-<span class="nc bnc" id="L1054" title="All 2 branches missed.">            &amp;&amp; filterDependency(depSet, entry.getKey(), entry.getValue()))</span>
-<span class="nc" id="L1055">        .map(entry -&gt; entry.getKey().toString())</span>
-<span class="nc" id="L1056">        .collect(Collectors.toSet());</span>
+<span class="nc" id="L1057">    return projectDependencies.getPathElements().entrySet().stream()</span>
+<span class="nc bnc" id="L1058" title="All 2 branches missed.">        .filter(entry -&gt; entry != null</span>
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">            &amp;&amp; entry.getKey() != null</span>
+<span class="nc bnc" id="L1060" title="All 2 branches missed.">            &amp;&amp; filterDependency(depSet, entry.getKey(), entry.getValue()))</span>
+<span class="nc" id="L1061">        .map(entry -&gt; entry.getKey().toString())</span>
+<span class="nc" id="L1062">        .collect(Collectors.toSet());</span>
   }
 
   /**
@@ -1065,12 +1071,12 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @return the set of the excluded project dependencies
    */
   private Set&lt;String&gt; getExcludedDependencies(final DependencySet depSet) {
-<span class="nc" id="L1068">    return projectDependencies.getPathElements().entrySet().stream()</span>
-<span class="nc bnc" id="L1069" title="All 2 branches missed.">        .filter(entry -&gt; entry != null</span>
-<span class="nc bnc" id="L1070" title="All 2 branches missed.">            &amp;&amp; entry.getKey() != null</span>
-<span class="nc bnc" id="L1071" title="All 2 branches missed.">            &amp;&amp; !filterDependency(depSet, entry.getKey(), entry.getValue()))</span>
-<span class="nc" id="L1072">        .map(entry -&gt; entry.getKey().toString())</span>
-<span class="nc" id="L1073">        .collect(Collectors.toSet());</span>
+<span class="nc" id="L1074">    return projectDependencies.getPathElements().entrySet().stream()</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">        .filter(entry -&gt; entry != null</span>
+<span class="nc bnc" id="L1076" title="All 2 branches missed.">            &amp;&amp; entry.getKey() != null</span>
+<span class="nc bnc" id="L1077" title="All 2 branches missed.">            &amp;&amp; !filterDependency(depSet, entry.getKey(), entry.getValue()))</span>
+<span class="nc" id="L1078">        .map(entry -&gt; entry.getKey().toString())</span>
+<span class="nc" id="L1079">        .collect(Collectors.toSet());</span>
   }
 
   /**
@@ -1089,64 +1095,64 @@ import ru.akman.maven.plugins.CommandLineOption;
   private boolean filterDependency(final DependencySet depSet, final File file,
       final JavaModuleDescriptor descriptor) {
 
-<span class="nc bnc" id="L1092" title="All 2 branches missed.">    if (descriptor == null) {</span>
-<span class="nc bnc" id="L1093" title="All 2 branches missed.">      if (getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L1094">        getLog().warn(&quot;Missing module descriptor: &quot; + file);</span>
+<span class="nc bnc" id="L1098" title="All 2 branches missed.">    if (descriptor == null) {</span>
+<span class="nc bnc" id="L1099" title="All 2 branches missed.">      if (getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L1100">        getLog().warn(&quot;Missing module descriptor: &quot; + file);</span>
       }
     } else {
-<span class="nc bnc" id="L1097" title="All 4 branches missed.">      if (descriptor.isAutomatic() &amp;&amp; getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1098">        getLog().info(&quot;Found automatic module: &quot; + file);</span>
+<span class="nc bnc" id="L1103" title="All 4 branches missed.">      if (descriptor.isAutomatic() &amp;&amp; getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1104">        getLog().info(&quot;Found automatic module: &quot; + file);</span>
       }
     }
 
-<span class="nc" id="L1102">    boolean isIncluded = false;</span>
+<span class="nc" id="L1108">    boolean isIncluded = false;</span>
 
-<span class="nc bnc" id="L1104" title="All 2 branches missed.">    if (depSet == null) {</span>
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">    if (depSet == null) {</span>
       // include module by default
-<span class="nc" id="L1106">      isIncluded = true;</span>
+<span class="nc" id="L1112">      isIncluded = true;</span>
       // include automatic module by default
-<span class="nc bnc" id="L1108" title="All 4 branches missed.">      if (descriptor != null &amp;&amp; descriptor.isAutomatic()</span>
-<span class="nc bnc" id="L1109" title="All 2 branches missed.">          &amp;&amp; getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1110">        getLog().info(&quot;Included automatic module: &quot; + file);</span>
+<span class="nc bnc" id="L1114" title="All 4 branches missed.">      if (descriptor != null &amp;&amp; descriptor.isAutomatic()</span>
+<span class="nc bnc" id="L1115" title="All 2 branches missed.">          &amp;&amp; getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1116">        getLog().info(&quot;Included automatic module: &quot; + file);</span>
       }
       // exclude output module by default
-<span class="nc bnc" id="L1113" title="All 2 branches missed.">      if (file.compareTo(outputDir) == 0) {</span>
-<span class="nc" id="L1114">        isIncluded = false;</span>
-<span class="nc bnc" id="L1115" title="All 2 branches missed.">        if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1116">          getLog().info(&quot;Excluded output module: &quot; + file);</span>
+<span class="nc bnc" id="L1119" title="All 2 branches missed.">      if (file.compareTo(outputDir) == 0) {</span>
+<span class="nc" id="L1120">        isIncluded = false;</span>
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">        if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1122">          getLog().info(&quot;Excluded output module: &quot; + file);</span>
         }
       }
     } else {
-<span class="nc bnc" id="L1120" title="All 4 branches missed.">      if (descriptor != null &amp;&amp; descriptor.isAutomatic()</span>
-<span class="nc bnc" id="L1121" title="All 2 branches missed.">          &amp;&amp; depSet.isAutomaticExcluded()) {</span>
-<span class="nc bnc" id="L1122" title="All 2 branches missed.">        if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1123">          getLog().info(&quot;Excluded automatic module: &quot; + file);</span>
+<span class="nc bnc" id="L1126" title="All 4 branches missed.">      if (descriptor != null &amp;&amp; descriptor.isAutomatic()</span>
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">          &amp;&amp; depSet.isAutomaticExcluded()) {</span>
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">        if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1129">          getLog().info(&quot;Excluded automatic module: &quot; + file);</span>
         }
       } else {
-<span class="nc bnc" id="L1126" title="All 2 branches missed.">        if (file.compareTo(outputDir) == 0) {</span>
-<span class="nc bnc" id="L1127" title="All 2 branches missed.">          if (depSet.isOutputIncluded()) {</span>
-<span class="nc" id="L1128">            isIncluded = true;</span>
-<span class="nc bnc" id="L1129" title="All 2 branches missed.">            if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1130">              getLog().info(&quot;Included output module: &quot; + file);</span>
+<span class="nc bnc" id="L1132" title="All 2 branches missed.">        if (file.compareTo(outputDir) == 0) {</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">          if (depSet.isOutputIncluded()) {</span>
+<span class="nc" id="L1134">            isIncluded = true;</span>
+<span class="nc bnc" id="L1135" title="All 2 branches missed.">            if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1136">              getLog().info(&quot;Included output module: &quot; + file);</span>
             }
           } else {
-<span class="nc bnc" id="L1133" title="All 2 branches missed.">            if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1134">              getLog().info(&quot;Excluded output module: &quot; + file);</span>
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">            if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1140">              getLog().info(&quot;Excluded output module: &quot; + file);</span>
             }
           }
         } else {
-<span class="nc bnc" id="L1138" title="All 2 branches missed.">          isIncluded = matchesIncludes(depSet, file, descriptor)</span>
-<span class="nc bnc" id="L1139" title="All 2 branches missed.">              &amp;&amp; !matchesExcludes(depSet, file, descriptor);</span>
+<span class="nc bnc" id="L1144" title="All 2 branches missed.">          isIncluded = matchesIncludes(depSet, file, descriptor)</span>
+<span class="nc bnc" id="L1145" title="All 2 branches missed.">              &amp;&amp; !matchesExcludes(depSet, file, descriptor);</span>
         }
       }
     }
 
-<span class="nc bnc" id="L1144" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1145">      getLog().debug(PluginUtils.getDependencyDebugInfo(file, descriptor,</span>
+<span class="nc bnc" id="L1150" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1151">      getLog().debug(PluginUtils.getDependencyDebugInfo(file, descriptor,</span>
           isIncluded));
     }
 
-<span class="nc" id="L1149">    return isIncluded;</span>
+<span class="nc" id="L1155">    return isIncluded;</span>
   }
 
   /**
@@ -1163,28 +1169,28 @@ import ru.akman.maven.plugins.CommandLineOption;
   private boolean matchesIncludes(final DependencySet depSet, final File file,
       final JavaModuleDescriptor descriptor) {
 
-<span class="nc bnc" id="L1166" title="All 2 branches missed.">    final String name = descriptor == null ? &quot;&quot; : descriptor.name();</span>
+<span class="nc bnc" id="L1172" title="All 2 branches missed.">    final String name = descriptor == null ? &quot;&quot; : descriptor.name();</span>
 
-<span class="nc" id="L1168">    final List&lt;String&gt; includes = depSet.getIncludes();</span>
-<span class="nc" id="L1169">    final List&lt;String&gt; includenames = depSet.getIncludeNames();</span>
+<span class="nc" id="L1174">    final List&lt;String&gt; includes = depSet.getIncludes();</span>
+<span class="nc" id="L1175">    final List&lt;String&gt; includenames = depSet.getIncludeNames();</span>
 
-<span class="nc" id="L1171">    boolean result = true;</span>
+<span class="nc" id="L1177">    boolean result = true;</span>
 
-<span class="nc bnc" id="L1173" title="All 4 branches missed.">    if (includenames == null || includenames.isEmpty()) {</span>
-<span class="nc bnc" id="L1174" title="All 4 branches missed.">      if (includes == null || includes.isEmpty()) {</span>
-<span class="nc" id="L1175">        result = true;</span>
+<span class="nc bnc" id="L1179" title="All 4 branches missed.">    if (includenames == null || includenames.isEmpty()) {</span>
+<span class="nc bnc" id="L1180" title="All 4 branches missed.">      if (includes == null || includes.isEmpty()) {</span>
+<span class="nc" id="L1181">        result = true;</span>
       } else {
-<span class="nc" id="L1177">        result = pathMatches(includes, file.toPath());</span>
+<span class="nc" id="L1183">        result = pathMatches(includes, file.toPath());</span>
       }
     } else {
-<span class="nc bnc" id="L1180" title="All 4 branches missed.">      if (includes == null || includes.isEmpty()) {</span>
-<span class="nc" id="L1181">        result = nameMatches(includenames, name);</span>
+<span class="nc bnc" id="L1186" title="All 4 branches missed.">      if (includes == null || includes.isEmpty()) {</span>
+<span class="nc" id="L1187">        result = nameMatches(includenames, name);</span>
       } else {
-<span class="nc bnc" id="L1183" title="All 2 branches missed.">        result = pathMatches(includes, file.toPath())</span>
-<span class="nc bnc" id="L1184" title="All 2 branches missed.">            || nameMatches(includenames, name);</span>
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">        result = pathMatches(includes, file.toPath())</span>
+<span class="nc bnc" id="L1190" title="All 2 branches missed.">            || nameMatches(includenames, name);</span>
       }
     }
-<span class="nc" id="L1187">    return result;</span>
+<span class="nc" id="L1193">    return result;</span>
   }
 
   /**
@@ -1201,28 +1207,28 @@ import ru.akman.maven.plugins.CommandLineOption;
   private boolean matchesExcludes(final DependencySet depSet, final File file,
       final JavaModuleDescriptor descriptor) {
 
-<span class="nc bnc" id="L1204" title="All 2 branches missed.">    final String name = descriptor == null ? &quot;&quot; : descriptor.name();</span>
+<span class="nc bnc" id="L1210" title="All 2 branches missed.">    final String name = descriptor == null ? &quot;&quot; : descriptor.name();</span>
 
-<span class="nc" id="L1206">    final List&lt;String&gt; excludes = depSet.getExcludes();</span>
-<span class="nc" id="L1207">    final List&lt;String&gt; excludenames = depSet.getExcludeNames();</span>
+<span class="nc" id="L1212">    final List&lt;String&gt; excludes = depSet.getExcludes();</span>
+<span class="nc" id="L1213">    final List&lt;String&gt; excludenames = depSet.getExcludeNames();</span>
 
-<span class="nc" id="L1209">    boolean result = false;</span>
+<span class="nc" id="L1215">    boolean result = false;</span>
 
-<span class="nc bnc" id="L1211" title="All 4 branches missed.">    if (excludenames == null || excludenames.isEmpty()) {</span>
-<span class="nc bnc" id="L1212" title="All 4 branches missed.">      if (excludes == null || excludes.isEmpty()) {</span>
-<span class="nc" id="L1213">        result = false;</span>
+<span class="nc bnc" id="L1217" title="All 4 branches missed.">    if (excludenames == null || excludenames.isEmpty()) {</span>
+<span class="nc bnc" id="L1218" title="All 4 branches missed.">      if (excludes == null || excludes.isEmpty()) {</span>
+<span class="nc" id="L1219">        result = false;</span>
       } else {
-<span class="nc" id="L1215">        result = pathMatches(excludes, file.toPath());</span>
+<span class="nc" id="L1221">        result = pathMatches(excludes, file.toPath());</span>
       }
     } else {
-<span class="nc bnc" id="L1218" title="All 4 branches missed.">      if (excludes == null || excludes.isEmpty()) {</span>
-<span class="nc" id="L1219">        result = nameMatches(excludenames, name);</span>
+<span class="nc bnc" id="L1224" title="All 4 branches missed.">      if (excludes == null || excludes.isEmpty()) {</span>
+<span class="nc" id="L1225">        result = nameMatches(excludenames, name);</span>
       } else {
-<span class="nc bnc" id="L1221" title="All 2 branches missed.">        result = pathMatches(excludes, file.toPath())</span>
-<span class="nc bnc" id="L1222" title="All 2 branches missed.">            || nameMatches(excludenames, name);</span>
+<span class="nc bnc" id="L1227" title="All 2 branches missed.">        result = pathMatches(excludes, file.toPath())</span>
+<span class="nc bnc" id="L1228" title="All 2 branches missed.">            || nameMatches(excludenames, name);</span>
       }
     }
-<span class="nc" id="L1225">    return result;</span>
+<span class="nc" id="L1231">    return result;</span>
   }
 
   /**
@@ -1237,14 +1243,14 @@ import ru.akman.maven.plugins.CommandLineOption;
    *              if no patterns are specified
    */
   private boolean pathMatches(final List&lt;String&gt; patterns, final Path path) {
-<span class="nc bnc" id="L1240" title="All 2 branches missed.">    for (final String pattern : patterns) {</span>
+<span class="nc bnc" id="L1246" title="All 2 branches missed.">    for (final String pattern : patterns) {</span>
       final PathMatcher pathMatcher =
-<span class="nc" id="L1242">          FileSystems.getDefault().getPathMatcher(pattern);</span>
-<span class="nc bnc" id="L1243" title="All 2 branches missed.">      if (pathMatcher.matches(path)) {</span>
-<span class="nc" id="L1244">        return true;</span>
+<span class="nc" id="L1248">          FileSystems.getDefault().getPathMatcher(pattern);</span>
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">      if (pathMatcher.matches(path)) {</span>
+<span class="nc" id="L1250">        return true;</span>
       }
-<span class="nc" id="L1246">    }</span>
-<span class="nc" id="L1247">    return false;</span>
+<span class="nc" id="L1252">    }</span>
+<span class="nc" id="L1253">    return false;</span>
   }
 
   /**
@@ -1258,14 +1264,14 @@ import ru.akman.maven.plugins.CommandLineOption;
    *              if no patterns are specified
    */
   private boolean nameMatches(final List&lt;String&gt; patterns, final String name) {
-<span class="nc bnc" id="L1261" title="All 2 branches missed.">    for (final String pattern : patterns) {</span>
-<span class="nc" id="L1262">      final Pattern regexPattern = Pattern.compile(pattern);</span>
-<span class="nc" id="L1263">      final Matcher nameMatcher = regexPattern.matcher(name);</span>
-<span class="nc bnc" id="L1264" title="All 2 branches missed.">      if (nameMatcher.matches()) {</span>
-<span class="nc" id="L1265">        return true;</span>
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">    for (final String pattern : patterns) {</span>
+<span class="nc" id="L1268">      final Pattern regexPattern = Pattern.compile(pattern);</span>
+<span class="nc" id="L1269">      final Matcher nameMatcher = regexPattern.matcher(name);</span>
+<span class="nc bnc" id="L1270" title="All 2 branches missed.">      if (nameMatcher.matches()) {</span>
+<span class="nc" id="L1271">        return true;</span>
       }
-<span class="nc" id="L1267">    }</span>
-<span class="nc" id="L1268">    return false;</span>
+<span class="nc" id="L1273">    }</span>
+<span class="nc" id="L1274">    return false;</span>
   }
 
   /**
@@ -1277,55 +1283,55 @@ import ru.akman.maven.plugins.CommandLineOption;
    */
   private void processModules(final CommandLineBuilder cmdLine)
       throws MojoExecutionException {
-<span class="nc" id="L1280">    CommandLineOption opt = null;</span>
+<span class="nc" id="L1286">    CommandLineOption opt = null;</span>
     // modulepath
-<span class="nc bnc" id="L1282" title="All 2 branches missed.">    if (modulepath != null) {</span>
-<span class="nc" id="L1283">      final StringBuilder path = new StringBuilder();</span>
-<span class="nc" id="L1284">      final String pathElements = getPathElements();</span>
-<span class="nc bnc" id="L1285" title="All 2 branches missed.">      if (!StringUtils.isBlank(pathElements)) {</span>
-<span class="nc" id="L1286">        path.append(StringUtils.stripToEmpty(pathElements));</span>
+<span class="nc bnc" id="L1288" title="All 2 branches missed.">    if (modulepath != null) {</span>
+<span class="nc" id="L1289">      final StringBuilder path = new StringBuilder();</span>
+<span class="nc" id="L1290">      final String pathElements = getPathElements();</span>
+<span class="nc bnc" id="L1291" title="All 2 branches missed.">      if (!StringUtils.isBlank(pathElements)) {</span>
+<span class="nc" id="L1292">        path.append(StringUtils.stripToEmpty(pathElements));</span>
       }
-<span class="nc" id="L1288">      final String fileSets = getFileSets();</span>
-<span class="nc bnc" id="L1289" title="All 2 branches missed.">      if (!StringUtils.isBlank(fileSets)) {</span>
-<span class="nc bnc" id="L1290" title="All 2 branches missed.">        if (path.length() != 0) {</span>
-<span class="nc" id="L1291">          path.append(File.pathSeparator);</span>
+<span class="nc" id="L1294">      final String fileSets = getFileSets();</span>
+<span class="nc bnc" id="L1295" title="All 2 branches missed.">      if (!StringUtils.isBlank(fileSets)) {</span>
+<span class="nc bnc" id="L1296" title="All 2 branches missed.">        if (path.length() != 0) {</span>
+<span class="nc" id="L1297">          path.append(File.pathSeparator);</span>
         }
-<span class="nc" id="L1293">        path.append(StringUtils.stripToEmpty(fileSets));</span>
+<span class="nc" id="L1299">        path.append(StringUtils.stripToEmpty(fileSets));</span>
       }
-<span class="nc" id="L1295">      final String dirSets = getDirSets();</span>
-<span class="nc bnc" id="L1296" title="All 2 branches missed.">      if (!StringUtils.isBlank(dirSets)) {</span>
-<span class="nc bnc" id="L1297" title="All 2 branches missed.">        if (path.length() != 0) {</span>
-<span class="nc" id="L1298">          path.append(File.pathSeparator);</span>
+<span class="nc" id="L1301">      final String dirSets = getDirSets();</span>
+<span class="nc bnc" id="L1302" title="All 2 branches missed.">      if (!StringUtils.isBlank(dirSets)) {</span>
+<span class="nc bnc" id="L1303" title="All 2 branches missed.">        if (path.length() != 0) {</span>
+<span class="nc" id="L1304">          path.append(File.pathSeparator);</span>
         }
-<span class="nc" id="L1300">        path.append(StringUtils.stripToEmpty(dirSets));</span>
+<span class="nc" id="L1306">        path.append(StringUtils.stripToEmpty(dirSets));</span>
       }
-<span class="nc" id="L1302">      final String dependencySets = getDependencySets();</span>
-<span class="nc bnc" id="L1303" title="All 2 branches missed.">      if (!StringUtils.isBlank(dependencySets)) {</span>
-<span class="nc bnc" id="L1304" title="All 2 branches missed.">        if (path.length() != 0) {</span>
-<span class="nc" id="L1305">          path.append(File.pathSeparator);</span>
+<span class="nc" id="L1308">      final String dependencySets = getDependencySets();</span>
+<span class="nc bnc" id="L1309" title="All 2 branches missed.">      if (!StringUtils.isBlank(dependencySets)) {</span>
+<span class="nc bnc" id="L1310" title="All 2 branches missed.">        if (path.length() != 0) {</span>
+<span class="nc" id="L1311">          path.append(File.pathSeparator);</span>
         }
-<span class="nc" id="L1307">        path.append(StringUtils.stripToEmpty(dependencySets));</span>
+<span class="nc" id="L1313">        path.append(StringUtils.stripToEmpty(dependencySets));</span>
       }
-<span class="nc bnc" id="L1309" title="All 2 branches missed.">      if (path.length() != 0) {</span>
-<span class="nc" id="L1310">        opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1311">        opt.createArg().setValue(&quot;--module-path&quot;);</span>
-<span class="nc" id="L1312">        opt.createArg().setValue(path.toString());</span>
+<span class="nc bnc" id="L1315" title="All 2 branches missed.">      if (path.length() != 0) {</span>
+<span class="nc" id="L1316">        opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1317">        opt.createArg().setValue(&quot;--module-path&quot;);</span>
+<span class="nc" id="L1318">        opt.createArg().setValue(path.toString());</span>
       }
     }
     // addmodules
-<span class="nc bnc" id="L1316" title="All 4 branches missed.">    if (includelocales != null &amp;&amp; !includelocales.isEmpty()) {</span>
-<span class="nc bnc" id="L1317" title="All 2 branches missed.">      if (addmodules == null) {</span>
-<span class="nc" id="L1318">        addmodules = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1322" title="All 4 branches missed.">    if (includelocales != null &amp;&amp; !includelocales.isEmpty()) {</span>
+<span class="nc bnc" id="L1323" title="All 2 branches missed.">      if (addmodules == null) {</span>
+<span class="nc" id="L1324">        addmodules = new ArrayList&lt;&gt;();</span>
       }
-<span class="nc" id="L1320">      addmodules.add(&quot;jdk.localedata&quot;);</span>
+<span class="nc" id="L1326">      addmodules.add(&quot;jdk.localedata&quot;);</span>
     }
-<span class="nc bnc" id="L1322" title="All 4 branches missed.">    if (addmodules != null &amp;&amp; !addmodules.isEmpty()) {</span>
-<span class="nc" id="L1323">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1324">      opt.createArg().setValue(&quot;--add-modules&quot;);</span>
-<span class="nc" id="L1325">      opt.createArg().setValue(</span>
-<span class="nc" id="L1326">          addmodules.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
+<span class="nc bnc" id="L1328" title="All 4 branches missed.">    if (addmodules != null &amp;&amp; !addmodules.isEmpty()) {</span>
+<span class="nc" id="L1329">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1330">      opt.createArg().setValue(&quot;--add-modules&quot;);</span>
+<span class="nc" id="L1331">      opt.createArg().setValue(</span>
+<span class="nc" id="L1332">          addmodules.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
     }
-<span class="nc" id="L1328">  }</span>
+<span class="nc" id="L1334">  }</span>
 
   /**
    * Process options.
@@ -1333,68 +1339,68 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @param cmdLine the command line builder
    */
   private void processOptions(final CommandLineBuilder cmdLine) {
-<span class="nc" id="L1336">    CommandLineOption opt = null;</span>
+<span class="nc" id="L1342">    CommandLineOption opt = null;</span>
     // output
-<span class="nc" id="L1338">    opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1339">    opt.createArg().setValue(&quot;--output&quot;);</span>
-<span class="nc" id="L1340">    opt.createArg().setFile(output);</span>
+<span class="nc" id="L1344">    opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1345">    opt.createArg().setValue(&quot;--output&quot;);</span>
+<span class="nc" id="L1346">    opt.createArg().setFile(output);</span>
     // saveopts
-<span class="nc bnc" id="L1342" title="All 2 branches missed.">    if (saveopts != null) {</span>
-<span class="nc" id="L1343">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1344">      opt.createArg().setValue(&quot;--save-opts&quot;);</span>
-<span class="nc" id="L1345">      opt.createArg().setFile(saveopts);</span>
+<span class="nc bnc" id="L1348" title="All 2 branches missed.">    if (saveopts != null) {</span>
+<span class="nc" id="L1349">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1350">      opt.createArg().setValue(&quot;--save-opts&quot;);</span>
+<span class="nc" id="L1351">      opt.createArg().setFile(saveopts);</span>
     }
     // postprocesspath
-<span class="nc bnc" id="L1348" title="All 2 branches missed.">    if (postprocesspath != null) {</span>
-<span class="nc" id="L1349">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1350">      opt.createArg().setValue(&quot;--post-process-path&quot;);</span>
-<span class="nc" id="L1351">      opt.createArg().setFile(postprocesspath);</span>
+<span class="nc bnc" id="L1354" title="All 2 branches missed.">    if (postprocesspath != null) {</span>
+<span class="nc" id="L1355">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1356">      opt.createArg().setValue(&quot;--post-process-path&quot;);</span>
+<span class="nc" id="L1357">      opt.createArg().setFile(postprocesspath);</span>
     }
     // resourceslastsorter
-<span class="nc bnc" id="L1354" title="All 2 branches missed.">    if (!StringUtils.isBlank(resourceslastsorter)) {</span>
-<span class="nc" id="L1355">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1356">      opt.createArg().setValue(&quot;--resources-last-sorter&quot;);</span>
-<span class="nc" id="L1357">      opt.createArg().setValue(StringUtils.stripToEmpty(resourceslastsorter));</span>
+<span class="nc bnc" id="L1360" title="All 2 branches missed.">    if (!StringUtils.isBlank(resourceslastsorter)) {</span>
+<span class="nc" id="L1361">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1362">      opt.createArg().setValue(&quot;--resources-last-sorter&quot;);</span>
+<span class="nc" id="L1363">      opt.createArg().setValue(StringUtils.stripToEmpty(resourceslastsorter));</span>
     }
     // verbose
-<span class="nc bnc" id="L1360" title="All 2 branches missed.">    if (verbose) {</span>
-<span class="nc" id="L1361">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1362">      opt.createArg().setValue(&quot;--verbose&quot;);</span>
+<span class="nc bnc" id="L1366" title="All 2 branches missed.">    if (verbose) {</span>
+<span class="nc" id="L1367">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1368">      opt.createArg().setValue(&quot;--verbose&quot;);</span>
     }
     // bindservices
-<span class="nc bnc" id="L1365" title="All 2 branches missed.">    if (bindservices) {</span>
-<span class="nc" id="L1366">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1367">      opt.createArg().setValue(&quot;--bind-services&quot;);</span>
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">    if (bindservices) {</span>
+<span class="nc" id="L1372">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1373">      opt.createArg().setValue(&quot;--bind-services&quot;);</span>
     }
     // noheaderfiles
-<span class="nc bnc" id="L1370" title="All 2 branches missed.">    if (noheaderfiles) {</span>
-<span class="nc" id="L1371">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1372">      opt.createArg().setValue(&quot;--no-header-files&quot;);</span>
+<span class="nc bnc" id="L1376" title="All 2 branches missed.">    if (noheaderfiles) {</span>
+<span class="nc" id="L1377">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1378">      opt.createArg().setValue(&quot;--no-header-files&quot;);</span>
     }
     // nomanpages
-<span class="nc bnc" id="L1375" title="All 2 branches missed.">    if (nomanpages) {</span>
-<span class="nc" id="L1376">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1377">      opt.createArg().setValue(&quot;--no-man-pages&quot;);</span>
+<span class="nc bnc" id="L1381" title="All 2 branches missed.">    if (nomanpages) {</span>
+<span class="nc" id="L1382">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1383">      opt.createArg().setValue(&quot;--no-man-pages&quot;);</span>
     }
     // ignoresigninginformation
-<span class="nc bnc" id="L1380" title="All 2 branches missed.">    if (ignoresigninginformation) {</span>
-<span class="nc" id="L1381">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1382">      opt.createArg().setValue(&quot;--ignore-signing-information&quot;);</span>
+<span class="nc bnc" id="L1386" title="All 2 branches missed.">    if (ignoresigninginformation) {</span>
+<span class="nc" id="L1387">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1388">      opt.createArg().setValue(&quot;--ignore-signing-information&quot;);</span>
     }
     // stripdebug
-<span class="nc bnc" id="L1385" title="All 2 branches missed.">    if (stripdebug) {</span>
-<span class="nc" id="L1386">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1387">      opt.createArg().setValue(&quot;--strip-debug&quot;);</span>
+<span class="nc bnc" id="L1391" title="All 2 branches missed.">    if (stripdebug) {</span>
+<span class="nc" id="L1392">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1393">      opt.createArg().setValue(&quot;--strip-debug&quot;);</span>
     }
     // stripjavadebugattributes
-<span class="nc bnc" id="L1390" title="All 2 branches missed.">    if (stripjavadebugattributes) {</span>
-<span class="nc bnc" id="L1391" title="All 2 branches missed.">      if (toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {</span>
-<span class="nc" id="L1392">        opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1393">        opt.createArg().setValue(&quot;--strip-java-debug-attributes&quot;);</span>
+<span class="nc bnc" id="L1396" title="All 2 branches missed.">    if (stripjavadebugattributes) {</span>
+<span class="nc bnc" id="L1397" title="All 2 branches missed.">      if (toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {</span>
+<span class="nc" id="L1398">        opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1399">        opt.createArg().setValue(&quot;--strip-java-debug-attributes&quot;);</span>
       } else {
-<span class="nc" id="L1395">        stripjavadebugattributes = false;</span>
-<span class="nc bnc" id="L1396" title="All 2 branches missed.">        if (getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L1397">          getLog().warn(MessageFormat.format(</span>
+<span class="nc" id="L1401">        stripjavadebugattributes = false;</span>
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">        if (getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L1403">          getLog().warn(MessageFormat.format(</span>
               &quot;Parameter [{0}] skiped, at least {1} is required to use it&quot;,
               &quot;--strip-java-debug-attributes&quot;,
               JavaVersion.JAVA_13));
@@ -1402,156 +1408,156 @@ import ru.akman.maven.plugins.CommandLineOption;
       }
     }
     // stripnativecommands
-<span class="nc bnc" id="L1405" title="All 2 branches missed.">    if (stripnativecommands) {</span>
-<span class="nc" id="L1406">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1407">      opt.createArg().setValue(&quot;--strip-native-commands&quot;);</span>
+<span class="nc bnc" id="L1411" title="All 2 branches missed.">    if (stripnativecommands) {</span>
+<span class="nc" id="L1412">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1413">      opt.createArg().setValue(&quot;--strip-native-commands&quot;);</span>
     }
     // deduplegalnotices
-<span class="nc bnc" id="L1410" title="All 2 branches missed.">    if (deduplegalnotices) {</span>
-<span class="nc" id="L1411">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1412">      opt.createArg().setValue(</span>
+<span class="nc bnc" id="L1416" title="All 2 branches missed.">    if (deduplegalnotices) {</span>
+<span class="nc" id="L1417">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1418">      opt.createArg().setValue(</span>
           &quot;--dedup-legal-notices=error-if-not-same-content&quot;);
     }
     // limitmodules
-<span class="nc bnc" id="L1416" title="All 4 branches missed.">    if (limitmodules != null &amp;&amp; !limitmodules.isEmpty()) {</span>
-<span class="nc" id="L1417">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1418">      opt.createArg().setValue(&quot;--limit-modules&quot;);</span>
-<span class="nc" id="L1419">      opt.createArg().setValue(</span>
-<span class="nc" id="L1420">          limitmodules.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
+<span class="nc bnc" id="L1422" title="All 4 branches missed.">    if (limitmodules != null &amp;&amp; !limitmodules.isEmpty()) {</span>
+<span class="nc" id="L1423">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1424">      opt.createArg().setValue(&quot;--limit-modules&quot;);</span>
+<span class="nc" id="L1425">      opt.createArg().setValue(</span>
+<span class="nc" id="L1426">          limitmodules.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
     }
     // suggestproviders
-<span class="nc bnc" id="L1423" title="All 4 branches missed.">    if (suggestproviders != null &amp;&amp; !suggestproviders.isEmpty()) {</span>
-<span class="nc" id="L1424">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1425">      opt.createArg().setValue(&quot;--suggest-providers&quot;);</span>
-<span class="nc" id="L1426">      opt.createArg().setValue(</span>
-<span class="nc" id="L1427">          suggestproviders.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
+<span class="nc bnc" id="L1429" title="All 4 branches missed.">    if (suggestproviders != null &amp;&amp; !suggestproviders.isEmpty()) {</span>
+<span class="nc" id="L1430">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1431">      opt.createArg().setValue(&quot;--suggest-providers&quot;);</span>
+<span class="nc" id="L1432">      opt.createArg().setValue(</span>
+<span class="nc" id="L1433">          suggestproviders.stream().collect(Collectors.joining(&quot;,&quot;)));</span>
     }
     // endian
-<span class="nc bnc" id="L1430" title="All 4 branches missed.">    if (endian != null &amp;&amp; !endian.equals(Endian.NATIVE)) {</span>
-<span class="nc" id="L1431">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1432">      opt.createArg().setValue(&quot;--endian&quot;);</span>
-<span class="nc" id="L1433">      opt.createArg().setValue(endian.toString().toLowerCase(Locale.ROOT));</span>
+<span class="nc bnc" id="L1436" title="All 4 branches missed.">    if (endian != null &amp;&amp; !endian.equals(Endian.NATIVE)) {</span>
+<span class="nc" id="L1437">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1438">      opt.createArg().setValue(&quot;--endian&quot;);</span>
+<span class="nc" id="L1439">      opt.createArg().setValue(endian.toString().toLowerCase(Locale.ROOT));</span>
     }
     // disableplugins
-<span class="nc bnc" id="L1436" title="All 2 branches missed.">    if (disableplugins != null) {</span>
-<span class="nc bnc" id="L1437" title="All 2 branches missed.">      for (final String plugin : disableplugins) {</span>
-<span class="nc" id="L1438">        opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1439">        opt.createArg().setValue(&quot;--disable-plugin&quot;);</span>
-<span class="nc" id="L1440">        opt.createArg().setValue(plugin);</span>
-<span class="nc" id="L1441">      }</span>
+<span class="nc bnc" id="L1442" title="All 2 branches missed.">    if (disableplugins != null) {</span>
+<span class="nc bnc" id="L1443" title="All 2 branches missed.">      for (final String plugin : disableplugins) {</span>
+<span class="nc" id="L1444">        opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1445">        opt.createArg().setValue(&quot;--disable-plugin&quot;);</span>
+<span class="nc" id="L1446">        opt.createArg().setValue(plugin);</span>
+<span class="nc" id="L1447">      }</span>
     }
     // includelocales
-<span class="nc bnc" id="L1444" title="All 4 branches missed.">    if (includelocales != null &amp;&amp; !includelocales.isEmpty()) {</span>
-<span class="nc" id="L1445">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1446">      opt.createArg().setValue(</span>
-<span class="nc" id="L1447">          includelocales.stream()</span>
-<span class="nc" id="L1448">              .collect(Collectors.joining(&quot;,&quot;, &quot;--include-locales=&quot;, &quot;&quot;)));</span>
+<span class="nc bnc" id="L1450" title="All 4 branches missed.">    if (includelocales != null &amp;&amp; !includelocales.isEmpty()) {</span>
+<span class="nc" id="L1451">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1452">      opt.createArg().setValue(</span>
+<span class="nc" id="L1453">          includelocales.stream()</span>
+<span class="nc" id="L1454">              .collect(Collectors.joining(&quot;,&quot;, &quot;--include-locales=&quot;, &quot;&quot;)));</span>
     }
     // excludejmodsection
-<span class="nc bnc" id="L1451" title="All 2 branches missed.">    if (excludejmodsection != null) {</span>
-<span class="nc" id="L1452">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1453">      opt.createArg().setValue(&quot;--exclude-jmod-section=&quot;</span>
-<span class="nc" id="L1454">          + excludejmodsection.toString().toLowerCase(Locale.ROOT));</span>
+<span class="nc bnc" id="L1457" title="All 2 branches missed.">    if (excludejmodsection != null) {</span>
+<span class="nc" id="L1458">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1459">      opt.createArg().setValue(&quot;--exclude-jmod-section=&quot;</span>
+<span class="nc" id="L1460">          + excludejmodsection.toString().toLowerCase(Locale.ROOT));</span>
     }
     // generatejliclasses
-<span class="nc bnc" id="L1457" title="All 2 branches missed.">    if (generatejliclasses != null) {</span>
-<span class="nc" id="L1458">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1459">      opt.createArg().setValue(&quot;--generate-jli-classes=@&quot;</span>
-<span class="nc" id="L1460">          + generatejliclasses.toString());</span>
+<span class="nc bnc" id="L1463" title="All 2 branches missed.">    if (generatejliclasses != null) {</span>
+<span class="nc" id="L1464">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1465">      opt.createArg().setValue(&quot;--generate-jli-classes=@&quot;</span>
+<span class="nc" id="L1466">          + generatejliclasses.toString());</span>
     }
     // vm
-<span class="nc bnc" id="L1463" title="All 2 branches missed.">    if (vm != null) {</span>
-<span class="nc" id="L1464">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1465">      opt.createArg().setValue(&quot;--vm=&quot;</span>
-<span class="nc" id="L1466">          + vm.toString().toLowerCase(Locale.ROOT));</span>
+<span class="nc bnc" id="L1469" title="All 2 branches missed.">    if (vm != null) {</span>
+<span class="nc" id="L1470">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1471">      opt.createArg().setValue(&quot;--vm=&quot;</span>
+<span class="nc" id="L1472">          + vm.toString().toLowerCase(Locale.ROOT));</span>
     }
     // launcher
-<span class="nc bnc" id="L1469" title="All 2 branches missed.">    if (launcher != null) {</span>
-<span class="nc" id="L1470">      final String launcherCommand =</span>
-<span class="nc" id="L1471">          StringUtils.stripToEmpty(launcher.getCommand());</span>
-<span class="nc bnc" id="L1472" title="All 2 branches missed.">      if (!StringUtils.isBlank(launcherCommand)) {</span>
-<span class="nc" id="L1473">        final String launcherModule =</span>
-<span class="nc" id="L1474">            StringUtils.stripToEmpty(launcher.getMainModule());</span>
-<span class="nc bnc" id="L1475" title="All 2 branches missed.">        if (!StringUtils.isBlank(launcherModule)) {</span>
-<span class="nc" id="L1476">          opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1477">          opt.createArg().setValue(&quot;--launcher&quot;);</span>
-<span class="nc" id="L1478">          final String launcherClass =</span>
-<span class="nc" id="L1479">              StringUtils.stripToEmpty(launcher.getMainClass());</span>
-<span class="nc bnc" id="L1480" title="All 2 branches missed.">          if (StringUtils.isBlank(launcherClass)) {</span>
-<span class="nc" id="L1481">            opt.createArg().setValue(launcherCommand + &quot;=&quot;</span>
+<span class="nc bnc" id="L1475" title="All 2 branches missed.">    if (launcher != null) {</span>
+<span class="nc" id="L1476">      final String launcherCommand =</span>
+<span class="nc" id="L1477">          StringUtils.stripToEmpty(launcher.getCommand());</span>
+<span class="nc bnc" id="L1478" title="All 2 branches missed.">      if (!StringUtils.isBlank(launcherCommand)) {</span>
+<span class="nc" id="L1479">        final String launcherModule =</span>
+<span class="nc" id="L1480">            StringUtils.stripToEmpty(launcher.getMainModule());</span>
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">        if (!StringUtils.isBlank(launcherModule)) {</span>
+<span class="nc" id="L1482">          opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1483">          opt.createArg().setValue(&quot;--launcher&quot;);</span>
+<span class="nc" id="L1484">          final String launcherClass =</span>
+<span class="nc" id="L1485">              StringUtils.stripToEmpty(launcher.getMainClass());</span>
+<span class="nc bnc" id="L1486" title="All 2 branches missed.">          if (StringUtils.isBlank(launcherClass)) {</span>
+<span class="nc" id="L1487">            opt.createArg().setValue(launcherCommand + &quot;=&quot;</span>
                 + launcherModule);
           } else {
-<span class="nc" id="L1484">            opt.createArg().setValue(launcherCommand + &quot;=&quot;</span>
+<span class="nc" id="L1490">            opt.createArg().setValue(launcherCommand + &quot;=&quot;</span>
                 + launcherModule + &quot;/&quot; + launcherClass);
           }
         }
       }
     }
     // compress
-<span class="nc bnc" id="L1491" title="All 2 branches missed.">    if (compress != null) {</span>
-<span class="nc" id="L1492">      final Compression compression = compress.getCompression();</span>
-<span class="nc" id="L1493">      final List&lt;String&gt; filters = compress.getFilters();</span>
-<span class="nc bnc" id="L1494" title="All 2 branches missed.">      if (compression != null) {</span>
-<span class="nc" id="L1495">        final StringBuilder option = new StringBuilder(&quot;--compress=&quot;);</span>
-<span class="nc" id="L1496">        option.append(compression.getValue());</span>
-<span class="nc bnc" id="L1497" title="All 2 branches missed.">        if (filters != null) {</span>
-<span class="nc" id="L1498">          option.append(filters.stream()</span>
-<span class="nc" id="L1499">              .collect(Collectors.joining(&quot;,&quot;, &quot;:filter=&quot;, &quot;&quot;)));</span>
+<span class="nc bnc" id="L1497" title="All 2 branches missed.">    if (compress != null) {</span>
+<span class="nc" id="L1498">      final Compression compression = compress.getCompression();</span>
+<span class="nc" id="L1499">      final List&lt;String&gt; filters = compress.getFilters();</span>
+<span class="nc bnc" id="L1500" title="All 2 branches missed.">      if (compression != null) {</span>
+<span class="nc" id="L1501">        final StringBuilder option = new StringBuilder(&quot;--compress=&quot;);</span>
+<span class="nc" id="L1502">        option.append(compression.getValue());</span>
+<span class="nc bnc" id="L1503" title="All 2 branches missed.">        if (filters != null) {</span>
+<span class="nc" id="L1504">          option.append(filters.stream()</span>
+<span class="nc" id="L1505">              .collect(Collectors.joining(&quot;,&quot;, &quot;:filter=&quot;, &quot;&quot;)));</span>
         }
-<span class="nc" id="L1501">        opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1502">        opt.createArg().setValue(option.toString());</span>
+<span class="nc" id="L1507">        opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1508">        opt.createArg().setValue(option.toString());</span>
       }
     }
     // orderresources
-<span class="nc bnc" id="L1506" title="All 4 branches missed.">    if (orderresources != null &amp;&amp; !orderresources.isEmpty()) {</span>
-<span class="nc" id="L1507">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1508">      opt.createArg().setValue(orderresources.stream()</span>
-<span class="nc" id="L1509">          .collect(Collectors.joining(&quot;,&quot;, &quot;--order-resources=&quot;, &quot;&quot;)));</span>
+<span class="nc bnc" id="L1512" title="All 4 branches missed.">    if (orderresources != null &amp;&amp; !orderresources.isEmpty()) {</span>
+<span class="nc" id="L1513">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1514">      opt.createArg().setValue(orderresources.stream()</span>
+<span class="nc" id="L1515">          .collect(Collectors.joining(&quot;,&quot;, &quot;--order-resources=&quot;, &quot;&quot;)));</span>
     }
     // excluderesources
-<span class="nc bnc" id="L1512" title="All 4 branches missed.">    if (excluderesources != null &amp;&amp; !excluderesources.isEmpty()) {</span>
-<span class="nc" id="L1513">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1514">      opt.createArg().setValue(excluderesources.stream()</span>
-<span class="nc" id="L1515">          .collect(Collectors.joining(&quot;,&quot;, &quot;--exclude-resources=&quot;, &quot;&quot;)));</span>
+<span class="nc bnc" id="L1518" title="All 4 branches missed.">    if (excluderesources != null &amp;&amp; !excluderesources.isEmpty()) {</span>
+<span class="nc" id="L1519">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1520">      opt.createArg().setValue(excluderesources.stream()</span>
+<span class="nc" id="L1521">          .collect(Collectors.joining(&quot;,&quot;, &quot;--exclude-resources=&quot;, &quot;&quot;)));</span>
     }
     // excludefiles
-<span class="nc bnc" id="L1518" title="All 4 branches missed.">    if (excludefiles != null &amp;&amp; !excludefiles.isEmpty()) {</span>
-<span class="nc" id="L1519">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1520">      opt.createArg().setValue(excludefiles.stream()</span>
-<span class="nc" id="L1521">          .collect(Collectors.joining(&quot;,&quot;, &quot;--exclude-files=&quot;, &quot;&quot;)));</span>
+<span class="nc bnc" id="L1524" title="All 4 branches missed.">    if (excludefiles != null &amp;&amp; !excludefiles.isEmpty()) {</span>
+<span class="nc" id="L1525">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1526">      opt.createArg().setValue(excludefiles.stream()</span>
+<span class="nc" id="L1527">          .collect(Collectors.joining(&quot;,&quot;, &quot;--exclude-files=&quot;, &quot;&quot;)));</span>
     }
     // releaseinfo
-<span class="nc bnc" id="L1524" title="All 2 branches missed.">    if (releaseinfo != null) {</span>
-<span class="nc" id="L1525">      final StringBuilder option = new StringBuilder();</span>
-<span class="nc" id="L1526">      final File releaseinfofile = releaseinfo.getFile();</span>
-<span class="nc bnc" id="L1527" title="All 2 branches missed.">      if (releaseinfofile != null) {</span>
-<span class="nc" id="L1528">        option.append(releaseinfofile.toString());</span>
+<span class="nc bnc" id="L1530" title="All 2 branches missed.">    if (releaseinfo != null) {</span>
+<span class="nc" id="L1531">      final StringBuilder option = new StringBuilder();</span>
+<span class="nc" id="L1532">      final File releaseinfofile = releaseinfo.getFile();</span>
+<span class="nc bnc" id="L1533" title="All 2 branches missed.">      if (releaseinfofile != null) {</span>
+<span class="nc" id="L1534">        option.append(releaseinfofile.toString());</span>
       }
-<span class="nc" id="L1530">      final Map&lt;String, String&gt; adds = releaseinfo.getAdds();</span>
-<span class="nc bnc" id="L1531" title="All 4 branches missed.">      if (adds != null &amp;&amp; !adds.entrySet().isEmpty()) {</span>
-<span class="nc bnc" id="L1532" title="All 2 branches missed.">        if (option.length() != 0) {</span>
-<span class="nc" id="L1533">          option.append(':');</span>
+<span class="nc" id="L1536">      final Map&lt;String, String&gt; adds = releaseinfo.getAdds();</span>
+<span class="nc bnc" id="L1537" title="All 4 branches missed.">      if (adds != null &amp;&amp; !adds.entrySet().isEmpty()) {</span>
+<span class="nc bnc" id="L1538" title="All 2 branches missed.">        if (option.length() != 0) {</span>
+<span class="nc" id="L1539">          option.append(':');</span>
         }
-<span class="nc" id="L1535">        option.append(adds.entrySet().stream()</span>
-<span class="nc bnc" id="L1536" title="All 4 branches missed.">            .filter(add -&gt; add != null &amp;&amp; !StringUtils.isBlank(add.getKey()))</span>
-<span class="nc" id="L1537">            .map(add -&gt; StringUtils.stripToEmpty(add.getKey()) + &quot;=&quot;</span>
-<span class="nc" id="L1538">                + StringUtils.stripToEmpty(add.getValue()))</span>
-<span class="nc" id="L1539">            .collect(Collectors.joining(&quot;:&quot;, &quot;add:&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L1541">        option.append(adds.entrySet().stream()</span>
+<span class="nc bnc" id="L1542" title="All 4 branches missed.">            .filter(add -&gt; add != null &amp;&amp; !StringUtils.isBlank(add.getKey()))</span>
+<span class="nc" id="L1543">            .map(add -&gt; StringUtils.stripToEmpty(add.getKey()) + &quot;=&quot;</span>
+<span class="nc" id="L1544">                + StringUtils.stripToEmpty(add.getValue()))</span>
+<span class="nc" id="L1545">            .collect(Collectors.joining(&quot;:&quot;, &quot;add:&quot;, &quot;&quot;)));</span>
       }
-<span class="nc" id="L1541">      final Map&lt;String, String&gt; dels = releaseinfo.getDels();</span>
-<span class="nc bnc" id="L1542" title="All 4 branches missed.">      if (dels != null &amp;&amp; !dels.entrySet().isEmpty()) {</span>
-<span class="nc bnc" id="L1543" title="All 2 branches missed.">        if (option.length() != 0) {</span>
-<span class="nc" id="L1544">          option.append(':');</span>
+<span class="nc" id="L1547">      final Map&lt;String, String&gt; dels = releaseinfo.getDels();</span>
+<span class="nc bnc" id="L1548" title="All 4 branches missed.">      if (dels != null &amp;&amp; !dels.entrySet().isEmpty()) {</span>
+<span class="nc bnc" id="L1549" title="All 2 branches missed.">        if (option.length() != 0) {</span>
+<span class="nc" id="L1550">          option.append(':');</span>
         }
-<span class="nc" id="L1546">        option.append(dels.entrySet().stream()</span>
-<span class="nc bnc" id="L1547" title="All 4 branches missed.">            .filter(del -&gt; del != null &amp;&amp; !StringUtils.isBlank(del.getKey()))</span>
-<span class="nc" id="L1548">            .map(del -&gt; StringUtils.stripToEmpty(del.getKey()))</span>
-<span class="nc" id="L1549">            .collect(Collectors.joining(&quot;:&quot;, &quot;del:&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L1552">        option.append(dels.entrySet().stream()</span>
+<span class="nc bnc" id="L1553" title="All 4 branches missed.">            .filter(del -&gt; del != null &amp;&amp; !StringUtils.isBlank(del.getKey()))</span>
+<span class="nc" id="L1554">            .map(del -&gt; StringUtils.stripToEmpty(del.getKey()))</span>
+<span class="nc" id="L1555">            .collect(Collectors.joining(&quot;:&quot;, &quot;del:&quot;, &quot;&quot;)));</span>
       }
-<span class="nc" id="L1551">      opt = cmdLine.createOpt();</span>
-<span class="nc" id="L1552">      opt.createArg().setValue(&quot;--release-info=&quot; + option.toString());</span>
+<span class="nc" id="L1557">      opt = cmdLine.createOpt();</span>
+<span class="nc" id="L1558">      opt.createArg().setValue(&quot;--release-info=&quot; + option.toString());</span>
     }
-<span class="nc" id="L1554">  }</span>
+<span class="nc" id="L1560">  }</span>
 
   /**
    * Copy files (only files, not directories) to the specified directory.
@@ -1563,34 +1569,34 @@ import ru.akman.maven.plugins.CommandLineOption;
    */
   private void copyFiles(final List&lt;File&gt; files, final File dir)
       throws MojoExecutionException {
-<span class="nc bnc" id="L1566" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1567">      getLog().debug(MessageFormat.format(&quot;Copy files to: [{0}]&quot;, dir));</span>
+<span class="nc bnc" id="L1572" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1573">      getLog().debug(MessageFormat.format(&quot;Copy files to: [{0}]&quot;, dir));</span>
     }
-<span class="nc bnc" id="L1569" title="All 2 branches missed.">    for (final File file : files) {</span>
+<span class="nc bnc" id="L1575" title="All 2 branches missed.">    for (final File file : files) {</span>
       try {
-<span class="nc bnc" id="L1571" title="All 2 branches missed.">        if (file.exists()) {</span>
-<span class="nc bnc" id="L1572" title="All 2 branches missed.">          if (file.isDirectory()) {</span>
-<span class="nc bnc" id="L1573" title="All 2 branches missed.">            if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1574">              getLog().debug(MessageFormat.format(&quot;Skiped directory: [{0}]&quot;,</span>
+<span class="nc bnc" id="L1577" title="All 2 branches missed.">        if (file.exists()) {</span>
+<span class="nc bnc" id="L1578" title="All 2 branches missed.">          if (file.isDirectory()) {</span>
+<span class="nc bnc" id="L1579" title="All 2 branches missed.">            if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1580">              getLog().debug(MessageFormat.format(&quot;Skiped directory: [{0}]&quot;,</span>
                   file));
             }
           } else {
-<span class="nc" id="L1578">            FileUtils.copyFileToDirectory(file, dir);</span>
-<span class="nc bnc" id="L1579" title="All 2 branches missed.">            if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1580">              getLog().debug(MessageFormat.format(&quot;Copied file: [{0}]&quot;, file));</span>
+<span class="nc" id="L1584">            FileUtils.copyFileToDirectory(file, dir);</span>
+<span class="nc bnc" id="L1585" title="All 2 branches missed.">            if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1586">              getLog().debug(MessageFormat.format(&quot;Copied file: [{0}]&quot;, file));</span>
             }
           }
         }
-<span class="nc" id="L1584">      } catch (IOException | IllegalArgumentException ex) {</span>
-<span class="nc bnc" id="L1585" title="All 2 branches missed.">        if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L1586">          getLog().error(MessageFormat.format(&quot;Unable to copy file: [{0}]&quot;,</span>
+<span class="nc" id="L1590">      } catch (IOException | IllegalArgumentException ex) {</span>
+<span class="nc bnc" id="L1591" title="All 2 branches missed.">        if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1592">          getLog().error(MessageFormat.format(&quot;Unable to copy file: [{0}]&quot;,</span>
               file), ex);
         }
-<span class="nc" id="L1589">        throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1595">        throw new MojoExecutionException(MessageFormat.format(</span>
             &quot;Error: Unable to copy file: [{0}]&quot;, file), ex);
-<span class="nc" id="L1591">      }</span>
-<span class="nc" id="L1592">    }</span>
-<span class="nc" id="L1593">  }</span>
+<span class="nc" id="L1597">      }</span>
+<span class="nc" id="L1598">    }</span>
+<span class="nc" id="L1599">  }</span>
 
   /**
    * Process launcher scripts.
@@ -1598,98 +1604,98 @@ import ru.akman.maven.plugins.CommandLineOption;
    * @throws MojoExecutionException if any errors occurred
    */
   private void processLauncherScripts() throws MojoExecutionException {
-<span class="nc bnc" id="L1601" title="All 2 branches missed.">    if (launcher == null) {</span>
-<span class="nc" id="L1602">      return;</span>
+<span class="nc bnc" id="L1607" title="All 2 branches missed.">    if (launcher == null) {</span>
+<span class="nc" id="L1608">      return;</span>
     }
 
-<span class="nc" id="L1605">    final String scriptName = StringUtils.stripToEmpty(launcher.getCommand());</span>
-<span class="nc bnc" id="L1606" title="All 2 branches missed.">    if (StringUtils.isBlank(scriptName)) {</span>
-<span class="nc" id="L1607">      return;</span>
+<span class="nc" id="L1611">    final String scriptName = StringUtils.stripToEmpty(launcher.getCommand());</span>
+<span class="nc bnc" id="L1612" title="All 2 branches missed.">    if (StringUtils.isBlank(scriptName)) {</span>
+<span class="nc" id="L1613">      return;</span>
     }
 
-<span class="nc" id="L1610">    final Path nixScript = output.toPath().resolve(&quot;bin/&quot; + scriptName);</span>
-<span class="nc" id="L1611">    final Path winScript = output.toPath().resolve(&quot;bin/&quot; + scriptName</span>
+<span class="nc" id="L1616">    final Path nixScript = output.toPath().resolve(&quot;bin/&quot; + scriptName);</span>
+<span class="nc" id="L1617">    final Path winScript = output.toPath().resolve(&quot;bin/&quot; + scriptName</span>
         + &quot;.bat&quot;);
 
-<span class="nc bnc" id="L1614" title="All 2 branches missed.">    if (stripnativecommands) {</span>
-<span class="nc bnc" id="L1615" title="All 4 branches missed.">      if (Files.exists(nixScript) &amp;&amp; !Files.isDirectory(nixScript)) {</span>
+<span class="nc bnc" id="L1620" title="All 2 branches missed.">    if (stripnativecommands) {</span>
+<span class="nc bnc" id="L1621" title="All 4 branches missed.">      if (Files.exists(nixScript) &amp;&amp; !Files.isDirectory(nixScript)) {</span>
         try {
-<span class="nc" id="L1617">          FileUtils.forceDelete(nixScript.toFile());</span>
-<span class="nc" id="L1618">        } catch (IOException ex) {</span>
-<span class="nc bnc" id="L1619" title="All 2 branches missed.">          if (getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L1620">            getLog().warn(MessageFormat.format(</span>
+<span class="nc" id="L1623">          FileUtils.forceDelete(nixScript.toFile());</span>
+<span class="nc" id="L1624">        } catch (IOException ex) {</span>
+<span class="nc bnc" id="L1625" title="All 2 branches missed.">          if (getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L1626">            getLog().warn(MessageFormat.format(</span>
                 &quot;Unable to delete launcher script: [{0}]&quot;, nixScript));
           }
-<span class="nc" id="L1623">        }</span>
+<span class="nc" id="L1629">        }</span>
       }
-<span class="nc bnc" id="L1625" title="All 4 branches missed.">      if (Files.exists(winScript) &amp;&amp; !Files.isDirectory(winScript)) {</span>
+<span class="nc bnc" id="L1631" title="All 4 branches missed.">      if (Files.exists(winScript) &amp;&amp; !Files.isDirectory(winScript)) {</span>
         try {
-<span class="nc" id="L1627">          FileUtils.forceDelete(winScript.toFile());</span>
-<span class="nc" id="L1628">        } catch (IOException ex) {</span>
-<span class="nc bnc" id="L1629" title="All 2 branches missed.">          if (getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L1630">            getLog().warn(MessageFormat.format(</span>
+<span class="nc" id="L1633">          FileUtils.forceDelete(winScript.toFile());</span>
+<span class="nc" id="L1634">        } catch (IOException ex) {</span>
+<span class="nc bnc" id="L1635" title="All 2 branches missed.">          if (getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L1636">            getLog().warn(MessageFormat.format(</span>
                 &quot;Unable to delete launcher script: [{0}]&quot;, winScript));
           }
-<span class="nc" id="L1633">        }</span>
+<span class="nc" id="L1639">        }</span>
       }
-<span class="nc" id="L1635">      return;</span>
-    }
-
-<span class="nc" id="L1638">    final String moduleName = StringUtils.stripToEmpty(</span>
-<span class="nc" id="L1639">        launcher.getMainModule());</span>
-<span class="nc bnc" id="L1640" title="All 2 branches missed.">    if (StringUtils.isEmpty(moduleName)) {</span>
 <span class="nc" id="L1641">      return;</span>
     }
 
-<span class="nc" id="L1644">    final String mainClassName = StringUtils.stripToEmpty(</span>
-<span class="nc" id="L1645">        launcher.getMainClass());</span>
-
-<span class="nc" id="L1647">    final StringBuilder mainName = new StringBuilder(moduleName);</span>
-<span class="nc bnc" id="L1648" title="All 2 branches missed.">    if (!StringUtils.isEmpty(mainClassName)) {</span>
-<span class="nc" id="L1649">      mainName</span>
-<span class="nc" id="L1650">          .append('/')</span>
-<span class="nc" id="L1651">          .append(mainClassName);</span>
+<span class="nc" id="L1644">    final String moduleName = StringUtils.stripToEmpty(</span>
+<span class="nc" id="L1645">        launcher.getMainModule());</span>
+<span class="nc bnc" id="L1646" title="All 2 branches missed.">    if (StringUtils.isEmpty(moduleName)) {</span>
+<span class="nc" id="L1647">      return;</span>
     }
 
-<span class="nc" id="L1654">    final String args = StringUtils.stripToEmpty(launcher.getArgs());</span>
+<span class="nc" id="L1650">    final String mainClassName = StringUtils.stripToEmpty(</span>
+<span class="nc" id="L1651">        launcher.getMainClass());</span>
 
-<span class="nc" id="L1656">    final String jvmArgs = StringUtils.stripToEmpty(launcher.getJvmArgs());</span>
+<span class="nc" id="L1653">    final StringBuilder mainName = new StringBuilder(moduleName);</span>
+<span class="nc bnc" id="L1654" title="All 2 branches missed.">    if (!StringUtils.isEmpty(mainClassName)) {</span>
+<span class="nc" id="L1655">      mainName</span>
+<span class="nc" id="L1656">          .append('/')</span>
+<span class="nc" id="L1657">          .append(mainClassName);</span>
+    }
 
-<span class="nc bnc" id="L1658" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1659">      getLog().debug(System.lineSeparator()</span>
+<span class="nc" id="L1660">    final String args = StringUtils.stripToEmpty(launcher.getArgs());</span>
+
+<span class="nc" id="L1662">    final String jvmArgs = StringUtils.stripToEmpty(launcher.getJvmArgs());</span>
+
+<span class="nc bnc" id="L1664" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1665">      getLog().debug(System.lineSeparator()</span>
           + &quot;Processing launcher scripts with following variables:&quot;
-<span class="nc" id="L1661">          + System.lineSeparator()</span>
-<span class="nc" id="L1662">          + MessageFormat.format(&quot;  - moduleName = [{0}]&quot;, moduleName)</span>
-<span class="nc" id="L1663">          + System.lineSeparator()</span>
-<span class="nc" id="L1664">          + MessageFormat.format(&quot;  - mainClassName = [{0}]&quot;, mainClassName)</span>
-<span class="nc" id="L1665">          + System.lineSeparator()</span>
-<span class="nc" id="L1666">          + MessageFormat.format(&quot;  - mainName = [{0}]&quot;, mainName.toString())</span>
 <span class="nc" id="L1667">          + System.lineSeparator()</span>
-<span class="nc" id="L1668">          + MessageFormat.format(&quot;  - args = [{0}]&quot;, args)</span>
+<span class="nc" id="L1668">          + MessageFormat.format(&quot;  - moduleName = [{0}]&quot;, moduleName)</span>
 <span class="nc" id="L1669">          + System.lineSeparator()</span>
-<span class="nc" id="L1670">          + MessageFormat.format(&quot;  - jvmArgs = [{0}]&quot;, jvmArgs));</span>
+<span class="nc" id="L1670">          + MessageFormat.format(&quot;  - mainClassName = [{0}]&quot;, mainClassName)</span>
+<span class="nc" id="L1671">          + System.lineSeparator()</span>
+<span class="nc" id="L1672">          + MessageFormat.format(&quot;  - mainName = [{0}]&quot;, mainName.toString())</span>
+<span class="nc" id="L1673">          + System.lineSeparator()</span>
+<span class="nc" id="L1674">          + MessageFormat.format(&quot;  - args = [{0}]&quot;, args)</span>
+<span class="nc" id="L1675">          + System.lineSeparator()</span>
+<span class="nc" id="L1676">          + MessageFormat.format(&quot;  - jvmArgs = [{0}]&quot;, jvmArgs));</span>
     }
 
-<span class="nc" id="L1673">    final Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L1674">    data.put(&quot;moduleName&quot;, moduleName);</span>
-<span class="nc" id="L1675">    data.put(&quot;mainClassName&quot;, mainClassName);</span>
-<span class="nc" id="L1676">    data.put(&quot;mainName&quot;, mainName.toString());</span>
-<span class="nc" id="L1677">    data.put(&quot;args&quot;, args);</span>
-<span class="nc" id="L1678">    data.put(&quot;jvmArgs&quot;, jvmArgs);</span>
+<span class="nc" id="L1679">    final Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L1680">    data.put(&quot;moduleName&quot;, moduleName);</span>
+<span class="nc" id="L1681">    data.put(&quot;mainClassName&quot;, mainClassName);</span>
+<span class="nc" id="L1682">    data.put(&quot;mainName&quot;, mainName.toString());</span>
+<span class="nc" id="L1683">    data.put(&quot;args&quot;, args);</span>
+<span class="nc" id="L1684">    data.put(&quot;jvmArgs&quot;, jvmArgs);</span>
 
-<span class="nc" id="L1680">    final File nixTemplate = launcher.getNixTemplate();</span>
-<span class="nc bnc" id="L1681" title="All 4 branches missed.">    if (nixTemplate != null &amp;&amp; Files.exists(nixTemplate.toPath())</span>
-<span class="nc bnc" id="L1682" title="All 2 branches missed.">        &amp;&amp; !Files.isDirectory(nixTemplate.toPath())) {</span>
-<span class="nc" id="L1683">      createLauncherScript(nixScript, nixTemplate.toPath(), data);</span>
+<span class="nc" id="L1686">    final File nixTemplate = launcher.getNixTemplate();</span>
+<span class="nc bnc" id="L1687" title="All 4 branches missed.">    if (nixTemplate != null &amp;&amp; Files.exists(nixTemplate.toPath())</span>
+<span class="nc bnc" id="L1688" title="All 2 branches missed.">        &amp;&amp; !Files.isDirectory(nixTemplate.toPath())) {</span>
+<span class="nc" id="L1689">      createLauncherScript(nixScript, nixTemplate.toPath(), data);</span>
     }
 
-<span class="nc" id="L1686">    final File winTemplate = launcher.getWinTemplate();</span>
-<span class="nc bnc" id="L1687" title="All 4 branches missed.">    if (winTemplate != null &amp;&amp; Files.exists(winTemplate.toPath())</span>
-<span class="nc bnc" id="L1688" title="All 2 branches missed.">        &amp;&amp; !Files.isDirectory(winTemplate.toPath())) {</span>
-<span class="nc" id="L1689">      createLauncherScript(winScript, winTemplate.toPath(), data);</span>
+<span class="nc" id="L1692">    final File winTemplate = launcher.getWinTemplate();</span>
+<span class="nc bnc" id="L1693" title="All 4 branches missed.">    if (winTemplate != null &amp;&amp; Files.exists(winTemplate.toPath())</span>
+<span class="nc bnc" id="L1694" title="All 2 branches missed.">        &amp;&amp; !Files.isDirectory(winTemplate.toPath())) {</span>
+<span class="nc" id="L1695">      createLauncherScript(winScript, winTemplate.toPath(), data);</span>
     }
 
-<span class="nc" id="L1692">  }</span>
+<span class="nc" id="L1698">  }</span>
 
   /**
    * Create launcher script.
@@ -1703,40 +1709,40 @@ import ru.akman.maven.plugins.CommandLineOption;
    */
   private void createLauncherScript(final Path script, final Path template,
       final Map&lt;String, String&gt; data) throws MojoExecutionException {
-<span class="nc bnc" id="L1706" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1707">      getLog().debug(System.lineSeparator()</span>
-<span class="nc" id="L1708">          + MessageFormat.format(&quot;Fixing launcher script: [{0}]&quot;, script)</span>
-<span class="nc" id="L1709">          + System.lineSeparator()</span>
-<span class="nc" id="L1710">          + MessageFormat.format(&quot;with template: [{0}]&quot;, template));</span>
+<span class="nc bnc" id="L1712" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1713">      getLog().debug(System.lineSeparator()</span>
+<span class="nc" id="L1714">          + MessageFormat.format(&quot;Fixing launcher script: [{0}]&quot;, script)</span>
+<span class="nc" id="L1715">          + System.lineSeparator()</span>
+<span class="nc" id="L1716">          + MessageFormat.format(&quot;with template: [{0}]&quot;, template));</span>
     }
-<span class="nc" id="L1712">    final StringSubstitutor engine = new StringSubstitutor(data)</span>
-<span class="nc" id="L1713">        .setEnableUndefinedVariableException(true)</span>
-<span class="nc" id="L1714">        .setPreserveEscapes(true)</span>
-<span class="nc" id="L1715">        .setEscapeChar('\\');</span>
+<span class="nc" id="L1718">    final StringSubstitutor engine = new StringSubstitutor(data)</span>
+<span class="nc" id="L1719">        .setEnableUndefinedVariableException(true)</span>
+<span class="nc" id="L1720">        .setPreserveEscapes(true)</span>
+<span class="nc" id="L1721">        .setEscapeChar('\\');</span>
     try {
-<span class="nc" id="L1717">      Files.write(script,</span>
-<span class="nc" id="L1718">          Files.lines(template, sourceEncoding)</span>
-<span class="nc" id="L1719">              .map(line -&gt; engine.replace(line).replace(&quot;\\$&quot;, &quot;$&quot;))</span>
-<span class="nc" id="L1720">              .collect(Collectors.toList()),</span>
+<span class="nc" id="L1723">      Files.write(script,</span>
+<span class="nc" id="L1724">          Files.lines(template, sourceEncoding)</span>
+<span class="nc" id="L1725">              .map(line -&gt; engine.replace(line).replace(&quot;\\$&quot;, &quot;$&quot;))</span>
+<span class="nc" id="L1726">              .collect(Collectors.toList()),</span>
           sourceEncoding);
-<span class="nc" id="L1722">    } catch (IllegalArgumentException ex) {</span>
-<span class="nc bnc" id="L1723" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L1724">        getLog().error(MessageFormat.format(</span>
+<span class="nc" id="L1728">    } catch (IllegalArgumentException ex) {</span>
+<span class="nc bnc" id="L1729" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1730">        getLog().error(MessageFormat.format(</span>
             &quot;Variable not found in the launcher template file: [{0}]&quot;,
             template), ex);
       }
-<span class="nc" id="L1728">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1734">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Variable not found in the launcher template file: [{0}]&quot;, template),
           ex);
-<span class="nc" id="L1731">    } catch (IOException ex) {</span>
-<span class="nc bnc" id="L1732" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L1733">        getLog().error(MessageFormat.format(</span>
+<span class="nc" id="L1737">    } catch (IOException ex) {</span>
+<span class="nc bnc" id="L1738" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1739">        getLog().error(MessageFormat.format(</span>
             &quot;Unable to write to the launcher script file: [{0}]&quot;, script), ex);
       }
-<span class="nc" id="L1736">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1742">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Unable to write to the launcher script file: [{0}]&quot;, script), ex);
-<span class="nc" id="L1738">    }</span>
-<span class="nc" id="L1739">  }</span>
+<span class="nc" id="L1744">    }</span>
+<span class="nc" id="L1745">  }</span>
 
   /**
    * Execute goal.
@@ -1747,131 +1753,131 @@ import ru.akman.maven.plugins.CommandLineOption;
   public void execute() throws MojoExecutionException {
 
     // Init
-<span class="nc" id="L1750">    init(TOOL_NAME, TOOL_HOME_BIN); // from BaseToolMojo</span>
+<span class="nc" id="L1756">    init(TOOL_NAME, toolhome, TOOL_HOME_BIN); // from BaseToolMojo</span>
 
     // Check version
-<span class="nc bnc" id="L1753" title="All 2 branches missed.">    if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {</span>
-<span class="nc" id="L1754">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc bnc" id="L1759" title="All 2 branches missed.">    if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {</span>
+<span class="nc" id="L1760">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: At least {0} is required to use [{1}]&quot;, JavaVersion.JAVA_9,
           TOOL_NAME));
     }
 
     // Create mods directory
     try {
-<span class="nc" id="L1761">      FileUtils.forceMkdir(modsdir);</span>
-<span class="nc" id="L1762">    } catch (IOException | IllegalArgumentException ex) {</span>
-<span class="nc" id="L1763">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1767">      FileUtils.forceMkdir(modsdir);</span>
+<span class="nc" id="L1768">    } catch (IOException | IllegalArgumentException ex) {</span>
+<span class="nc" id="L1769">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: Unable to create mods directory: [{0}]&quot;, modsdir), ex);
-<span class="nc" id="L1765">    }</span>
+<span class="nc" id="L1771">    }</span>
 
     // Create libs directory
     try {
-<span class="nc" id="L1769">      FileUtils.forceMkdir(libsdir);</span>
-<span class="nc" id="L1770">    } catch (IOException | IllegalArgumentException ex) {</span>
-<span class="nc" id="L1771">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1775">      FileUtils.forceMkdir(libsdir);</span>
+<span class="nc" id="L1776">    } catch (IOException | IllegalArgumentException ex) {</span>
+<span class="nc" id="L1777">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: Unable to create libs directory: [{0}]&quot;, libsdir), ex);
-<span class="nc" id="L1773">    }</span>
+<span class="nc" id="L1779">    }</span>
 
     // Delete image output directory if it exists
-<span class="nc bnc" id="L1776" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
-<span class="nc" id="L1777">      getLog().info(MessageFormat.format(</span>
+<span class="nc bnc" id="L1782" title="All 2 branches missed.">    if (getLog().isInfoEnabled()) {</span>
+<span class="nc" id="L1783">      getLog().info(MessageFormat.format(</span>
           &quot;Set image output directory to: [{0}]&quot;, output));
     }
-<span class="nc bnc" id="L1780" title="All 4 branches missed.">    if (output.exists() &amp;&amp; output.isDirectory()) {</span>
+<span class="nc bnc" id="L1786" title="All 4 branches missed.">    if (output.exists() &amp;&amp; output.isDirectory()) {</span>
       try {
-<span class="nc" id="L1782">        FileUtils.deleteDirectory(output);</span>
-<span class="nc" id="L1783">      } catch (IOException ex) {</span>
-<span class="nc" id="L1784">        throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1788">        FileUtils.deleteDirectory(output);</span>
+<span class="nc" id="L1789">      } catch (IOException ex) {</span>
+<span class="nc" id="L1790">        throw new MojoExecutionException(MessageFormat.format(</span>
             &quot;Error: Unable to delete image output directory: [{0}]&quot;, output),
             ex);
-<span class="nc" id="L1787">      }</span>
+<span class="nc" id="L1793">      }</span>
     }
 
     // Resolve and fetch project dependencies
-<span class="nc" id="L1791">    projectDependencies = resolveDependencies();</span>
-<span class="nc" id="L1792">    mainModuleDescriptor = fetchMainModuleDescriptor();</span>
-<span class="nc" id="L1793">    classpathElements = fetchClasspathElements();</span>
-<span class="nc" id="L1794">    modulepathElements = fetchModulepathElements();</span>
-<span class="nc" id="L1795">    pathExceptions = fetchPathExceptions();</span>
-<span class="nc bnc" id="L1796" title="All 4 branches missed.">    if (!pathExceptions.isEmpty() &amp;&amp; getLog().isWarnEnabled()) {</span>
-<span class="nc" id="L1797">      getLog().warn(&quot;Found path exceptions: &quot; + pathExceptions.size()</span>
-<span class="nc" id="L1798">          + System.lineSeparator()</span>
-<span class="nc" id="L1799">          + pathExceptions.entrySet().stream()</span>
-<span class="nc" id="L1800">              .map(entry -&gt; entry.getKey().toString()</span>
-<span class="nc" id="L1801">                  + System.lineSeparator()</span>
-<span class="nc" id="L1802">                  + entry.getValue())</span>
-<span class="nc" id="L1803">              .collect(Collectors.joining(System.lineSeparator())));</span>
+<span class="nc" id="L1797">    projectDependencies = resolveDependencies();</span>
+<span class="nc" id="L1798">    mainModuleDescriptor = fetchMainModuleDescriptor();</span>
+<span class="nc" id="L1799">    classpathElements = fetchClasspathElements();</span>
+<span class="nc" id="L1800">    modulepathElements = fetchModulepathElements();</span>
+<span class="nc" id="L1801">    pathExceptions = fetchPathExceptions();</span>
+<span class="nc bnc" id="L1802" title="All 4 branches missed.">    if (!pathExceptions.isEmpty() &amp;&amp; getLog().isWarnEnabled()) {</span>
+<span class="nc" id="L1803">      getLog().warn(&quot;Found path exceptions: &quot; + pathExceptions.size()</span>
+<span class="nc" id="L1804">          + System.lineSeparator()</span>
+<span class="nc" id="L1805">          + pathExceptions.entrySet().stream()</span>
+<span class="nc" id="L1806">              .map(entry -&gt; entry.getKey().toString()</span>
+<span class="nc" id="L1807">                  + System.lineSeparator()</span>
+<span class="nc" id="L1808">                  + entry.getValue())</span>
+<span class="nc" id="L1809">              .collect(Collectors.joining(System.lineSeparator())));</span>
     }
 
     // copy dependencies
-<span class="nc" id="L1807">    copyFiles(modulepathElements, modsdir);</span>
-<span class="nc" id="L1808">    copyFiles(classpathElements, libsdir);</span>
+<span class="nc" id="L1813">    copyFiles(modulepathElements, modsdir);</span>
+<span class="nc" id="L1814">    copyFiles(classpathElements, libsdir);</span>
 
     // Build command line and populate the list of the command options
-<span class="nc" id="L1811">    final CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();</span>
-<span class="nc" id="L1812">    cmdLineBuilder.setExecutable(toolExecutable.toString());</span>
-<span class="nc" id="L1813">    processOptions(cmdLineBuilder);</span>
-<span class="nc" id="L1814">    processModules(cmdLineBuilder);</span>
-<span class="nc" id="L1815">    final List&lt;String&gt; optsLines = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L1816">    optsLines.add(&quot;# &quot; + TOOL_NAME);</span>
-<span class="nc" id="L1817">    optsLines.addAll(cmdLineBuilder.buildOptionList());</span>
-<span class="nc bnc" id="L1818" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
-<span class="nc" id="L1819">      getLog().debug(optsLines.stream()</span>
-<span class="nc" id="L1820">          .collect(Collectors.joining(System.lineSeparator(),</span>
-<span class="nc" id="L1821">              System.lineSeparator(), &quot;&quot;)));</span>
+<span class="nc" id="L1817">    final CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();</span>
+<span class="nc" id="L1818">    cmdLineBuilder.setExecutable(toolExecutable.toString());</span>
+<span class="nc" id="L1819">    processOptions(cmdLineBuilder);</span>
+<span class="nc" id="L1820">    processModules(cmdLineBuilder);</span>
+<span class="nc" id="L1821">    final List&lt;String&gt; optsLines = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1822">    optsLines.add(&quot;# &quot; + TOOL_NAME);</span>
+<span class="nc" id="L1823">    optsLines.addAll(cmdLineBuilder.buildOptionList());</span>
+<span class="nc bnc" id="L1824" title="All 2 branches missed.">    if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L1825">      getLog().debug(optsLines.stream()</span>
+<span class="nc" id="L1826">          .collect(Collectors.joining(System.lineSeparator(),</span>
+<span class="nc" id="L1827">              System.lineSeparator(), &quot;&quot;)));</span>
     }
 
     // Save the list of command options to the file
     // will be used in the tool command line
-<span class="nc" id="L1826">    final Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);</span>
+<span class="nc" id="L1832">    final Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);</span>
     try {
-<span class="nc" id="L1828">      Files.write(cmdOptsPath, optsLines, sourceEncoding);</span>
-<span class="nc" id="L1829">    } catch (IOException ex) {</span>
-<span class="nc bnc" id="L1830" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L1831">        getLog().error(MessageFormat.format(</span>
+<span class="nc" id="L1834">      Files.write(cmdOptsPath, optsLines, sourceEncoding);</span>
+<span class="nc" id="L1835">    } catch (IOException ex) {</span>
+<span class="nc bnc" id="L1836" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1837">        getLog().error(MessageFormat.format(</span>
             &quot;Unable to write command options to file: [{0}]&quot;, cmdOptsPath), ex);
       }
-<span class="nc" id="L1834">    }</span>
+<span class="nc" id="L1840">    }</span>
 
     // Prepare command line with command options
     // specified in the file created early
-<span class="nc" id="L1838">    final Commandline cmdLine = new Commandline();</span>
-<span class="nc" id="L1839">    cmdLine.setExecutable(toolExecutable.toString());</span>
-<span class="nc" id="L1840">    cmdLine.createArg().setValue(&quot;@&quot; + cmdOptsPath.toString());</span>
+<span class="nc" id="L1844">    final Commandline cmdLine = new Commandline();</span>
+<span class="nc" id="L1845">    cmdLine.setExecutable(toolExecutable.toString());</span>
+<span class="nc" id="L1846">    cmdLine.createArg().setValue(&quot;@&quot; + cmdOptsPath.toString());</span>
 
     // Execute command line
-<span class="nc" id="L1843">    int exitCode = 0;</span>
+<span class="nc" id="L1849">    int exitCode = 0;</span>
     try {
-<span class="nc" id="L1845">      exitCode = execCmdLine(cmdLine); // from BaseToolMojo</span>
-<span class="nc" id="L1846">    } catch (CommandLineException ex) {</span>
-<span class="nc" id="L1847">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1851">      exitCode = execCmdLine(cmdLine); // from BaseToolMojo</span>
+<span class="nc" id="L1852">    } catch (CommandLineException ex) {</span>
+<span class="nc" id="L1853">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: Unable to execute [{0}] tool&quot;, TOOL_NAME), ex);
-<span class="nc" id="L1849">    }</span>
-<span class="nc bnc" id="L1850" title="All 2 branches missed.">    if (exitCode != 0) {</span>
-<span class="nc bnc" id="L1851" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
-<span class="nc" id="L1852">        getLog().error(System.lineSeparator()</span>
+<span class="nc" id="L1855">    }</span>
+<span class="nc bnc" id="L1856" title="All 2 branches missed.">    if (exitCode != 0) {</span>
+<span class="nc bnc" id="L1857" title="All 2 branches missed.">      if (getLog().isErrorEnabled()) {</span>
+<span class="nc" id="L1858">        getLog().error(System.lineSeparator()</span>
             + &quot;Command options was: &quot;
-<span class="nc" id="L1854">            + System.lineSeparator()</span>
-<span class="nc" id="L1855">            + optsLines.stream()</span>
-<span class="nc" id="L1856">                .collect(Collectors.joining(System.lineSeparator())));</span>
+<span class="nc" id="L1860">            + System.lineSeparator()</span>
+<span class="nc" id="L1861">            + optsLines.stream()</span>
+<span class="nc" id="L1862">                .collect(Collectors.joining(System.lineSeparator())));</span>
       }
-<span class="nc" id="L1858">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1864">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: Tool execution failed [{0}] with exit code: {1}&quot;, TOOL_NAME,
-<span class="nc" id="L1860">          exitCode));</span>
+<span class="nc" id="L1866">          exitCode));</span>
     }
 
     // Process launcher scripts
-<span class="nc" id="L1864">    processLauncherScripts();</span>
+<span class="nc" id="L1870">    processLauncherScripts();</span>
 
     // Delete temporary file
     try {
-<span class="nc" id="L1868">      FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());</span>
-<span class="nc" id="L1869">    } catch (IOException ex) {</span>
-<span class="nc" id="L1870">      throw new MojoExecutionException(MessageFormat.format(</span>
+<span class="nc" id="L1874">      FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());</span>
+<span class="nc" id="L1875">    } catch (IOException ex) {</span>
+<span class="nc" id="L1876">      throw new MojoExecutionException(MessageFormat.format(</span>
           &quot;Error: Unable to delete temporary file: [{0}]&quot;, cmdOptsPath), ex);
-<span class="nc" id="L1872">    }</span>
+<span class="nc" id="L1878">    }</span>
 
-<span class="nc" id="L1874">  }</span>
+<span class="nc" id="L1880">  }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

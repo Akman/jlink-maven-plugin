@@ -25,7 +25,7 @@ under the License.
     <language>en-us</language>
     <copyright>&#169;2020</copyright>
     <item>
-      <title>File: 19,
+      <title>File: 20,
              Errors: 0,
              Warnings: 0,
              Infos: 0
@@ -201,6 +201,20 @@ under the License.
                           <tr>
                 <td>
                   <a href="https://github.com/akman/jlink-maven-plugin/checkstyle.html#ru.akman.maven.plugins.jlink.Launcher.java">ru/akman/maven/plugins/jlink/Launcher.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="https://github.com/akman/jlink-maven-plugin/checkstyle.html#target.maven-archiver.pom.properties">target/maven-archiver/pom.properties</a>
                 </td>
                 <td>
                   0
