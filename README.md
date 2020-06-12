@@ -1,4 +1,4 @@
-# JLink Maven Plugin v0.1.0
+# JLink Maven Plugin v0.1.1
 
 [![Build Status][travis_badge]][travis_href]
 [![Maven Central][central_badge]][central_href]
@@ -44,7 +44,7 @@ mvn jlink:help -Ddetail=true
           <plugin>
             <groupId>com.github.akman</groupId>
             <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -83,7 +83,7 @@ repository in your pom.xml.
           <plugin>
             <groupId>com.github.akman</groupId>
             <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>0.1.2-SNAPSHOT</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -107,7 +107,7 @@ repository in your pom.xml.
 [helpmojo]: https://akman.github.io/jlink-maven-plugin/help-mojo.html
 [jlink]: https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html
 [jep220]: http://openjdk.java.net/jeps/220
-[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.0
+[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.1
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
 [central_badge]: https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin
 [central_href]: https://search.maven.org/artifact/com.github.akman/jlink-maven-plugin
