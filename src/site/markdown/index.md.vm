@@ -54,14 +54,14 @@ $H$H Examples
 To provide you with better understanding on some usages of the ${project.name},
 you can take a look into the following examples:
 
-- [Plugin configuration example][example]
+- [Simple configuration example][simple]
 
 [faq]: faq.html
 [usage]: usage.html
 [goals]: plugin-info.html
 [jlinkmojo]: jlink-mojo.html
 [helpmojo]: help-mojo.html
-[example]: examples/example.html
+[simple]: examples/simple.html
 [src]: ${project.scm.url}
 [issue]: ${project.issueManagement.url}
 [guide]: http://maven.apache.org/guides/development/guide-helping.html
