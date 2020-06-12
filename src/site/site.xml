@@ -165,7 +165,7 @@
     </menu>
 
     <menu name="Examples">
-      <item name="Plugin configuration example" href="examples/example.html"/>
+      <item name="Simple configuration" href="examples/simple.html"/>
     </menu>
 
     <!--

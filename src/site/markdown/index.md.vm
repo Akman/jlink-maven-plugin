@@ -1,8 +1,8 @@
 ## Velocity treats double hashes as comments, so $H can be used instead
 #set( $H = '#' )
-# ${project.name}
+# Introduction
 
-The maven jlink plugin lets you create a custom runtime image with
+The ${project.name} lets you create a custom runtime image with
 the jlink tool introduced in Java 9.
 
 The main idea is to avoid being tied to project artifacts and allow the user
@@ -15,7 +15,7 @@ This plugin has two [goals][goals]:
 
 - [jlink:jlink][jlinkmojo] is already bound to *package* phase within the Maven
 lifecycle and is therefore, automatically executed.
-- [jlink:help][helpmojo] Display help information on the plugin.
+- [jlink:help][helpmojo] display help information on the plugin.
 
 To create a custom runtime image manually you need only to execute:
 

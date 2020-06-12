@@ -2,8 +2,6 @@
 #set( $H = '#' )
 # FAQ
 
-$H$H Modulepath dependencies
-
 - [Can I not use the project artifacts at all?](#q1)
 - [How to exclude automatic modules?](#q2)
 
