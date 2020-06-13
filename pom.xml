@@ -29,9 +29,6 @@
 
   <properties>
 
-    <releaseVersion>0.1.1</releaseVersion>
-    <developmentVersion>${project.version}</developmentVersion>
-
     <!-- ${project.inceptionYear} - ${currentYear} -->
     <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
 
@@ -428,8 +425,28 @@
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <useReleaseProfile>false</useReleaseProfile>
             <releaseProfiles>release</releaseProfiles>
-            <preparationGoals>clean verify resources:copy-resources@prepare scm:checkin@prepare</preparationGoals>
-            <!--completionGoals>clean verify resources:copy-resources@perform scm:checkin@perform</completionGoals-->
+            <!--
+              Goals to run as part of the preparation step,
+              after changing the version in the POMs from x-SNAPSHOT to
+              a new version but before committing.
+            -->
+            <preparationGoals>
+              clean
+              verify
+              site:site
+              resources:copy-resources@prepare
+              antrun:run@prepare
+              scm:checkin@prepare
+            </preparationGoals>
+            <!--
+              Goals to run on completion of the preparation step,
+              after transformation back to the next development version
+              but before committing.
+            -->
+            <!--
+            <completionGoals>
+            </completionGoals>
+            -->
             <goals>deploy</goals>
           </configuration>
         </plugin>
@@ -583,41 +600,6 @@
           </execution>
         </executions>
       </plugin>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare</id>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${project.basedir}</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>config/readme</directory>
-                      <includes>
-                        <include>README.md</include>
-                      </includes>
-                      <filtering>true</filtering>
-                    </resource>
-                  </resources>              
-                </configuration>            
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-scm-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare</id>
-                <configuration>
-                  <message>[maven-release-plugin] updated versions in README.md</message>
-                  <includes>README.md</includes>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -741,6 +723,62 @@
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
       </plugin>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <delete includeemptydirs="true">
+                      <fileset dir="${project.basedir}/docs" includes="**/*" />
+                    </delete>
+                    <copy todir="${project.basedir}/docs">
+                      <fileset dir="${project.reporting.outputDirectory}" includes="**" />
+                    </copy>
+                  </target>
+                </configuration>
+              </execution> 
+            </executions>
+          </plugin>      
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare</id>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.basedir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>config/readme</directory>
+                      <includes>
+                        <include>README.md</include>
+                      </includes>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>              
+                </configuration>            
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-scm-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare</id>
+                <configuration>
+                  <message>[maven-release-plugin] updated versions in README.md</message>
+                  <includes>README.md, docs/**/*</includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
     </plugins>
 
     <resources>
