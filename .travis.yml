@@ -61,3 +61,7 @@ install:
 
 script:
   - mvn clean install --quiet -B
+
+cache:
+  directories:
+    - $HOME/.m2
