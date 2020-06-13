@@ -773,8 +773,8 @@
               <execution>
                 <id>prepare</id>
                 <configuration>
-                  <message>[maven-release-plugin] updated versions in README.md</message>
-                  <includes>README.md, docs/**/*</includes>
+                  <message>[maven-release-plugin] updated documentation site and version numbers in README.md</message>
+                  <includes>README.md, docs</includes>
                 </configuration>
               </execution>
             </executions>
