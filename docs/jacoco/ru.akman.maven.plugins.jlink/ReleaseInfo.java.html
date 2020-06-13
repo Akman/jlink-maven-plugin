@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReleaseInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JLink Maven Plugin</a> &gt; <a href="index.source.html" class="el_package">ru.akman.maven.plugins.jlink</a> &gt; <span class="el_source">ReleaseInfo.java</span></div><h1>ReleaseInfo.java</h1><pre class="source lang-java linenums">/*
+  Copyright (C) 2020 Alexander Kapitman
+  
+  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+    http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+
+package ru.akman.maven.plugins.jlink;
+
+import java.io.File;
+import java.util.Map;
+
+/**
+ * Release info.
+ */
+<span class="fc" id="L25">public class ReleaseInfo {</span>
+
+  /**
+   * File contains release info.
+   */
+  private File file;
+
+  /**
+   * Pairs of key and its value used to add release info.
+   */
+  private Map&lt;String, String&gt; adds;
+
+  /**
+   * Keys used to delete release info.
+   */
+  private Map&lt;String, String&gt; dels;
+
+  /**
+   * Get file contains release info.
+   *
+   * @return the file contains release info 
+   */
+  public File getFile() {
+<span class="fc" id="L48">    return this.file;</span>
+  }
+
+  /**
+   * Set file contains release info.
+   *
+   * @param file the file contains release info
+   */
+  public void setFile(final File file) {
+<span class="fc" id="L57">    this.file = file;</span>
+<span class="fc" id="L58">  }</span>
+
+  /**
+   * Get pairs of key and its value used to add release info.
+   *
+   * @return the pairs of key and its value used to add release info
+   */
+  public Map&lt;String, String&gt; getAdds() {
+<span class="fc" id="L66">    return this.adds;</span>
+  }
+
+  /**
+   * Set pairs of key and its value used to add release info.
+   *
+   * @param adds the pairs of key and its value used to add release info
+   */
+  public void setAdds(final Map&lt;String, String&gt; adds) {
+<span class="fc" id="L75">    this.adds = adds;</span>
+<span class="fc" id="L76">  }</span>
+
+  /**
+   * Get keys used to delete release info.
+   *
+   * @return the keys used to delete release info
+   */
+  public Map&lt;String, String&gt; getDels() {
+<span class="fc" id="L84">    return this.dels;</span>
+  }
+
+  /**
+   * Set keys used to delete release info.
+   *
+   * @param dels the keys used to delete release info
+   */
+  public void setDels(final Map&lt;String, String&gt; dels) {
+<span class="fc" id="L93">    this.dels = dels;</span>
+<span class="fc" id="L94">  }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
