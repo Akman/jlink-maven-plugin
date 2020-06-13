@@ -1,4 +1,4 @@
-# JLink Maven Plugin v0.1.1
+# ${project.name} v${releaseVersion}
 
 [![Build Status][travis_badge]][travis_href]
 [![Maven Central][central_badge]][central_href]
@@ -42,9 +42,9 @@ mvn jlink:help -Ddetail=true
       <pluginManagement>
         <plugins>
           <plugin>
-            <groupId>com.github.akman</groupId>
-            <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.1</version>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${releaseVersion}</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -64,9 +64,9 @@ repository in your pom.xml.
     ...
     <pluginRepositories>
       <pluginRepository>
-        <id>ossrh</id>
-        <name>OSS Sonatype Snapshots Repository</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        <id>${distributionManagement.snapshotRepository.id}</id>
+        <name>${distributionManagement.snapshotRepository.name}</name>
+        <url>${distributionManagement.snapshotRepository.url}</url>
         <layout>default</layout>
         <snapshots>
           <enabled>true</enabled>
@@ -81,9 +81,9 @@ repository in your pom.xml.
       <pluginManagement>
         <plugins>
           <plugin>
-            <groupId>com.github.akman</groupId>
-            <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.2-SNAPSHOT</version>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${developmentVersion}</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -101,7 +101,7 @@ repository in your pom.xml.
 
 [JEP-220 Modular runtime images.][jep220]
 
-[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.1
+[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v${releaseVersion}
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
 [central_badge]: https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin
 [central_href]: https://search.maven.org/artifact/com.github.akman/jlink-maven-plugin

@@ -29,6 +29,9 @@
 
   <properties>
 
+    <releaseVersion>0.1.1</releaseVersion>
+    <developmentVersion>${project.version}</developmentVersion>
+
     <!-- ${project.inceptionYear} - ${currentYear} -->
     <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
 
@@ -47,6 +50,7 @@
     <version.maven-changelog-plugin>2.3</version.maven-changelog-plugin>
     <version.maven-dependency-plugin>3.1.2</version.maven-dependency-plugin>
     <version.maven-release-plugin>3.0.0-M1</version.maven-release-plugin>
+    <version.maven-scm-plugin>1.11.2</version.maven-scm-plugin>
     <version.maven-jar-plugin>3.2.0</version.maven-jar-plugin>
     <version.maven-checkstyle-plugin>3.1.1</version.maven-checkstyle-plugin>
     <version.maven-clean-plugin>3.1.0</version.maven-clean-plugin>
@@ -424,9 +428,15 @@
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <useReleaseProfile>false</useReleaseProfile>
             <releaseProfiles>release</releaseProfiles>
+            <preparationGoals>clean verify resources:copy-resources@prepare scm:checkin@prepare</preparationGoals>
+            <!--completionGoals>clean verify resources:copy-resources@perform scm:checkin@perform</completionGoals-->
             <goals>deploy</goals>
           </configuration>
         </plugin>
+        <plugin>
+          <artifactId>maven-scm-plugin</artifactId>
+          <version>${version.maven-scm-plugin}</version>
+        </plugin>        
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>${version.maven-enforcer-plugin}</version>
@@ -573,6 +583,41 @@
           </execution>
         </executions>
       </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare</id>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.basedir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>config/readme</directory>
+                      <includes>
+                        <include>README.md</include>
+                      </includes>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>              
+                </configuration>            
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-scm-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare</id>
+                <configuration>
+                  <message>[maven-release-plugin] updated versions in README.md</message>
+                  <includes>README.md</includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -681,9 +726,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-install-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
       </plugin>
       <plugin>
         <artifactId>maven-site-plugin</artifactId>
@@ -911,10 +953,12 @@
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
+      <name>OSS Sonatype Snapshots Repository</name>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <repository>
       <id>ossrh</id>
+      <name>OSS Sonatype Releases Repository</name>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
     </repository>
   </distributionManagement>
