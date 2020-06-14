@@ -431,14 +431,10 @@
               a new version but before committing.
             -->
             <preparationGoals>
-              -DversionRelease="${releaseVersion}"
-              -DversionDevelopment="${developmentVersion}"
-              clean
-              verify
-              site:site
+              -DversionRelease=${releaseVersion}
+              -DversionDevelopment=${developmentVersion}
               resources:copy-resources@prepare
               antrun:run@prepare
-              scm:checkin@prepare
             </preparationGoals>
             <!--
               Goals to run on completion of the preparation step,
