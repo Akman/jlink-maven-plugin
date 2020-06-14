@@ -29,6 +29,9 @@
 
   <properties>
 
+    <developmentVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}${parsedVersion.qualifier?}</developmentVersion>
+    <releaseVersion>${releasedVersion.version}</releaseVersion>
+
     <!-- ${project.inceptionYear} - ${currentYear} -->
     <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
 
@@ -431,8 +434,7 @@
               a new version but before committing.
             -->
             <preparationGoals>
-              -DreleaseVersion=@{releaseVersion}
-              -DdevelopmentVersion=@{developmentVersion}
+              resources:copy-resources@prepare
               antrun:run@prepare
             </preparationGoals>
             <!--
@@ -584,6 +586,18 @@
               <goal>timestamp-property</goal>
             </goals>
           </execution>
+          <execution>
+            <id>parse-version</id>
+            <goals>
+              <goal>parse-version</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>released-version</id>
+            <goals>
+              <goal>released-version</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -704,8 +718,8 @@
             </goals>
             <configuration>
               <target>
-                <echo>Release: ${releaseVersion}</echo>
-                <echo>Development: ${developmentVersion}</echo>
+                <echo>Release: ${project.releaseVersion}</echo>
+                <echo>Development: ${project.developmentVersion}</echo>
                 <!--
                 <delete includeemptydirs="true">
                   <fileset dir="${project.basedir}/docs" includes="**/*" />
