@@ -434,7 +434,6 @@
               -DversionRelease=${releaseVersion}
               -DversionDevelopment=${developmentVersion}
               antrun:run@prepare
-              resources:copy-resources@prepare
             </preparationGoals>
             <!--
               Goals to run on completion of the preparation step,
@@ -909,6 +908,9 @@
             <executions>
               <execution>
                 <id>prepare</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
                 <configuration>
                   <target>
                     <echo>Release: ${releaseVersion}</echo>
