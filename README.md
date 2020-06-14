@@ -1,4 +1,4 @@
-# JLink Maven Plugin v${releaseVersion}
+# JLink Maven Plugin v${project.releaseVersion}
 
 [![Build Status][travis_badge]][travis_href]
 [![Maven Central][central_badge]][central_href]
@@ -44,7 +44,7 @@ mvn jlink:help -Ddetail=true
           <plugin>
             <groupId>com.github.akman</groupId>
             <artifactId>jlink-maven-plugin</artifactId>
-            <version>${releaseVersion}</version>
+            <version>${project.releaseVersion}</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -83,7 +83,7 @@ repository in your pom.xml.
           <plugin>
             <groupId>com.github.akman</groupId>
             <artifactId>jlink-maven-plugin</artifactId>
-            <version>${developmentVersion}</version>
+            <version>${project.developmentVersion}</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -101,7 +101,7 @@ repository in your pom.xml.
 
 [JEP-220 Modular runtime images.][jep220]
 
-[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v${releaseVersion}
+[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v${project.releaseVersion}
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
 [central_badge]: https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin
 [central_href]: https://search.maven.org/artifact/com.github.akman/jlink-maven-plugin

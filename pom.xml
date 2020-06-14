@@ -434,8 +434,12 @@
               a new version but before committing.
             -->
             <preparationGoals>
-              resources:copy-resources@prepare
+              clean
+              verify
+              site:site
               antrun:run@prepare
+              resources:copy-resources@prepare
+              scm:checkin@prepare
             </preparationGoals>
             <!--
               Goals to run on completion of the preparation step,
@@ -581,6 +585,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>timestamp-property</id>
             <phase>validate</phase>
             <goals>
               <goal>timestamp-property</goal>
@@ -588,12 +593,14 @@
           </execution>
           <execution>
             <id>parse-version</id>
+            <phase>validate</phase>
             <goals>
               <goal>parse-version</goal>
             </goals>
           </execution>
           <execution>
             <id>released-version</id>
+            <phase>validate</phase>
             <goals>
               <goal>released-version</goal>
             </goals>
@@ -718,16 +725,12 @@
             </goals>
             <configuration>
               <target>
-                <echo>Release: ${project.releaseVersion}</echo>
-                <echo>Development: ${project.developmentVersion}</echo>
-                <!--
                 <delete includeemptydirs="true">
                   <fileset dir="${project.basedir}/docs" includes="**/*" />
                 </delete>
                 <copy todir="${project.basedir}/docs">
                   <fileset dir="${project.reporting.outputDirectory}" includes="**/*" />
                 </copy>
-                -->
               </target>
             </configuration>
           </execution>
