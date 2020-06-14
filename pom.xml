@@ -431,6 +431,8 @@
               a new version but before committing.
             -->
             <preparationGoals>
+              -DreleaseVersion="${releaseVersion}"
+              -DdevelopmentVersion="${developmentVersion}"
               clean
               verify
               site:site
@@ -704,6 +706,7 @@
             <id>prepare</id>
             <configuration>
               <target>
+                <echo>Versions: release [${releaseVersion}], development [${developmentVersion}]</echo>
                 <delete includeemptydirs="true">
                   <fileset dir="${project.basedir}/docs" includes="**/*" />
                 </delete>
