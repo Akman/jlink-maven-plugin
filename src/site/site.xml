@@ -80,6 +80,7 @@
   <custom>
     <fluidoSkin>
 
+      <skipGenerationDate>true</skipGenerationDate>
       <topBarEnabled>true</topBarEnabled>
       <sideBarEnabled>true</sideBarEnabled>
       <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
@@ -90,7 +91,6 @@
       <!--leftColumnClass>span3</leftColumnClass-->
       <!--bodyColumnClass>span9</bodyColumnClass-->
       <!--copyrightClass>pull-right</copyrightClass-->
-      <!--skipGenerationDate>true</skipGenerationDate-->
 
       <gitHub>
         <projectId>akman/jlink-maven-plugin</projectId>

@@ -698,6 +698,58 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare</id>
+            <configuration>
+              <target>
+                <delete includeemptydirs="true">
+                  <fileset dir="${project.basedir}/docs"
+                      includes="**/*" />
+                </delete>
+                <copy todir="${project.basedir}/docs">
+                  <fileset dir="${project.reporting.outputDirectory}"
+                      includes="**/*" />
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare</id>
+            <configuration>
+              <outputDirectory>${project.basedir}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>config/readme</directory>
+                  <includes>
+                    <include>README.md</include>
+                  </includes>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-scm-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare</id>
+            <configuration>
+              <message>[maven-release-plugin] update documentation site and version numbers in files</message>
+              <includes>README.md, docs/**/*</includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
       <plugin>
@@ -891,64 +943,6 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <configuration>
-                  <target>
-                    <delete includeemptydirs="true">
-                      <fileset dir="${project.basedir}/docs"
-                          includes="**/*" />
-                    </delete>
-                    <copy todir="${project.basedir}/docs">
-                      <fileset dir="${project.reporting.outputDirectory}"
-                          includes="**" />
-                    </copy>
-                  </target>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare</id>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${project.basedir}</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>config/readme</directory>
-                      <includes>
-                        <include>README.md</include>
-                      </includes>
-                      <filtering>true</filtering>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-scm-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare</id>
-                <configuration>
-                  <message>[maven-release-plugin] update documentation site and version numbers in files</message>
-                  <includes>README.md, docs/**/*</includes>
-                </configuration>
               </execution>
             </executions>
           </plugin>
