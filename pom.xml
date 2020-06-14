@@ -431,6 +431,8 @@
               a new version but before committing.
             -->
             <preparationGoals>
+              -DreleaseVersion=@{releaseVersion}
+              -DdevelopmentVersion=@{developmentVersion}
               antrun:run@prepare
             </preparationGoals>
             <!--
