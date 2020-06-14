@@ -430,7 +430,9 @@
               after changing the version in the POMs from x-SNAPSHOT to
               a new version but before committing.
             -->
-            <preparationGoals>clean initialize</preparationGoals>
+            <preparationGoals>
+              antrun:run@prepare
+            </preparationGoals>
             <!--
               Goals to run on completion of the preparation step,
               after transformation back to the next development version
@@ -904,7 +906,6 @@
             <executions>
               <execution>
                 <id>prepare</id>
-                <phase>initialize</phase>
                 <goals>
                   <goal>run</goal>
                 </goals>
@@ -928,7 +929,6 @@
             <executions>
               <execution>
                 <id>prepare</id>
-                <phase>initialize</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
