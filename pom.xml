@@ -19,7 +19,7 @@
 
   <groupId>com.github.akman</groupId>
   <artifactId>jlink-maven-plugin</artifactId>
-  <version>0.1.2-SNAPSHOT</version>
+  <version>0.1.2</version>
   <packaging>maven-plugin</packaging>
 
   <name>JLink Maven Plugin</name>
@@ -705,12 +705,10 @@
             <configuration>
               <target>
                 <delete includeemptydirs="true">
-                  <fileset dir="${project.basedir}/docs"
-                      includes="**/*" />
+                  <fileset dir="${project.basedir}/docs" includes="**/*" />
                 </delete>
                 <copy todir="${project.basedir}/docs">
-                  <fileset dir="${project.reporting.outputDirectory}"
-                      includes="**/*" />
+                  <fileset dir="${project.reporting.outputDirectory}" includes="**/*" />
                 </copy>
               </target>
             </configuration>
@@ -981,7 +979,7 @@
     <url>https://github.com/akman/jlink-maven-plugin/tree/${project.scm.tag}</url>
     <connection>scm:git:git@github.com:akman/jlink-maven-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:akman/jlink-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v0.1.2</tag>
   </scm>
 
   <distributionManagement>
