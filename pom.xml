@@ -194,6 +194,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${version.maven-javadoc-plugin}</version>
           <configuration>
+            <notimestamp>true</notimestamp>
             <additionalOptions>-html5</additionalOptions>
           </configuration>
         </plugin>

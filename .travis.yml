@@ -60,7 +60,7 @@ install:
   - /bin/true
 
 script:
-  - mvn clean install --quiet -B
+  - mvn -q -B clean install
 
 cache:
   directories:
