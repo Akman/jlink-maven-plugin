@@ -29,8 +29,8 @@
 
   <properties>
 
-    <developmentVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}${parsedVersion.qualifier?}</developmentVersion>
-    <releaseVersion>${releasedVersion.version}</releaseVersion>
+    <releaseVersion>0.1.5</releaseVersion>
+    <developmentVersion>0.1.6-SNAPSHOT</developmentVersion>
 
     <!-- ${project.inceptionYear} - ${currentYear} -->
     <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
