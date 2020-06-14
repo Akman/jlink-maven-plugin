@@ -892,64 +892,62 @@
           </plugin>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
+            <configuration>
+              <target>
+                <echo>Release: @{releaseVersion}</echo>
+                <echo>Development: @{developmentVersion}</echo>
+                <delete includeemptydirs="true">
+                  <fileset dir="${project.basedir}/docs" includes="**/*" />
+                </delete>
+                <copy todir="${project.basedir}/docs">
+                  <fileset dir="${project.reporting.outputDirectory}" includes="**/*" />
+                </copy>
+              </target>
+            </configuration>
             <executions>
               <execution>
                 <id>prepare</id>
-                <phase>verify</phase>
                 <goals>
                   <goal>run</goal>
                 </goals>
-                <configuration>
-                  <target>
-                    <echo>Release: ${releaseVersion}</echo>
-                    <echo>Development: ${developmentVersion}</echo>
-                    <delete includeemptydirs="true">
-                      <fileset dir="${project.basedir}/docs" includes="**/*" />
-                    </delete>
-                    <copy todir="${project.basedir}/docs">
-                      <fileset dir="${project.reporting.outputDirectory}" includes="**/*" />
-                    </copy>
-                  </target>
-                </configuration>
               </execution>
             </executions>
           </plugin>
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
+            <configuration>
+              <outputDirectory>${project.basedir}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>config/readme</directory>
+                  <includes>
+                    <include>README.md</include>
+                  </includes>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
             <executions>
               <execution>
                 <id>prepare</id>
-                <phase>verify</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
-                <configuration>
-                  <outputDirectory>${project.basedir}</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>config/readme</directory>
-                      <includes>
-                        <include>README.md</include>
-                      </includes>
-                      <filtering>true</filtering>
-                    </resource>
-                  </resources>
-                </configuration>
               </execution>
             </executions>
           </plugin>
           <plugin>
             <artifactId>maven-scm-plugin</artifactId>
+            <configuration>
+              <message>[maven-release-plugin] update documentation site and version numbers in files</message>
+              <includes>README.md, docs/**/*</includes>
+            </configuration>
             <executions>
               <execution>
                 <id>prepare</id>
                 <goals>
                   <goal>checkin</goal>
                 </goals>
-                <configuration>
-                  <message>[maven-release-plugin] update documentation site and version numbers in files</message>
-                  <includes>README.md, docs/**/*</includes>
-                </configuration>
               </execution>
             </executions>
           </plugin>
