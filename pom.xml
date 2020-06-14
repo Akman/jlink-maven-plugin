@@ -433,8 +433,8 @@
             <preparationGoals>
               -DversionRelease=${releaseVersion}
               -DversionDevelopment=${developmentVersion}
-              resources:copy-resources@prepare
               antrun:run@prepare
+              resources:copy-resources@prepare
             </preparationGoals>
             <!--
               Goals to run on completion of the preparation step,
