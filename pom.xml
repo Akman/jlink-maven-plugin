@@ -29,8 +29,8 @@
 
   <properties>
 
-    <releaseVersion>0.1.5</releaseVersion>
-    <developmentVersion>0.1.6-SNAPSHOT</developmentVersion>
+    <releaseVersion>0.1.6</releaseVersion>
+    <developmentVersion>0.1.7-SNAPSHOT</developmentVersion>
 
     <!-- ${project.inceptionYear} - ${currentYear} -->
     <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
@@ -437,8 +437,8 @@
               clean
               verify
               site:site
-              antrun:run@prepare
               resources:copy-resources@prepare
+              antrun:run@prepare
               scm:checkin@prepare
             </preparationGoals>
             <!--
@@ -962,6 +962,14 @@
         <plugins>
           <plugin>
             <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
