@@ -100,76 +100,76 @@ public abstract class BaseToolMojo extends AbstractMojo {
   /**
    * Project base directory (that containing the pom.xml file).
    */
-  protected File baseDir;
-
+  private File baseDir;
+  
   /**
    * Project build directory (${project.basedir}/target).
    */
-  protected File buildDir;
+  private File buildDir;
 
   /**
    * Project output directory (${project.build.directory}/classes).
    */
-  protected File outputDir;
+  private File outputDir;
 
   /**
    * Project properties.
    */
-  protected Properties properties;
+  private Properties properties;
 
   /**
    * Default charset (${project.build.sourceEncoding}).
    */
-  protected Charset sourceEncoding = Charset.defaultCharset();
+  private Charset sourceEncoding = Charset.defaultCharset();
 
   /**
    * Fileset manager.
    */
-  protected FileSetManager fileSetManager;
+  private FileSetManager fileSetManager;
 
   /**
    * All JDK toolchains available in user settings
    * independently from maven-toolchains-plugin.
    */
-  protected List<Toolchain> toolchains;
+  private List<Toolchain> toolchains;
 
   /**
    * JDK toolchain from build context,
    * i.e. the toolchain selected by maven-toolchains-plugin.
    */
-  protected Toolchain toolchain;
+  private Toolchain toolchain;
 
   /**
    * Tool home directory.
    */
-  protected File toolHomeDir;
+  private File toolHomeDirectory;
 
   /**
    * Tool executable.
    */
-  protected File toolExecutable;
+  private File toolExecutable;
 
   /**
    * Tool version.
    */
-  protected String toolVersion;
+  private String toolVersion;
 
   /**
    * Tool corresponding java version.
    */
-  protected JavaVersion toolJavaVersion;
+  private JavaVersion toolJavaVersion;
 
   /**
    * Toolchain manager.
    */
   @Component
-  protected ToolchainManager toolchainManager;
+  private ToolchainManager toolchainManager;
 
   /**
    * Build plugin manager.
    */
   @Component
-  protected BuildPluginManager pluginManager;
+  private BuildPluginManager pluginManager;
 
   /**
    * Maven project.
@@ -179,7 +179,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
       readonly = true,
       required = true
   )
-  protected MavenProject project;
+  private MavenProject project;
 
   /**
    * Maven session.
@@ -189,7 +189,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
       readonly = true,
       required = true
   )
-  protected MavenSession session;
+  private MavenSession session;
 
   /**
    * Get tool executable path from tool home.
@@ -209,14 +209,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
     if (executablePath != null) {
       try {
         executablePath = executablePath.toRealPath();
-        this.toolHomeDir = toolHomeDir;
+        toolHomeDirectory = toolHomeDir;
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (toolhome) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (toolhome) for [{0}]: {1}", toolName,
-              this.toolHomeDir));
+              toolHomeDirectory));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -251,14 +251,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
         && !StringUtils.isBlank(tcToolExecutable)) {
       try {
         executablePath = Paths.get(tcToolExecutable).toRealPath();
-        this.toolHomeDir = new File(tcJavaHome);
+        toolHomeDirectory = new File(tcJavaHome);
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (toolchain) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (toolchain) for [{0}]: {1}", toolName,
-              this.toolHomeDir));
+              toolHomeDirectory));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -287,14 +287,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
     if (executablePath != null) {
       try {
         executablePath = executablePath.toRealPath();
-        this.toolHomeDir = javaHomeDir;
+        toolHomeDirectory = javaHomeDir;
         if (getLog().isInfoEnabled()) {
           getLog().info(MessageFormat.format(
               "Executable (javahome) for [{0}]: {1}", toolName,
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (javahome) for [{0}]: {1}", toolName,
-              this.toolHomeDir));
+              toolHomeDirectory));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -327,7 +327,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
     if (executablePath != null) {
       try {
         final Path toolHomePath = executablePath.getParent();
-        this.toolHomeDir = toolHomePath == null
+        toolHomeDirectory = toolHomePath == null
             ? null : toolHomePath.toRealPath().toFile();
         executablePath = executablePath.toRealPath();
         if (getLog().isInfoEnabled()) {
@@ -336,7 +336,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
               executablePath));
           getLog().info(MessageFormat.format(
               "Home directory (systempath) for [{0}]: {1}", toolName,
-              this.toolHomeDir));
+              toolHomeDirectory));
         }
       } catch (IOException ex) {
         if (getLog().isErrorEnabled()) {
@@ -368,8 +368,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
    *         configuration or by toolchain plugin or by system variable
    *         JAVA_HOME or null
    */
-  private Path getToolExecutable(final String toolName, final File toolHomeDir,
-      final String toolBinDirName) {
+  private Path getToolExecutablePath(final String toolName,
+      final File toolHomeDir, final String toolBinDirName) {
     Path executablePath =
         getExecutableFromToolHome(toolName, toolHomeDir, toolBinDirName);
     if (executablePath != null) {
@@ -514,14 +514,14 @@ public abstract class BaseToolMojo extends AbstractMojo {
   }
 
   /**
-   * Get the tool version.
+   * Obtain the tool version.
    *
    * @return the tool version or null
    *
    * @throws CommandLineException if any errors occurred while processing
    *                              command line
    */
-  private String getToolVersion(final Path executablePath)
+  private String obtainToolVersion(final Path executablePath)
       throws CommandLineException {
     final Commandline cmdLine = new Commandline();
     cmdLine.setExecutable(executablePath.toString());
@@ -571,6 +571,167 @@ public abstract class BaseToolMojo extends AbstractMojo {
       }
     }
     return resolvedVersion;
+  }
+
+  /**
+   * Get JDK toolchain specified in toolchains-plugin for
+   * current build context.
+   *
+   * @return JDK toolchain
+   */
+  @SuppressWarnings("deprecation") // DefaultJavaToolChain
+  private Toolchain getDefaultJavaToolchain() {
+    final Toolchain ctxToolchain =
+        getToolchainManager().getToolchainFromBuildContext(JDK, getSession());
+    return ctxToolchain == null || !(ctxToolchain
+        instanceof org.apache.maven.toolchain.java.DefaultJavaToolChain)
+        ? null : ctxToolchain;
+  }
+
+  /**
+   * Get project base directory.
+   *
+   * @return project base directory (that containing the pom.xml file)
+   */
+  protected File getBaseDir() {
+    return baseDir;
+  }
+
+  /**
+   * Get project build directory.
+   *
+   * @return project build directory (${project.basedir}/target)
+   */
+  protected File getBuildDir() {
+    return buildDir;
+  }
+
+  /**
+   * Get project output directory.
+   *
+   * @return project output directory (${project.build.directory}/classes)
+   */
+  protected File getOutputDir() {
+    return outputDir;
+  }
+
+  /**
+   * Get project properties.
+   *
+   * @return project properties
+   */
+  protected Properties getProperties() {
+    return properties;
+  }
+
+  /**
+   * Get default charset.
+   *
+   * @return default charset (${project.build.sourceEncoding})
+   */
+  protected Charset getCharset() {
+    return sourceEncoding;
+  }
+
+  /**
+   * Get fileset manager.
+   *
+   * @return fileset manager
+   */
+  protected FileSetManager getFileSetManager() {
+    return fileSetManager;
+  }
+
+  /**
+   * Get list of all JDK toolchains available in user settings
+   * independently from maven-toolchains-plugin.
+   *
+   * @return list of all JDK toolchains available in user settings
+   */
+  protected List<Toolchain> getToolchains() {
+    return toolchains;
+  }
+
+  /**
+   * Get JDK toolchain from build context,
+   * i.e. the toolchain selected by maven-toolchains-plugin.
+   *
+   * @return JDK toolchain from build context
+   */
+  protected Toolchain getToolchain() {
+    return toolchain;
+  }
+
+  /**
+   * Get tool home directory.
+   *
+   * @return tool home directory
+   */
+  protected File getToolHomeDirectory() {
+    return toolHomeDirectory;
+  }
+
+  /**
+   * Get tool executable.
+   *
+   * @return tool executable
+   */
+  protected File getToolExecutable() {
+    return toolExecutable;
+  }
+
+  /**
+   * Get tool version.
+   *
+   * @return tool version
+   */
+  protected String getToolVersion() {
+    return toolVersion;
+  }
+
+  /**
+   * Get tool corresponding java version.
+   *
+   * @return tool corresponding java version
+   */
+  protected JavaVersion getToolJavaVersion() {
+    return toolJavaVersion;
+  }
+
+  /**
+   * Get toolchain manager.
+   *
+   * @return toolchain manager
+   */
+  protected ToolchainManager getToolchainManager() {
+    return toolchainManager;
+  }
+
+  /**
+   * Get plugin manager.
+   *
+   * @return plugin manager
+   */
+  protected BuildPluginManager getPluginManager() {
+    return pluginManager;
+  }
+
+  /**
+   * Get maven project.
+   *
+   * @return maven project
+   */
+  protected MavenProject getProject() {
+    return project;
+  }
+
+  /**
+   * Get maven session.
+   *
+   * @return maven session
+   */
+  protected MavenSession getSession() {
+    return session;
   }
 
   /**
@@ -627,21 +788,6 @@ public abstract class BaseToolMojo extends AbstractMojo {
   }
 
   /**
-   * Get JDK toolchain specified in toolchains-plugin for
-   * current build context.
-   *
-   * @return JDK toolchain
-   */
-  @SuppressWarnings("deprecation") // DefaultJavaToolChain
-  private Toolchain getDefaultJavaToolchain() {
-    final Toolchain ctxToolchain =
-        toolchainManager.getToolchainFromBuildContext(JDK, session);
-    return ctxToolchain == null || !(ctxToolchain
-        instanceof org.apache.maven.toolchain.java.DefaultJavaToolChain)
-        ? null : ctxToolchain;
-  }
-
-  /**
    * Init Mojo.
    *
    * @param toolName the name of the tool (without extension)
@@ -654,35 +800,35 @@ public abstract class BaseToolMojo extends AbstractMojo {
    */
   protected void init(final String toolName, final File toolHomeDir,
       final String toolBinDirName) throws MojoExecutionException {
-    if (project == null) {
+    if (getProject() == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project} is not defined");
     }
 
-    if (session == null) {
+    if (getSession() == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${session} is not defined");
     }
 
-    baseDir = project.getBasedir();
+    baseDir = getProject().getBasedir();
     if (baseDir == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project.basedir} is not defined");
     }
 
-    buildDir = new File(project.getBuild().getDirectory());
+    buildDir = new File(getProject().getBuild().getDirectory());
     if (buildDir == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project.build.directory} is not defined");
     }
 
-    outputDir = new File(project.getBuild().getOutputDirectory());
+    outputDir = new File(getProject().getBuild().getOutputDirectory());
     if (outputDir == null) {
       throw new MojoExecutionException(
           "Error: The predefined variable ${project.build.outputDirectory} is not defined");
     }
 
-    properties = project.getProperties();
+    properties = getProject().getProperties();
     if (properties == null) {
       throw new MojoExecutionException(
           "Error: Unable to read project properties");
@@ -710,7 +856,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
     }
 
     // Resolve all available jdk toolchains
-    toolchains = toolchainManager.getToolchains(session, JDK, null);
+    toolchains = getToolchainManager().getToolchains(getSession(), JDK, null);
     if (toolchains == null) {
       if (getLog().isDebugEnabled()) {
         getLog().debug("No toolchains found");
@@ -738,7 +884,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
 
     // Resolve the tool home directory and executable file
     final Path executablePath =
-        getToolExecutable(toolName, toolHomeDir, toolBinDirName);
+        getToolExecutablePath(toolName, toolHomeDir, toolBinDirName);
     if (executablePath == null) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: Executable for [{0}] not found", toolName));
@@ -747,7 +893,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
 
     // Obtain the tool version
     try {
-      toolVersion = getToolVersion(executablePath);
+      toolVersion = obtainToolVersion(executablePath);
     } catch (CommandLineException ex) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: Unable to obtain version of [{0}]", toolName), ex);

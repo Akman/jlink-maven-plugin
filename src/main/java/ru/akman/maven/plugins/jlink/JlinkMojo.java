@@ -121,61 +121,6 @@ public class JlinkMojo extends BaseToolMojo {
    */
   private static final String DESCRIPTOR_NAME = "module-info.class";
 
-  /*
-   * Following fields inherit from BaseToolMojo
-   * ==========================================
-   *
-   * Maven project.
-   * MavenProject project;
-   *
-   * Maven session.
-   * MavenSession session;
-   *
-   * All JDK toolchains available in user settings
-   * independently from maven-toolchains-plugin.
-   * List<Toolchain> toolchains;
-   *
-   * JDK toolchain from build context,
-   * i.e. the toolchain selected by maven-toolchains-plugin.
-   * Toolchain toolchain;
-   *
-   * Toolchain manager.
-   * ToolchainManager toolchainManager;
-   *
-   * Build plugin manager.
-   * BuildPluginManager pluginManager;
-   *
-   * Fileset manager.
-   * FileSetManager fileSetManager;
-   *
-   * Project properties.
-   * Properties properties;
-   *
-   * Default charset (${project.build.sourceEncoding}).
-   * Charset sourceEncoding = Charset.defaultCharset();
-   *
-   * Project base directory (that containing the pom.xml file).
-   * File baseDir;
-   *
-   * Project build directory (${project.basedir}/target).
-   * File buildDir;
-   *
-   * Project output directory (${project.build.directory}/classes).
-   * File outputDir;
-   *
-   * Tool home directory.
-   * File toolHomeDir;
-   *
-   * Tool executable.
-   * File toolExecutable;
-   *
-   * Tool version.
-   * String toolVersion;
-   *
-   * Tool corresponding java version.
-   * JavaVersion toolJavaVersion;
-   */
-
   /**
    * Resolved project dependencies.
    */
@@ -185,21 +130,6 @@ public class JlinkMojo extends BaseToolMojo {
    * Resolved main module descriptor.
    */
   private JavaModuleDescriptor mainModuleDescriptor;
-
-  /**
-   * Path exceptions (not resolved dependencies).
-   */
-  private Map<File, String> pathExceptions;
-
-  /**
-   * Classpath elements (classpath dependencies).
-   */
-  private List<File> classpathElements;
-
-  /**
-   * Modulepath elements (modulepath dependencies).
-   */
-  private List<File> modulepathElements;
 
   /**
    * JPMS location manager.
@@ -215,8 +145,6 @@ public class JlinkMojo extends BaseToolMojo {
 
   /**
    * Specifies the location in which modular dependencies will be copied.
-   *
-   * <p>Default value: ${project.build.directory}/jlink/mods.</p>
    */
   @Parameter(
       defaultValue = "${project.build.directory}/jlink/mods"
@@ -225,8 +153,6 @@ public class JlinkMojo extends BaseToolMojo {
 
   /**
    * Specifies the location in which non modular dependencies will be copied.
-   *
-   * <p>Default value: ${project.build.directory}/jlink/libs.</p>
    */
   @Parameter(
       defaultValue = "${project.build.directory}/jlink/libs"
@@ -328,8 +254,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Specifies the location of the generated runtime image.
    *
-   * <p>Default value: ${project.build.directory}/jlink/image.</p>
-   *
    * <p>The jlink CLI is: <code>--output path</code></p>
    */
   @Parameter(
@@ -400,8 +324,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Enable verbose tracing.
    *
-   * <p>Default value: false.</p>
-   *
    * <p>The jlink CLI is: <code>--verbose</code></p>
    */
   @Parameter(
@@ -411,8 +333,6 @@ public class JlinkMojo extends BaseToolMojo {
 
   /**
    * Link service provider modules and their dependencies.
-   *
-   * <p>Default value: false.</p>
    *
    * <p>The jlink CLI is: <code>--bind-services</code></p>
    */
@@ -441,8 +361,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Excludes header files.
    *
-   * <p>Default value: false.</p>
-   *
    * <p>The jlink CLI is: <code>--no-header-files</code></p>
    */
   @Parameter(
@@ -453,8 +371,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Excludes man pages.
    *
-   * <p>Default value: false.</p>
-   *
    * <p>The jlink CLI is: <code>--no-man-pages</code></p>
    */
   @Parameter(
@@ -464,8 +380,6 @@ public class JlinkMojo extends BaseToolMojo {
 
   /**
    * Specifies the byte order of the generated image: { NATIVE | LITTLE | BIG }.
-   *
-   * <p>Default value: NATIVE (the format of your system's architecture).</p>
    *
    * <p>The jlink CLI is: <code>--endian {little|big}</code></p>
    */
@@ -478,8 +392,6 @@ public class JlinkMojo extends BaseToolMojo {
    * Suppresses a fatal error when signed modular JARs are linked
    * in the runtime image. The signature-related files of the signed
    * modular JARs aren't copied to the runtime image.
-   *
-   * <p>Default value: false.</p>
    *
    * <p>The jlink CLI is: <code>--ignore-signing-information</code></p>
    */
@@ -599,8 +511,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Strips debug information from the output image.
    *
-   * <p>Default value: false.</p>
-   *
    * <p>The jlink CLI is: <code>--strip-debug</code></p>
    */
   @Parameter(
@@ -611,8 +521,6 @@ public class JlinkMojo extends BaseToolMojo {
   /**
    * Strip Java debug attributes from classes in the output image.
    *
-   * <p>Default value: false.</p>
-   *
    * <p>The jlink CLI is: <code>--strip-java-debug-attributes</code></p>
    */
   @Parameter(
@@ -622,8 +530,6 @@ public class JlinkMojo extends BaseToolMojo {
 
   /**
    * Exclude native commands (such as java/java.exe) from the image.
-   *
-   * <p>Default value: false.</p>
    *
    * <p>The jlink CLI is: <code>--strip-native-commands</code></p>
    */
@@ -636,8 +542,6 @@ public class JlinkMojo extends BaseToolMojo {
    * De-duplicate all legal notices. If true is specified then
    * it will be an error if two files of the same filename
    * are different.
-   *
-   * <p>Default value: false.</p>
    *
    * <p>The jlink CLI is:
    * <code>--dedup-legal-notices=error-if-not-same-content</code></p>
@@ -748,7 +652,7 @@ public class JlinkMojo extends BaseToolMojo {
 
     // get project artifacts - all dependencies that this project has,
     // including transitive ones (depends on what phases have run)
-    final Set<Artifact> artifacts = project.getArtifacts();
+    final Set<Artifact> artifacts = getProject().getArtifacts();
     if (getLog().isDebugEnabled()) {
       getLog().debug(PluginUtils.getArtifactSetDebugInfo(artifacts));
     }
@@ -757,7 +661,7 @@ public class JlinkMojo extends BaseToolMojo {
     final List<File> paths = new ArrayList<>();
 
     // add the project output directory
-    paths.add(outputDir);
+    paths.add(getOutputDir());
 
     // SCOPE_COMPILE  - This is the default scope, used if none is specified.
     //                  Compile dependencies are available in all classpaths.
@@ -791,7 +695,7 @@ public class JlinkMojo extends BaseToolMojo {
 
     // [ SCOPE_SYSTEM ] add the project system dependencies
     // getSystemPath() is used only if the dependency scope is system
-    paths.addAll(project.getDependencies().stream()
+    paths.addAll(getProject().getDependencies().stream()
         .filter(d -> d != null && !StringUtils.isBlank(d.getSystemPath()))
         .map(d -> new File(StringUtils.stripToEmpty(d.getSystemPath())))
         .collect(Collectors.toList()));
@@ -803,14 +707,14 @@ public class JlinkMojo extends BaseToolMojo {
 
     // this is used to resolve main module descriptor
     final File descriptorFile =
-        outputDir.toPath().resolve(DESCRIPTOR_NAME).toFile();
+        getOutputDir().toPath().resolve(DESCRIPTOR_NAME).toFile();
     if (descriptorFile.exists() && !descriptorFile.isDirectory()) {
       request.setMainModuleDescriptor(descriptorFile);
     }
 
     // this is used to extract the module name
-    if (toolHomeDir != null) {
-      request.setJdkHome(toolHomeDir);
+    if (getToolHomeDirectory() != null) {
+      request.setJdkHome(getToolHomeDirectory());
     }
 
     // resolve project dependencies
@@ -958,7 +862,8 @@ public class JlinkMojo extends BaseToolMojo {
         for (final FileSet fileSet : filesets) {
           final File fileSetDir;
           try {
-            fileSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, fileSet);
+            fileSetDir =
+                PluginUtils.normalizeFileSetBaseDir(getBaseDir(), fileSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
               getLog().error("Unable to resolve fileset", ex);
@@ -966,7 +871,7 @@ public class JlinkMojo extends BaseToolMojo {
             throw new MojoExecutionException(
                 "Error: Unable to resolve fileset", ex);
           }
-          result = Stream.of(fileSetManager.getIncludedFiles(fileSet))
+          result = Stream.of(getFileSetManager().getIncludedFiles(fileSet))
               .filter(fileName -> !StringUtils.isBlank(fileName))
               .map(fileName -> fileSetDir.toPath().resolve(
                   StringUtils.stripToEmpty(fileName)).toString())
@@ -997,7 +902,8 @@ public class JlinkMojo extends BaseToolMojo {
         for (final FileSet dirSet : dirsets) {
           final File dirSetDir;
           try {
-            dirSetDir = PluginUtils.normalizeFileSetBaseDir(baseDir, dirSet);
+            dirSetDir =
+                PluginUtils.normalizeFileSetBaseDir(getBaseDir(), dirSet);
           } catch (IOException ex) {
             if (getLog().isErrorEnabled()) {
               getLog().error("Unable to resolve dirset", ex);
@@ -1005,7 +911,7 @@ public class JlinkMojo extends BaseToolMojo {
             throw new MojoExecutionException(
                 "Error: Unable to resolve dirset", ex);
           }
-          result = Stream.of(fileSetManager.getIncludedDirectories(dirSet))
+          result = Stream.of(getFileSetManager().getIncludedDirectories(dirSet))
               .filter(dirName -> !StringUtils.isBlank(dirName))
               .map(dirName -> dirSetDir.toPath().resolve(
                   StringUtils.stripToEmpty(dirName)).toString())
@@ -1116,7 +1022,7 @@ public class JlinkMojo extends BaseToolMojo {
         getLog().info("Included automatic module: " + file);
       }
       // exclude output module by default
-      if (file.compareTo(outputDir) == 0) {
+      if (file.compareTo(getOutputDir()) == 0) {
         isIncluded = false;
         if (getLog().isInfoEnabled()) {
           getLog().info("Excluded output module: " + file);
@@ -1129,7 +1035,7 @@ public class JlinkMojo extends BaseToolMojo {
           getLog().info("Excluded automatic module: " + file);
         }
       } else {
-        if (file.compareTo(outputDir) == 0) {
+        if (file.compareTo(getOutputDir()) == 0) {
           if (depSet.isOutputIncluded()) {
             isIncluded = true;
             if (getLog().isInfoEnabled()) {
@@ -1394,7 +1300,7 @@ public class JlinkMojo extends BaseToolMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      if (toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {
+      if (getToolJavaVersion().atLeast(JavaVersion.JAVA_13)) {
         opt = cmdLine.createOpt();
         opt.createArg().setValue("--strip-java-debug-attributes");
       } else {
@@ -1721,10 +1627,10 @@ public class JlinkMojo extends BaseToolMojo {
         .setEscapeChar('\\');
     try {
       Files.write(script,
-          Files.lines(template, sourceEncoding)
+          Files.lines(template, getCharset())
               .map(line -> engine.replace(line).replace("\\$", "$"))
               .collect(Collectors.toList()),
-          sourceEncoding);
+          getCharset());
     } catch (IllegalArgumentException ex) {
       if (getLog().isErrorEnabled()) {
         getLog().error(MessageFormat.format(
@@ -1756,7 +1662,7 @@ public class JlinkMojo extends BaseToolMojo {
     init(TOOL_NAME, toolhome, TOOL_HOME_BIN); // from BaseToolMojo
 
     // Check version
-    if (!toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {
+    if (!getToolJavaVersion().atLeast(JavaVersion.JAVA_9)) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: At least {0} is required to use [{1}]", JavaVersion.JAVA_9,
           TOOL_NAME));
@@ -1796,9 +1702,9 @@ public class JlinkMojo extends BaseToolMojo {
     // Resolve and fetch project dependencies
     projectDependencies = resolveDependencies();
     mainModuleDescriptor = fetchMainModuleDescriptor();
-    classpathElements = fetchClasspathElements();
-    modulepathElements = fetchModulepathElements();
-    pathExceptions = fetchPathExceptions();
+    List<File> classpathElements = fetchClasspathElements();
+    List<File> modulepathElements = fetchModulepathElements();
+    Map<File, String> pathExceptions = fetchPathExceptions();
     if (!pathExceptions.isEmpty() && getLog().isWarnEnabled()) {
       getLog().warn("Found path exceptions: " + pathExceptions.size()
           + System.lineSeparator()
@@ -1815,7 +1721,7 @@ public class JlinkMojo extends BaseToolMojo {
 
     // Build command line and populate the list of the command options
     final CommandLineBuilder cmdLineBuilder = new CommandLineBuilder();
-    cmdLineBuilder.setExecutable(toolExecutable.toString());
+    cmdLineBuilder.setExecutable(getToolExecutable().toString());
     processOptions(cmdLineBuilder);
     processModules(cmdLineBuilder);
     final List<String> optsLines = new ArrayList<>();
@@ -1829,9 +1735,9 @@ public class JlinkMojo extends BaseToolMojo {
 
     // Save the list of command options to the file
     // will be used in the tool command line
-    final Path cmdOptsPath = buildDir.toPath().resolve(OPTS_FILE);
+    final Path cmdOptsPath = getBuildDir().toPath().resolve(OPTS_FILE);
     try {
-      Files.write(cmdOptsPath, optsLines, sourceEncoding);
+      Files.write(cmdOptsPath, optsLines, getCharset());
     } catch (IOException ex) {
       if (getLog().isErrorEnabled()) {
         getLog().error(MessageFormat.format(
@@ -1842,7 +1748,7 @@ public class JlinkMojo extends BaseToolMojo {
     // Prepare command line with command options
     // specified in the file created early
     final Commandline cmdLine = new Commandline();
-    cmdLine.setExecutable(toolExecutable.toString());
+    cmdLine.setExecutable(getToolExecutable().toString());
     cmdLine.createArg().setValue("@" + cmdOptsPath.toString());
 
     // Execute command line
@@ -1871,7 +1777,7 @@ public class JlinkMojo extends BaseToolMojo {
 
     // Delete temporary file
     try {
-      FileUtils.forceDeleteOnExit(cmdOptsPath.toFile());
+      FileUtils.forceDelete(cmdOptsPath.toFile());
     } catch (IOException ex) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: Unable to delete temporary file: [{0}]", cmdOptsPath), ex);
