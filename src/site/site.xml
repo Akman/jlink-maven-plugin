@@ -66,7 +66,7 @@
   -->
 
   <!-- position=left, right, navigation-top, navigation-bottom, bottom, none -->
-  <publishDate format="yyyy-MM-dd" position="right" />
+  <publishDate format="yyyy-MM-dd" position="none" />
 
   <!-- left, right, navigation-top, navigation-bottom, bottom, none -->
   <version position="right"/>
