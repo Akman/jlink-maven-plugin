@@ -11,6 +11,8 @@ The main idea is to avoid being tied to project artifacts and allow the user
 to fully control the process of creating an image. However, it is possible,
 of course, to customize the process using project artifacts.
 
+[The detailed documentation for this plugin is available here.][goals]
+
 ## Goals
 
 This plugin has two [goals][goals]:
@@ -33,7 +35,7 @@ mvn jlink:help -Ddetail=true
 
 ## Usage
 
-[The detailed documentation for this plugin is available here.][goals]
+Add the plugin to your pom:
 
 ```xml
   <project>
@@ -78,6 +80,12 @@ repository in your pom.xml.
     </pluginRepositories>
     ...
   </project>
+```
+
+And then package your project (as usual), jlink starts automatically:
+
+```console
+mvn clean package
 ```
 
 ## Links

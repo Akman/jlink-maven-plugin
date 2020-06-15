@@ -11,6 +11,8 @@ The main idea is to avoid being tied to project artifacts and allow the user
 to fully control the process of creating an image. However, it is possible,
 of course, to customize the process using project artifacts.
 
+[The detailed documentation for this plugin is available here.][goals]
+
 ## Goals
 
 This plugin has two [goals][goals]:
@@ -33,7 +35,7 @@ mvn jlink:help -Ddetail=true
 
 ## Usage
 
-[The detailed documentation for this plugin is available here.][goals]
+Add the plugin to your pom:
 
 ```xml
   <project>
@@ -80,11 +82,21 @@ repository in your pom.xml.
   </project>
 ```
 
+And then package your project (as usual), jlink starts automatically:
+
+```console
+mvn clean package
+```
+
 ## Links
 
 [The JLink tool official description.][jlink]
 
 [JEP-220 Modular runtime images.][jep220]
+
+## Pull request
+
+Pull request template: [.github/pull_request_template.md][pull_request].
 
 [travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v${project.version}
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
@@ -97,3 +109,4 @@ repository in your pom.xml.
 [mojo_help]: https://akman.github.io/jlink-maven-plugin/help-mojo.html
 [jlink]: https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html
 [jep220]: http://openjdk.java.net/jeps/220
+[pull_request]: https://github.com/akman/jlink-maven-plugin/blob/master/.github/pull_request_template.md
