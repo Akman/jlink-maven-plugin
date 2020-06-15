@@ -195,6 +195,7 @@
           <version>${version.maven-javadoc-plugin}</version>
           <configuration>
             <notimestamp>true</notimestamp>
+            <bottom>${copyright.notice}</bottom>
             <additionalOptions>-html5</additionalOptions>
           </configuration>
         </plugin>
@@ -729,11 +730,6 @@
                 <delete includeemptydirs="true">
                   <fileset dir="${project.basedir}/docs" includes="**/*" />
                 </delete>
-                <replace dir="${project.reporting.outputDirectory}"
-                    value="Version: ${releaseVersion}">
-                  <include name="**/*.html" />
-                  <replacetoken>Version: ${project.version}</replacetoken>
-                </replace>
                 <replaceregexp
                     file="${project.reporting.outputDirectory}/changelog.html"
                     match="&lt;a class=&quot;externalLink&quot;.*&lt;/a&gt;&lt;br /&gt;&lt;br /&gt;"
