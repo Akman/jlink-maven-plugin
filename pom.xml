@@ -19,7 +19,7 @@
 
   <groupId>com.github.akman</groupId>
   <artifactId>jlink-maven-plugin</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.7-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>JLink Maven Plugin</name>
