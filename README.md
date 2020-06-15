@@ -77,21 +77,6 @@ repository in your pom.xml.
       </pluginRepository>
     </pluginRepositories>
     ...
-    <build>
-      <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>com.github.akman</groupId>
-            <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.7-SNAPSHOT</version>
-            <configuration>
-              <!-- put your configurations here -->
-            </configuration>
-          </plugin>
-        </plugins>
-      </pluginManagement>
-    </build>
-    ...
   </project>
 ```
 
