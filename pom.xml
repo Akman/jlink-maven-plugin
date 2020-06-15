@@ -29,20 +29,17 @@
 
   <properties>
 
-    <releaseVersion>0.1.6</releaseVersion>
-    <developmentVersion>0.1.7-SNAPSHOT</developmentVersion>
-
-    <!-- ${project.inceptionYear} - ${currentYear} -->
-    <copyright.notice>Copyright (C) ${project.inceptionYear} Alexander Kapitman</copyright.notice>
-
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.release>11</maven.compiler.release>
 
-    <default.encoding>UTF-8</default.encoding>
-    <project.build.sourceEncoding>${default.encoding}</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>${default.encoding}</project.reporting.outputEncoding>
+    <project.copyright>Copyright (C) ${project.copyrightYears} ${project.developers[0].name}</project.copyright>
 
+    <project.encoding>UTF-8</project.encoding>
+    <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${project.encoding}</project.reporting.outputEncoding>
+
+    <version.properties-maven-plugin>1.0.0</version.properties-maven-plugin>
     <version.build-helper-maven-plugin>3.1.0</version.build-helper-maven-plugin>
     <version.maven-gpg-plugin>1.6</version.maven-gpg-plugin>
     <version.maven-antrun-plugin>3.0.0</version.maven-antrun-plugin>
@@ -179,6 +176,16 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>properties-maven-plugin</artifactId>
+          <version>${version.properties-maven-plugin}</version>
+          <configuration>
+            <files>
+              <file>${project.basedir}/project.properties</file>
+            </files>
+          </configuration>
+        </plugin>
+        <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${version.maven-compiler-plugin}</version>
           <configuration>
@@ -195,7 +202,7 @@
           <version>${version.maven-javadoc-plugin}</version>
           <configuration>
             <notimestamp>true</notimestamp>
-            <bottom>${copyright.notice}</bottom>
+            <bottom>${project.copyright}</bottom>
             <additionalOptions>-html5</additionalOptions>
           </configuration>
         </plugin>
@@ -203,7 +210,7 @@
           <artifactId>maven-jxr-plugin</artifactId>
           <version>${version.maven-jxr-plugin}</version>
           <configuration>
-            <bottom>${copyright.notice}</bottom>
+            <bottom>${project.copyright}</bottom>
           </configuration>
         </plugin>
         <plugin>
@@ -296,7 +303,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${version.maven-surefire-plugin}</version>
           <configuration>
-            <argLine>-Dfile.encoding=${default.encoding} @{argLine}</argLine>
+            <argLine>-Dfile.encoding=${project.encoding} @{argLine}</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -310,7 +317,7 @@
             <failIfMissing>false</failIfMissing>
             <failIfUnknown>false</failIfUnknown>
             <properties>
-              <copyright>${copyright.notice}</copyright>
+              <copyright>${project.copyright}</copyright>
             </properties>
             <headerDefinitions>
               <headerDefinition>config/license/xml_style.xml</headerDefinition>
@@ -585,6 +592,18 @@
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
