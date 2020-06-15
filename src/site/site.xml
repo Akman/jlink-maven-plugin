@@ -174,7 +174,7 @@
     -->
     <menu ref="reports" />
 
-    <footer>${copyright.notice}. All rights reserved.</footer>
+    <footer>${project.copyright}. All rights reserved.</footer>
 
   </body>
 
