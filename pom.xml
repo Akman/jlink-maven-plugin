@@ -19,7 +19,7 @@
 
   <groupId>com.github.akman</groupId>
   <artifactId>jlink-maven-plugin</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.1.6</version>
   <packaging>maven-plugin</packaging>
 
   <name>JLink Maven Plugin</name>
@@ -197,6 +197,13 @@
             <notimestamp>true</notimestamp>
             <bottom>${copyright.notice}</bottom>
             <additionalOptions>-html5</additionalOptions>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jxr-plugin</artifactId>
+          <version>${version.maven-jxr-plugin}</version>
+          <configuration>
+            <bottom>${copyright.notice}</bottom>
           </configuration>
         </plugin>
         <plugin>
@@ -543,10 +550,6 @@
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>${version.maven-install-plugin}</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jxr-plugin</artifactId>
-          <version>${version.maven-jxr-plugin}</version>
         </plugin>
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
