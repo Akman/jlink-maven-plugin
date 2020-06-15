@@ -94,6 +94,10 @@ mvn clean package
 
 [JEP-220 Modular runtime images.][jep220]
 
+## Pull request
+
+Pull request template: [.github/pull_request_template.md][pull_request].
+
 [travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.6
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
 [central_badge]: https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin
@@ -105,3 +109,4 @@ mvn clean package
 [mojo_help]: https://akman.github.io/jlink-maven-plugin/help-mojo.html
 [jlink]: https://docs.oracle.com/en/java/javase/14/docs/specs/man/jlink.html
 [jep220]: http://openjdk.java.net/jeps/220
+[pull_request]: https://github.com/akman/jlink-maven-plugin/blob/master/.github/pull_request_template.md
