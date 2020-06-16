@@ -532,9 +532,10 @@ public abstract class BaseToolMojo extends AbstractMojo {
         new CommandLineUtils.StringStreamConsumer();
     final int exitCode =
         CommandLineUtils.executeCommandLine(cmdLine, out, err);
+    logCommandLineExecution(cmdLine, exitCode, out.getOutput(),
+        err.getOutput());
     return exitCode == 0
         ? StringUtils.stripToEmpty(out.getOutput())
-            + StringUtils.stripToEmpty(err.getOutput())
         : null;
   }
 
@@ -546,29 +547,31 @@ public abstract class BaseToolMojo extends AbstractMojo {
    * @return the corresponding Java version matching the tool version
    */
   private JavaVersion getCorrespondingJavaVersion(final String version) {
+    if (version == null) {
+      throw new IllegalArgumentException();
+    }
     final Matcher versionMatcher = Pattern.compile(VERSION_PATTERN)
         .matcher(version);
-    if (!versionMatcher.matches()) {
-      throw new IllegalArgumentException("Invalid version format");
-    }
-    int majorVersion = 0;
-    int minorVersion = 0;
-    try {
-      majorVersion = Integer.parseInt(versionMatcher.group(1));
-      minorVersion = Integer.parseInt(versionMatcher.group(2));
-    } catch (NumberFormatException ex) {
-      throw new IllegalArgumentException("Invalid version format", ex);
-    }
     JavaVersion resolvedVersion = null;
-    if (majorVersion >= NEW_MAJOR) {
-      resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
-    } else {
-      if (majorVersion == OLD_MAJOR) {
-        resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
-            + "_" + minorVersion);
-      } else {
-        throw new IllegalArgumentException("Invalid version format");
+    if (versionMatcher.matches()) {
+      try {
+        final int majorVersion = Integer.parseInt(versionMatcher.group(1));
+        final int minorVersion = Integer.parseInt(versionMatcher.group(2));
+        if (majorVersion >= NEW_MAJOR) {
+          resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
+        } else {
+          if (majorVersion == OLD_MAJOR) {
+            resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
+                + "_" + minorVersion);
+          } else {
+            throw new IllegalArgumentException();
+          }
+        }
+      } catch (NumberFormatException ex) {
+        throw new IllegalArgumentException();
       }
+    } else {
+      throw new IllegalArgumentException();
     }
     return resolvedVersion;
   }
@@ -586,6 +589,41 @@ public abstract class BaseToolMojo extends AbstractMojo {
     return ctxToolchain == null || !(ctxToolchain
         instanceof org.apache.maven.toolchain.java.DefaultJavaToolChain)
         ? null : ctxToolchain;
+  }
+
+  /**
+   * Log result of the commandline execution.
+   *
+   * @param cmdLine the command line
+   * @param exitCode the exit code
+   * @param stdout the standard output
+   * @param stderr the standard error
+   */
+  private void logCommandLineExecution(final Commandline cmdLine,
+      final int exitCode, final String stdout, final String stderr) {
+    if (exitCode == 0) {
+      if (getLog().isDebugEnabled()) {
+        if (!StringUtils.isBlank(stdout)) {
+          getLog().debug(System.lineSeparator() + stdout);
+        }
+        if (!StringUtils.isBlank(stderr)) {
+          getLog().debug(System.lineSeparator() + stderr);
+        }
+      }
+    } else {
+      if (getLog().isErrorEnabled()) {
+        getLog().error(System.lineSeparator() + "Exit code: " + exitCode);
+        if (!StringUtils.isBlank(stdout)) {
+          getLog().error(System.lineSeparator() + stdout);
+        }
+        if (!StringUtils.isBlank(stderr)) {
+          getLog().error(System.lineSeparator() + stderr);
+        }
+        getLog().error(System.lineSeparator()
+            + "Command line was: "
+            + CommandLineUtils.toString(cmdLine.getCommandline()));
+      }
+    }
   }
 
   /**
@@ -754,36 +792,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
     final CommandLineUtils.StringStreamConsumer out =
         new CommandLineUtils.StringStreamConsumer();
     final int exitCode = CommandLineUtils.executeCommandLine(cmdLine, out, err);
-    final String stdout = out.getOutput().trim();
-    final String stderr = err.getOutput().trim();
-    if (exitCode == 0) {
-      if (getLog().isInfoEnabled() && !StringUtils.isBlank(stdout)) {
-        getLog().info(System.lineSeparator()
-            + System.lineSeparator()
-            + stdout);
-      }
-      if (getLog().isInfoEnabled() && !StringUtils.isBlank(stderr)) {
-        getLog().info(System.lineSeparator()
-            + System.lineSeparator()
-            + stderr);
-      }
-    } else {
-      if (getLog().isErrorEnabled()) {
-        if (!StringUtils.isBlank(stdout)) {
-          getLog().error(System.lineSeparator()
-              + "Exit code: " + exitCode
-              + System.lineSeparator() + stdout);
-        }
-        if (!StringUtils.isBlank(stderr)) {
-          getLog().error(System.lineSeparator()
-              + "Exit code: " + exitCode
-              + System.lineSeparator() + stderr);
-        }
-        getLog().error(System.lineSeparator()
-            + "Command line was: "
-            + CommandLineUtils.toString(cmdLine.getCommandline()));
-      }
-    }
+    logCommandLineExecution(cmdLine, exitCode, out.getOutput(),
+        err.getOutput());
     return exitCode;
   }
 
@@ -899,26 +909,31 @@ public abstract class BaseToolMojo extends AbstractMojo {
           "Error: Unable to obtain version of [{0}]", toolName), ex);
     }
     if (toolVersion == null) {
-      throw new MojoExecutionException(MessageFormat.format(
-          "Error: Unable to obtain version of [{0}]", toolName));
-    }
-    if (getLog().isInfoEnabled()) {
-      getLog().info(MessageFormat.format("Version of [{0}]: {1}", toolName,
-          toolVersion));
+      if (getLog().isWarnEnabled()) {
+        getLog().warn(MessageFormat.format(
+            "Unable to resolve version of [{0}]", toolName));
+      }
+    } else {
+      if (getLog().isInfoEnabled()) {
+        getLog().info(MessageFormat.format("Version of [{0}]: {1}", toolName,
+            toolVersion));
+      }
     }
 
     // Obtain the corresponding java version matching the tool version
     try {
       toolJavaVersion = getCorrespondingJavaVersion(toolVersion);
+      if (getLog().isInfoEnabled()) {
+        getLog().info(MessageFormat.format(
+            "Version (corresponding java version) of [{0}]: {1}", toolName,
+            toolJavaVersion));
+      }
     } catch (IllegalArgumentException ex) {
-      throw new MojoExecutionException(MessageFormat.format(
-          "Error: Unable to obtain corresponding java version of [{0}]",
-          toolName), ex);
-    }
-    if (getLog().isInfoEnabled()) {
-      getLog().info(MessageFormat.format(
-          "Version (corresponding java version) of [{0}]: {1}", toolName,
-          toolJavaVersion));
+      if (getLog().isWarnEnabled()) {
+        getLog().warn(MessageFormat.format(
+            "Unable to resolve corresponding java version of [{0}]",
+            toolName));
+      }
     }
 
   }
