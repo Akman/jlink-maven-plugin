@@ -156,8 +156,6 @@
         <artifactId>@project.artifactId@</artifactId>
         <executions>
           <execution>
-            <id>default</id>
-            <phase>package</phase>
             <goals>
               <goal>jlink</goal>
             </goals>
@@ -411,7 +409,7 @@
                 Exclude native commands (such as java/java.exe) from the image.
                 Default value: false.
               -->
-              <stripnativecommands>true</stripnativecommands>
+              <stripnativecommands>false</stripnativecommands>
               <!--
                 De-duplicate all legal notices. If true is specified then
                 it will be an error if two files of the same filename

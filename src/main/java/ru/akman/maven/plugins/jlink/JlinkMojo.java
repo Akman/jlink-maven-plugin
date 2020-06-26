@@ -71,7 +71,7 @@ import ru.akman.maven.plugins.CommandLineOption;
  */
 @Mojo(
     name = "jlink",
-    defaultPhase = LifecyclePhase.PACKAGE,
+    defaultPhase = LifecyclePhase.VERIFY,
     requiresDependencyResolution = ResolutionScope.RUNTIME
 //    requiresProject = true
 //    aggregator = <false|true>,
@@ -89,7 +89,7 @@ import ru.akman.maven.plugins.CommandLineOption;
     // before continuing to execute the current one.
     // If no lifecycle is specified, Maven will use the lifecycle
     // of the current build.
-    phase = LifecyclePhase.PACKAGE
+    phase = LifecyclePhase.VERIFY
 //
 //    This will execute the given goal before execution of this one.
 //    The goal name is specified using the prefix:goal notation.

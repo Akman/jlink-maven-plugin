@@ -47,7 +47,7 @@
               - JDK home directory specified by system variable JAVA_HOME
               - system path specified by system variable PATH
           -->
-          <toolhome>${java.home}</toolhome>
+          <toolhome>path/to/jlink/home</toolhome>
           <!--
             Specifies the location in which modular dependencies
             will be placed.

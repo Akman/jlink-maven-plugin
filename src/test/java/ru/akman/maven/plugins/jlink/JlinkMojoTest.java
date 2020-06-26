@@ -126,6 +126,22 @@ public class JlinkMojoTest {
   };
 
   /**
+   * Parameter 'toolhome' exists and has a value.
+   *
+   * @throws Exception if any errors occurred
+   */
+  @Test
+  public void testMojoHasToolHome() throws Exception {
+    final File toolhome =
+        (File) rule.getVariableValueFromObject(mojo, "toolhome");
+    assertEquals("toolhome",
+        TestUtils.getCanonicalPath(toolhome),
+        TestUtils.getCanonicalPath(new File(project.getBasedir(),
+            "path/to/jlink/home"))
+    );
+  }
+
+  /**
    * Parameter 'modsdir' exists and has a value.
    *
    * @throws Exception if any errors occurred

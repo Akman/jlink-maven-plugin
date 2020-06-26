@@ -73,6 +73,21 @@ public abstract class BaseToolMojo extends AbstractMojo {
   private static final int NEW_MAJOR = 9;
 
   /**
+   * The value from which the most recent major versions of Java begin.
+   */
+  private static final int NEW_RECENT = 14;
+
+  /**
+   * The value for android major versions of Java.
+   */
+  private static final int ANDROID_MAJOR = 0;
+
+  /**
+   * The value for android minor versions of Java.
+   */
+  private static final int ANDROID_MINOR = 9;
+
+  /**
    * The name of the subdirectory under JAVA_HOME where executables live.
    */
   private static final String JAVA_HOME_BIN = "bin";
@@ -90,7 +105,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
   /**
    * The version string pattern of CLI tool.
    */
-  private static final String VERSION_PATTERN = "^(\\d+)\\.(\\d+).*";
+  private static final String VERSION_PATTERN = "^(\\d+)(\\.(\\d+))?.*";
 
   /**
    * The version option of CLI tool.
@@ -555,12 +570,26 @@ public abstract class BaseToolMojo extends AbstractMojo {
     JavaVersion resolvedVersion = null;
     if (versionMatcher.matches()) {
       try {
-        final int majorVersion = Integer.parseInt(versionMatcher.group(1));
-        final int minorVersion = Integer.parseInt(versionMatcher.group(2));
+        // always present
+        final String majorVersionPart = versionMatcher.group(1);
+        final int majorVersion = Integer.parseInt(majorVersionPart);
+        // optional part
+        final String minorVersionPart = versionMatcher.group(3);
+        final int minorVersion = StringUtils.isBlank(minorVersionPart)
+            ? 0 : Integer.parseInt(minorVersionPart);
         if (majorVersion >= NEW_MAJOR) {
-          resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
+          if (majorVersion >= NEW_RECENT) {
+            resolvedVersion = JavaVersion.JAVA_RECENT;
+          } else {
+            resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
+          }
         } else {
-          if (majorVersion == OLD_MAJOR) {
+          // JAVA_1_1 - JAVA_1_9 || JAVA_0_9 (android)
+          if (majorVersion == OLD_MAJOR
+              && minorVersion > 0
+              && minorVersion <= NEW_MAJOR
+              || majorVersion == ANDROID_MAJOR
+              && minorVersion == ANDROID_MINOR) {
             resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
                 + "_" + minorVersion);
           } else {
