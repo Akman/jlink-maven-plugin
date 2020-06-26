@@ -225,17 +225,17 @@ public abstract class BaseToolMojo extends AbstractMojo {
       try {
         executablePath = executablePath.toRealPath();
         toolHomeDirectory = toolHomeDir;
-        if (getLog().isInfoEnabled()) {
-          getLog().info(MessageFormat.format(
+        if (getLog().isDebugEnabled()) {
+          getLog().debug(MessageFormat.format(
               "Executable (toolhome) for [{0}]: {1}", toolName,
               executablePath));
-          getLog().info(MessageFormat.format(
+          getLog().debug(MessageFormat.format(
               "Home directory (toolhome) for [{0}]: {1}", toolName,
               toolHomeDirectory));
         }
       } catch (IOException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error(MessageFormat.format(
+        if (getLog().isWarnEnabled()) {
+          getLog().warn(MessageFormat.format(
               "Unable to resolve executable (toolhome) for [{0}]: {1}",
               toolName, executablePath), ex);
         }
@@ -267,17 +267,17 @@ public abstract class BaseToolMojo extends AbstractMojo {
       try {
         executablePath = Paths.get(tcToolExecutable).toRealPath();
         toolHomeDirectory = new File(tcJavaHome);
-        if (getLog().isInfoEnabled()) {
-          getLog().info(MessageFormat.format(
+        if (getLog().isDebugEnabled()) {
+          getLog().debug(MessageFormat.format(
               "Executable (toolchain) for [{0}]: {1}", toolName,
               executablePath));
-          getLog().info(MessageFormat.format(
+          getLog().debug(MessageFormat.format(
               "Home directory (toolchain) for [{0}]: {1}", toolName,
               toolHomeDirectory));
         }
       } catch (IOException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error(MessageFormat.format(
+        if (getLog().isWarnEnabled()) {
+          getLog().warn(MessageFormat.format(
               "Unable to resolve executable (toolchain) for [{0}]: {1}",
               toolName, executablePath), ex);
         }
@@ -303,17 +303,17 @@ public abstract class BaseToolMojo extends AbstractMojo {
       try {
         executablePath = executablePath.toRealPath();
         toolHomeDirectory = javaHomeDir;
-        if (getLog().isInfoEnabled()) {
-          getLog().info(MessageFormat.format(
+        if (getLog().isDebugEnabled()) {
+          getLog().debug(MessageFormat.format(
               "Executable (javahome) for [{0}]: {1}", toolName,
               executablePath));
-          getLog().info(MessageFormat.format(
+          getLog().debug(MessageFormat.format(
               "Home directory (javahome) for [{0}]: {1}", toolName,
               toolHomeDirectory));
         }
       } catch (IOException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error(MessageFormat.format(
+        if (getLog().isWarnEnabled()) {
+          getLog().warn(MessageFormat.format(
               "Unable to resolve executable (javahome) for [{0}]: {1}",
               toolName, executablePath), ex);
         }
@@ -345,17 +345,17 @@ public abstract class BaseToolMojo extends AbstractMojo {
         toolHomeDirectory = toolHomePath == null
             ? null : toolHomePath.toRealPath().toFile();
         executablePath = executablePath.toRealPath();
-        if (getLog().isInfoEnabled()) {
-          getLog().info(MessageFormat.format(
+        if (getLog().isDebugEnabled()) {
+          getLog().debug(MessageFormat.format(
               "Executable (systempath) for [{0}]: {1}", toolName,
               executablePath));
-          getLog().info(MessageFormat.format(
+          getLog().debug(MessageFormat.format(
               "Home directory (systempath) for [{0}]: {1}", toolName,
               toolHomeDirectory));
         }
       } catch (IOException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error(MessageFormat.format(
+        if (getLog().isWarnEnabled()) {
+          getLog().warn(MessageFormat.format(
               "Unable to resolve executable (systempath) for [{0}]: {1}",
               toolName, executablePath), ex);
         }
@@ -889,8 +889,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
         getLog().warn("Unable to read ${project.build.sourceEncoding}");
       }
     }
-    if (getLog().isInfoEnabled()) {
-      getLog().info(MessageFormat.format(
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(MessageFormat.format(
           "Using source encoding: [{0}] to write files", sourceEncoding));
     }
 
@@ -902,8 +902,8 @@ public abstract class BaseToolMojo extends AbstractMojo {
       }
     } else {
       toolchains.forEach(tc -> {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Found toolchain: " + tc);
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Found toolchain: " + tc);
         }
       });
     }

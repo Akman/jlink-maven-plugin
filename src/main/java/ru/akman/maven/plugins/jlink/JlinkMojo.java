@@ -721,9 +721,6 @@ public class JlinkMojo extends BaseToolMojo {
     try {
       return locationManager.resolvePaths(request);
     } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error("Unable to resolve project dependencies", ex);
-      }
       throw new MojoExecutionException(
           "Error: Unable to resolve project dependencies", ex);
     }
@@ -744,8 +741,8 @@ public class JlinkMojo extends BaseToolMojo {
         getLog().warn("The main module descriptor not found");
       }
     } else {
-      if (getLog().isInfoEnabled()) {
-        getLog().info(MessageFormat.format(
+      if (getLog().isDebugEnabled()) {
+        getLog().debug(MessageFormat.format(
             "Found the main module descriptor: [{0}]", descriptor.name()));
       }
     }
@@ -777,8 +774,8 @@ public class JlinkMojo extends BaseToolMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isInfoEnabled()) {
-      getLog().info("Found classpath elements: " + result.size()
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Found classpath elements: " + result.size()
           + System.lineSeparator()
           + result.stream()
               .map(file -> file.toString())
@@ -798,8 +795,8 @@ public class JlinkMojo extends BaseToolMojo {
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
-    if (getLog().isInfoEnabled()) {
-      getLog().info("Found modulepath elements: " + result.size()
+    if (getLog().isDebugEnabled()) {
+      getLog().debug("Found modulepath elements: " + result.size()
           + System.lineSeparator()
           + projectDependencies.getModulepathElements().entrySet().stream()
               .filter(entry -> entry != null && entry.getKey() != null)
@@ -865,9 +862,6 @@ public class JlinkMojo extends BaseToolMojo {
             fileSetDir =
                 PluginUtils.normalizeFileSetBaseDir(getBaseDir(), fileSet);
           } catch (IOException ex) {
-            if (getLog().isErrorEnabled()) {
-              getLog().error("Unable to resolve fileset", ex);
-            }
             throw new MojoExecutionException(
                 "Error: Unable to resolve fileset", ex);
           }
@@ -905,9 +899,6 @@ public class JlinkMojo extends BaseToolMojo {
             dirSetDir =
                 PluginUtils.normalizeFileSetBaseDir(getBaseDir(), dirSet);
           } catch (IOException ex) {
-            if (getLog().isErrorEnabled()) {
-              getLog().error("Unable to resolve dirset", ex);
-            }
             throw new MojoExecutionException(
                 "Error: Unable to resolve dirset", ex);
           }
@@ -1006,8 +997,8 @@ public class JlinkMojo extends BaseToolMojo {
         getLog().warn("Missing module descriptor: " + file);
       }
     } else {
-      if (descriptor.isAutomatic() && getLog().isInfoEnabled()) {
-        getLog().info("Found automatic module: " + file);
+      if (descriptor.isAutomatic() && getLog().isDebugEnabled()) {
+        getLog().debug("Found automatic module: " + file);
       }
     }
 
@@ -1018,32 +1009,32 @@ public class JlinkMojo extends BaseToolMojo {
       isIncluded = true;
       // include automatic module by default
       if (descriptor != null && descriptor.isAutomatic()
-          && getLog().isInfoEnabled()) {
-        getLog().info("Included automatic module: " + file);
+          && getLog().isDebugEnabled()) {
+        getLog().debug("Included automatic module: " + file);
       }
       // exclude output module by default
       if (file.compareTo(getOutputDir()) == 0) {
         isIncluded = false;
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Excluded output module: " + file);
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Excluded output module: " + file);
         }
       }
     } else {
       if (descriptor != null && descriptor.isAutomatic()
           && depSet.isAutomaticExcluded()) {
-        if (getLog().isInfoEnabled()) {
-          getLog().info("Excluded automatic module: " + file);
+        if (getLog().isDebugEnabled()) {
+          getLog().debug("Excluded automatic module: " + file);
         }
       } else {
         if (file.compareTo(getOutputDir()) == 0) {
           if (depSet.isOutputIncluded()) {
             isIncluded = true;
-            if (getLog().isInfoEnabled()) {
-              getLog().info("Included output module: " + file);
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Included output module: " + file);
             }
           } else {
-            if (getLog().isInfoEnabled()) {
-              getLog().info("Excluded output module: " + file);
+            if (getLog().isDebugEnabled()) {
+              getLog().debug("Excluded output module: " + file);
             }
           }
         } else {
@@ -1494,10 +1485,6 @@ public class JlinkMojo extends BaseToolMojo {
           }
         }
       } catch (IOException | IllegalArgumentException ex) {
-        if (getLog().isErrorEnabled()) {
-          getLog().error(MessageFormat.format("Unable to copy file: [{0}]",
-              file), ex);
-        }
         throw new MojoExecutionException(MessageFormat.format(
             "Error: Unable to copy file: [{0}]", file), ex);
       }
@@ -1632,21 +1619,13 @@ public class JlinkMojo extends BaseToolMojo {
               .collect(Collectors.toList()),
           getCharset());
     } catch (IllegalArgumentException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error(MessageFormat.format(
-            "Variable not found in the launcher template file: [{0}]",
-            template), ex);
-      }
       throw new MojoExecutionException(MessageFormat.format(
-          "Variable not found in the launcher template file: [{0}]", template),
-          ex);
+          "Error: Variable not found in the launcher template file: [{0}]",
+          template), ex);
     } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error(MessageFormat.format(
-            "Unable to write to the launcher script file: [{0}]", script), ex);
-      }
       throw new MojoExecutionException(MessageFormat.format(
-          "Unable to write to the launcher script file: [{0}]", script), ex);
+          "Error: Unable to write to the launcher script file: [{0}]",
+          script), ex);
     }
   }
 
@@ -1685,9 +1664,8 @@ public class JlinkMojo extends BaseToolMojo {
     }
 
     // Delete image output directory if it exists
-    if (getLog().isInfoEnabled()) {
-      getLog().info(MessageFormat.format(
-          "Set image output directory to: [{0}]", output));
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(MessageFormat.format("Output directory: [{0}]", output));
     }
     if (output.exists() && output.isDirectory()) {
       try {
@@ -1739,10 +1717,9 @@ public class JlinkMojo extends BaseToolMojo {
     try {
       Files.write(cmdOptsPath, optsLines, getCharset());
     } catch (IOException ex) {
-      if (getLog().isErrorEnabled()) {
-        getLog().error(MessageFormat.format(
-            "Unable to write command options to file: [{0}]", cmdOptsPath), ex);
-      }
+      throw new MojoExecutionException(MessageFormat.format(
+          "Error: Unable to write command options to file: [{0}]",
+          cmdOptsPath), ex);
     }
 
     // Prepare command line with command options
