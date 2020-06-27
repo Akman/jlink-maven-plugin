@@ -33,7 +33,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.release>11</maven.compiler.release>
 
-    <project.copyright>Copyright (C) ${project.copyrightYears} ${project.developers[0].name}</project.copyright>
+    <copyright.notice>Copyright (C) ${copyright.years} ${project.developers[0].name}</copyright.notice>
 
     <project.encoding>UTF-8</project.encoding>
     <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
@@ -202,7 +202,7 @@
           <version>${version.maven-javadoc-plugin}</version>
           <configuration>
             <notimestamp>true</notimestamp>
-            <bottom>${project.copyright}</bottom>
+            <bottom>${copyright.notice}</bottom>
             <additionalOptions>-html5</additionalOptions>
           </configuration>
         </plugin>
@@ -210,7 +210,7 @@
           <artifactId>maven-jxr-plugin</artifactId>
           <version>${version.maven-jxr-plugin}</version>
           <configuration>
-            <bottom>${project.copyright}</bottom>
+            <bottom>${copyright.notice}</bottom>
           </configuration>
         </plugin>
         <plugin>
@@ -317,7 +317,7 @@
             <failIfMissing>false</failIfMissing>
             <failIfUnknown>false</failIfUnknown>
             <properties>
-              <copyright>${project.copyright}</copyright>
+              <copyright>${copyright.notice}</copyright>
             </properties>
             <headerDefinitions>
               <headerDefinition>config/license/xml_style.xml</headerDefinition>
