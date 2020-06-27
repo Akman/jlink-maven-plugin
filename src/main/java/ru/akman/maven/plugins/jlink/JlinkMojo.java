@@ -122,6 +122,11 @@ public class JlinkMojo extends BaseToolMojo {
   private static final String DESCRIPTOR_NAME = "module-info.class";
 
   /**
+   * Resolved java corresponding version for tool.
+   */
+  private JavaVersion toolJavaVersion;
+
+  /**
    * Resolved project dependencies.
    */
   private ResolvePathsResult<File> projectDependencies;
@@ -1291,7 +1296,7 @@ public class JlinkMojo extends BaseToolMojo {
     }
     // stripjavadebugattributes
     if (stripjavadebugattributes) {
-      if (getToolJavaVersion().atLeast(JavaVersion.JAVA_13)) {
+      if (toolJavaVersion.atLeast(JavaVersion.JAVA_13)) {
         opt = cmdLine.createOpt();
         opt.createArg().setValue("--strip-java-debug-attributes");
       } else {
@@ -1641,7 +1646,9 @@ public class JlinkMojo extends BaseToolMojo {
     init(TOOL_NAME, toolhome, TOOL_HOME_BIN); // from BaseToolMojo
 
     // Check version
-    if (!getToolJavaVersion().atLeast(JavaVersion.JAVA_9)) {
+    toolJavaVersion = getToolJavaVersion();
+    if (toolJavaVersion == null
+        || !toolJavaVersion.atLeast(JavaVersion.JAVA_9)) {
       throw new MojoExecutionException(MessageFormat.format(
           "Error: At least {0} is required to use [{1}]", JavaVersion.JAVA_9,
           TOOL_NAME));
