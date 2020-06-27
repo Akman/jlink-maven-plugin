@@ -563,33 +563,29 @@ public abstract class BaseToolMojo extends AbstractMojo {
       final Matcher versionMatcher = Pattern.compile(VERSION_PATTERN)
           .matcher(version);
       if (versionMatcher.matches()) {
-        try {
-          // always present
-          final String majorVersionPart = versionMatcher.group(1);
-          final int majorVersion = Integer.parseInt(majorVersionPart);
-          // optional part
-          final String minorVersionPart = versionMatcher.group(3);
-          final int minorVersion = StringUtils.isBlank(minorVersionPart)
-              ? 0 : Integer.parseInt(minorVersionPart);
-          if (majorVersion >= NEW_MAJOR) {
-            if (majorVersion >= NEW_RECENT) {
-              resolvedVersion = JavaVersion.JAVA_RECENT;
-            } else {
-              resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
-            }
+        // always present
+        final String majorVersionPart = versionMatcher.group(1);
+        final int majorVersion = Integer.parseInt(majorVersionPart);
+        // optional part
+        final String minorVersionPart = versionMatcher.group(3);
+        final int minorVersion = StringUtils.isBlank(minorVersionPart)
+            ? 0 : Integer.parseInt(minorVersionPart);
+        if (majorVersion >= NEW_MAJOR) {
+          if (majorVersion >= NEW_RECENT) {
+            resolvedVersion = JavaVersion.JAVA_RECENT;
           } else {
-            // JAVA_1_1 - JAVA_1_9 || JAVA_0_9 (android)
-            if (majorVersion == OLD_MAJOR
-                && minorVersion > 0
-                && minorVersion <= NEW_MAJOR
-                || majorVersion == ANDROID_MAJOR
-                && minorVersion == ANDROID_MINOR) {
-              resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
-                  + "_" + minorVersion);
-            }
+            resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion);
           }
-        } catch (NumberFormatException ex) {
-          // skip
+        } else {
+          // JAVA_1_1 - JAVA_1_9 || JAVA_0_9 (android)
+          if (majorVersion == OLD_MAJOR
+              && minorVersion > 0
+              && minorVersion <= NEW_MAJOR
+              || majorVersion == ANDROID_MAJOR
+              && minorVersion == ANDROID_MINOR) {
+            resolvedVersion = JavaVersion.valueOf("JAVA_" + majorVersion
+                + "_" + minorVersion);
+          }
         }
       }
     }

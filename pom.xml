@@ -33,7 +33,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.release>11</maven.compiler.release>
 
-    <copyright.notice>Copyright (C) ${copyright.years} ${project.developers[0].name}</copyright.notice>
+    <copyright.notice>Copyright (C) ${project.copyright.years} ${project.developers[0].name}</copyright.notice>
 
     <project.encoding>UTF-8</project.encoding>
     <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
