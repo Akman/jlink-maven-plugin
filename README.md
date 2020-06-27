@@ -1,4 +1,4 @@
-# JLink Maven Plugin v0.1.7
+# JLink Maven Plugin v0.1.8-SNAPSHOT
 
 [![Build Status][travis_badge]][travis_href]
 [![Maven Central][central_badge]][central_href]
@@ -46,7 +46,7 @@ Add the plugin to your pom:
           <plugin>
             <groupId>com.github.akman</groupId>
             <artifactId>jlink-maven-plugin</artifactId>
-            <version>0.1.7</version>
+            <version>0.1.8-SNAPSHOT</version>
             <configuration>
               <!-- put your configurations here -->
             </configuration>
@@ -98,7 +98,7 @@ mvn clean package
 
 Pull request template: [.github/pull_request_template.md][pull_request].
 
-[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.7
+[travis_badge]: https://travis-ci.com/akman/jlink-maven-plugin.svg?branch=v0.1.8-SNAPSHOT
 [travis_href]: https://travis-ci.com/akman/jlink-maven-plugin
 [central_badge]: https://img.shields.io/maven-central/v/com.github.akman/jlink-maven-plugin
 [central_href]: https://search.maven.org/artifact/com.github.akman/jlink-maven-plugin

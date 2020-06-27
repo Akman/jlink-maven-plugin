@@ -79,7 +79,7 @@
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment"> */</em>
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>  @Mojo(
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>      name = <span class="jxr_string">"jlink"</span>,
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>      defaultPhase = LifecyclePhase.VERIFY,
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      defaultPhase = LifecyclePhase.PACKAGE,
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>      requiresDependencyResolution = ResolutionScope.RUNTIME
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_comment">//    requiresProject = true</em>
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_comment">//    aggregator = &lt;false|true&gt;,</em>
@@ -97,7 +97,7 @@
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>      <em class="jxr_comment">// before continuing to execute the current one.</em>
 <a class="jxr_linenumber" name="L90" href="#L90">90</a>      <em class="jxr_comment">// If no lifecycle is specified, Maven will use the lifecycle</em>
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>      <em class="jxr_comment">// of the current build.</em>
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>      phase = LifecyclePhase.VERIFY
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      phase = LifecyclePhase.PACKAGE
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_comment">//</em>
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_comment">//    This will execute the given goal before execution of this one.</em>
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_comment">//    The goal name is specified using the prefix:goal notation.</em>
