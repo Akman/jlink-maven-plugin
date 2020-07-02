@@ -445,7 +445,7 @@
             -->
             <preparationGoals>
               clean
-              verify
+              validate
               site:site
               resources:copy-resources@prepare
               antrun:run@prepare
