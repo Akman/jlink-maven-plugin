@@ -71,9 +71,9 @@ import ru.akman.maven.plugins.CommandLineOption;
  */
 @Mojo(
     name = "jlink",
-    defaultPhase = LifecyclePhase.PACKAGE,
     requiresDependencyResolution = ResolutionScope.RUNTIME
-//    requiresProject = true
+//    defaultPhase = LifecyclePhase.VERIFY,
+//    requiresProject = true,
 //    aggregator = <false|true>,
 //    configurator = "<role hint>",
 //    executionStrategy = "<once-per-session|always>",
@@ -84,12 +84,12 @@ import ru.akman.maven.plugins.CommandLineOption;
 //    requiresOnline = <false|true>,
 //    threadSafe = <false|true>
 )
-@Execute(
-    // This will fork an alternate build lifecycle up to the specified phase
-    // before continuing to execute the current one.
-    // If no lifecycle is specified, Maven will use the lifecycle
-    // of the current build.
-    phase = LifecyclePhase.PACKAGE
+// @Execute(
+//    This will fork an alternate build lifecycle up to the specified phase
+//    before continuing to execute the current one.
+//    If no lifecycle is specified, Maven will use the lifecycle
+//    of the current build.
+//    phase = LifecyclePhase.VERIFY
 //
 //    This will execute the given goal before execution of this one.
 //    The goal name is specified using the prefix:goal notation.
@@ -98,7 +98,7 @@ import ru.akman.maven.plugins.CommandLineOption;
 //    This will execute the given alternate lifecycle. A custom lifecycle
 //    can be defined in META-INF/maven/lifecycle.xml.
 //    lifecycle = "<lifecycle>", phase="<phase>"
-)
+// )
 public class JlinkMojo extends BaseToolMojo {
 
   /**
@@ -115,6 +115,12 @@ public class JlinkMojo extends BaseToolMojo {
    * Filename for temporary file contains the tool options.
    */
   private static final String OPTS_FILE = TOOL_NAME + ".opts";
+
+  /**
+   * Error message pattern for unability to resolve file path.
+   */
+  private static final String ERROR_RESOLVE =
+      "Error: Unable to resolve file path for {0} [{1}]";
 
   /**
    * Filename of a module descriptor.
@@ -1239,24 +1245,48 @@ public class JlinkMojo extends BaseToolMojo {
    * Process options.
    *
    * @param cmdLine the command line builder
+   *
+   * @throws MojoExecutionException if any errors occurred
    */
-  private void processOptions(final CommandLineBuilder cmdLine) {
+  private void processOptions(final CommandLineBuilder cmdLine)
+      throws MojoExecutionException {
     CommandLineOption opt = null;
     // output
     opt = cmdLine.createOpt();
     opt.createArg().setValue("--output");
-    opt.createArg().setFile(output);
+    try {
+      opt.createArg().setValue(output.getCanonicalPath());
+    } catch (IOException ex) {
+      throw new MojoExecutionException(MessageFormat.format(
+          ERROR_RESOLVE,
+          "--output",
+          output.toString()), ex);
+    }
     // saveopts
     if (saveopts != null) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--save-opts");
-      opt.createArg().setFile(saveopts);
+      try {
+        opt.createArg().setValue(saveopts.getCanonicalPath());
+      } catch (IOException ex) {
+        throw new MojoExecutionException(MessageFormat.format(
+            ERROR_RESOLVE,
+            "--save-opts",
+            saveopts.toString()), ex);
+      }
     }
     // postprocesspath
     if (postprocesspath != null) {
       opt = cmdLine.createOpt();
       opt.createArg().setValue("--post-process-path");
-      opt.createArg().setFile(postprocesspath);
+      try {
+        opt.createArg().setValue(postprocesspath.getCanonicalPath());
+      } catch (IOException ex) {
+        throw new MojoExecutionException(MessageFormat.format(
+            ERROR_RESOLVE,
+            "--post-process-path",
+            postprocesspath.toString()), ex);
+      }
     }
     // resourceslastsorter
     if (!StringUtils.isBlank(resourceslastsorter)) {
@@ -1364,8 +1394,15 @@ public class JlinkMojo extends BaseToolMojo {
     // generatejliclasses
     if (generatejliclasses != null) {
       opt = cmdLine.createOpt();
-      opt.createArg().setValue("--generate-jli-classes=@"
-          + generatejliclasses.toString());
+      try {
+        opt.createArg().setValue("--generate-jli-classes=@"
+            + generatejliclasses.getCanonicalPath());
+      } catch (IOException ex) {
+        throw new MojoExecutionException(MessageFormat.format(
+            ERROR_RESOLVE,
+            "----generate-jli-classes",
+            generatejliclasses.toString()), ex);
+      }
     }
     // vm
     if (vm != null) {

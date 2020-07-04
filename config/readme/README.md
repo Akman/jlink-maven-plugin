@@ -17,8 +17,10 @@ of course, to customize the process using project artifacts.
 
 This plugin has two [goals][goals]:
 
-- [jlink:jlink][mojo_jlink] is already bound to *package* phase within the Maven
-lifecycle and is therefore, automatically executed.
+- [jlink:jlink][mojo_jlink] is not bound to any phase within the Maven
+lifecycle and is therefore is not automatically executed, therefore
+the required phase must be specified explicitly.
+
 - [jlink:help][mojo_help] display help information on the plugin.
 
 To create a custom runtime image manually you need only to execute:
@@ -26,6 +28,9 @@ To create a custom runtime image manually you need only to execute:
 ```console
 mvn jlink:jlink
 ```
+
+It will not fork (spawn a parallel) an alternate build lifecycle and
+will execute the *jlink* goal immediately.
 
 To display parameter details execute:
 
@@ -43,17 +48,36 @@ Add the plugin to your pom:
     <build>
       <pluginManagement>
         <plugins>
+          ...
           <plugin>
             <groupId>${project.groupId}</groupId>
             <artifactId>${project.artifactId}</artifactId>
             <version>${project.version}</version>
-            <configuration>
-              <!-- put your configurations here -->
-            </configuration>
           </plugin>
+          ...
         </plugins>
       </pluginManagement>
     </build>
+    ...
+    <plugins>
+      ...
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>${project.artifactId}</artifactId>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>jlink</goal>
+            </goals>
+            <configuration>
+              <!-- put your configurations here -->
+            </configuration>
+          <execution>
+        <executions>
+      </plugin>
+      ...
+    </plugins>
     ...
   </project>
 ```
@@ -82,10 +106,10 @@ repository in your pom.xml.
   </project>
 ```
 
-And then package your project (as usual), jlink starts automatically:
+And then build your project, *jlink* starts automatically:
 
 ```console
-mvn clean package
+mvn clean verify
 ```
 
 ## Links

@@ -10,44 +10,44 @@ Add the plugin to your pom:
     <build>
       <pluginManagement>
         <plugins>
+          ...
           <plugin>
             <groupId>${project.groupId}</groupId>
             <artifactId>${project.artifactId}</artifactId>
             <version>${project.version}</version>
-            <configuration>
-
-              <!-- put your configurations here -->
-
-            </configuration>
           </plugin>
+          ...
         </plugins>
       </pluginManagement>
-      ...
-      <plugins>
-        ...
-          <plugin>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>${project.artifactId}</artifactId>
-            <executions>
-              <execution>
-                <!-- plugin is already bound to package phase -->
-                <goals>
-                  <goal>jlink</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        ...
-      </plugins>
     </build>
+    ...
+    <plugins>
+      ...
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>${project.artifactId}</artifactId>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>jlink</goal>
+            </goals>
+            <configuration>
+              <!-- put your configurations here -->
+            </configuration>
+          <execution>
+        <executions>
+      </plugin>
+      ...
+    </plugins>
     ...
   </project>
 ```
 
-And then package your project (as usual), *jlink* starts automatically.
+And then build your project, *jlink* starts automatically.
 
 ```console
-mvn package
+mvn clean verify
 ```
 
 Or you can start the plugin manually.
@@ -56,5 +56,29 @@ Or you can start the plugin manually.
 mvn jlink:jlink
 ```
 
-It will fork (spawn a parallel) an alternate build lifecycle
-up to the *package* phase before continuing to execute the *jlink* goal.
+It will not fork (spawn a parallel) an alternate build lifecycle and
+will execute the *jlink* goal immediately.
+
+If you want to use snapshot versions of the plugin connect the snapshot
+repository in your pom.xml.
+
+```xml
+  <project>
+    ...
+    <pluginRepositories>
+      <pluginRepository>
+        <id>${project.distributionManagement.snapshotRepository.id}</id>
+        <name>${project.distributionManagement.snapshotRepository.name}</name>
+        <url>${project.distributionManagement.snapshotRepository.url}</url>
+        <layout>default</layout>
+        <snapshots>
+          <enabled>true</enabled>
+        </snapshots>
+        <releases>
+          <enabled>false</enabled>
+        </releases>
+      </pluginRepository>
+    </pluginRepositories>
+    ...
+  </project>
+```

@@ -8,6 +8,7 @@
     <build>
       <pluginManagement>
         <plugins>
+          ...
           <plugin>
             <groupId>${project.groupId}</groupId>
             <artifactId>${project.artifactId}</artifactId>
@@ -32,6 +33,7 @@
               <stripdebug>true</stripdebug>
             </configuration>
           </plugin>
+          ...
         </plugins>
       </pluginManagement>
       ...
@@ -42,7 +44,7 @@
             <artifactId>${project.artifactId}</artifactId>
             <executions>
               <execution>
-                <!-- plugin is already bound to package phase -->
+                <phase>verify</phase>
                 <goals>
                   <goal>jlink</goal>
                 </goals>

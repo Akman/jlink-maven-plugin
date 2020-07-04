@@ -156,6 +156,7 @@
         <artifactId>@project.artifactId@</artifactId>
         <executions>
           <execution>
+            <phase>verify</phase>
             <goals>
               <goal>jlink</goal>
             </goals>
