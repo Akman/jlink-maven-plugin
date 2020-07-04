@@ -4,7 +4,7 @@ JLink Maven Plugin,ru.akman.maven.plugins.jlink,Compress,0,20,0,0,0,8,0,5,0,5
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,Section,0,24,0,0,0,3,0,1,0,1
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,ReleaseInfo,0,24,0,0,0,10,0,7,0,7
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,Endian,0,34,0,0,0,4,0,1,0,1
-JLink Maven Plugin,ru.akman.maven.plugins.jlink,JlinkMojo,2472,3,382,0,566,1,238,1,47,1
+JLink Maven Plugin,ru.akman.maven.plugins.jlink,JlinkMojo,2559,3,382,0,582,1,238,1,47,1
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,Compression,3,45,0,0,1,7,1,2,1,2
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,DependencySet,16,29,0,0,8,11,4,9,4,9
 JLink Maven Plugin,ru.akman.maven.plugins.jlink,Launcher,20,32,0,0,10,12,5,10,5,10
