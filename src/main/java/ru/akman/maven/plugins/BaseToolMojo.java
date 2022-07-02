@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2020 Alexander Kapitman
+  Copyright (C) 2020 - 2022 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
+import org.slf4j.Logger;
 
 /**
  * Base class for creating a CLI tool Mojos.
@@ -882,7 +883,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
           "Error: Unable to read project properties");
     }
 
-    fileSetManager = new FileSetManager(getLog(), true);
+    fileSetManager = new FileSetManager((Logger) getLog(), true);
     if (fileSetManager == null) {
       throw new MojoExecutionException(
           "Error: Unable to create file set manager");
