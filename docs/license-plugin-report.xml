@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<licensePluginReport goal="CHECK" timestamp="1656869534476">
+    <module artifactId="jlink-maven-plugin" groupId="com.github.akman" version="0.1.9"/>
+    <files>
+        <file path="pom.xml" result="PRESENT"/>
+        <file path="src\it\projects\base\pom.xml" result="PRESENT"/>
+        <file path="src\it\projects\base\postbuild.groovy" result="PRESENT"/>
+        <file path="src\it\projects\base\src\main\java\ru\akman\hello\Main.java" result="PRESENT"/>
+        <file path="src\it\projects\base\src\main\java\ru\akman\hello\Util.java" result="PRESENT"/>
+        <file path="src\it\projects\base\src\main\java\ru\akman\module-info.java" result="PRESENT"/>
+        <file path="src\it\projects\base\src\main\resources\logback.xml" result="PRESENT"/>
+        <file path="src\it\settings.xml" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\BaseToolMojo.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\CommandLineBuilder.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\CommandLineOption.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\Compress.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\Compression.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\DependencySet.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\Endian.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\HotSpot.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\JlinkMojo.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\Launcher.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\ModulePath.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\PluginUtils.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\ReleaseInfo.java" result="PRESENT"/>
+        <file path="src\main\java\ru\akman\maven\plugins\jlink\Section.java" result="PRESENT"/>
+        <file path="src\site\resources\css\site.css" result="PRESENT"/>
+        <file path="src\site\site.xml" result="PRESENT"/>
+        <file path="src\test\java\ru\akman\maven\plugins\TestUtils.java" result="PRESENT"/>
+        <file path="src\test\java\ru\akman\maven\plugins\jlink\JlinkMojoTest.java" result="PRESENT"/>
+        <file path="src\test\resources\project\pom.xml" result="PRESENT"/>
+    </files>
+</licensePluginReport>

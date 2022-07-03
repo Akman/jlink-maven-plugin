@@ -23,11 +23,11 @@ under the License.
     <link>https://github.com/akman/jlink-maven-plugin</link>
     <description>JLink Maven Plugin - Checkstyle report</description>
     <language>en-us</language>
-    <copyright>&#169;2020</copyright>
+    <copyright>&#169;2020 - 2022</copyright>
     <item>
       <title>File: 21,
              Errors: 0,
-             Warnings: 0,
+             Warnings: 1,
              Infos: 0
       </title>
             <link>https://github.com/akman/jlink-maven-plugin/checkstyle.html</link>
@@ -52,7 +52,7 @@ under the License.
                   0
                 </td>
                 <td>
-                  0
+                  1
                 </td>
                 <td>
                   0
