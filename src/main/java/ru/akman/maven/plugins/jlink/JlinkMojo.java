@@ -978,6 +978,7 @@ public class JlinkMojo extends BaseToolMojo {
    *
    * @return the set of the excluded project dependencies
    */
+  @SuppressWarnings("unused")
   private Set<String> getExcludedDependencies(final DependencySet depSet) {
     return projectDependencies.getPathElements().entrySet().stream()
         .filter(entry -> entry != null

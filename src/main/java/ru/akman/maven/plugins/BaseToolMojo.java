@@ -46,7 +46,6 @@ import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
-import org.slf4j.Logger;
 
 /**
  * Base class for creating a CLI tool Mojos.
@@ -883,7 +882,7 @@ public abstract class BaseToolMojo extends AbstractMojo {
           "Error: Unable to read project properties");
     }
 
-    fileSetManager = new FileSetManager((Logger) getLog(), true);
+    fileSetManager = new FileSetManager();
     if (fileSetManager == null) {
       throw new MojoExecutionException(
           "Error: Unable to create file set manager");
