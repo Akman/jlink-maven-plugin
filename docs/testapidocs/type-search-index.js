@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"ru.akman.maven.plugins.jlink","l":"JlinkMojoTest"},{"p":"ru.akman.maven.plugins","l":"TestUtils"}]
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"ru.akman.maven.plugins.jlink","l":"JlinkMojoTest"},{"p":"ru.akman.maven.plugins","l":"TestUtils"}];updateSearchResults();
