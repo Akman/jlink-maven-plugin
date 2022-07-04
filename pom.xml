@@ -29,7 +29,7 @@
 
   <properties>
 
-    <javaVersion>11</javaVersion>
+    <javaVersion>9</javaVersion>
     <maven.compiler.release>${javaVersion}</maven.compiler.release>
 
     <copyright.notice>Copyright (C) ${copyright.years} ${project.developers[0].name}</copyright.notice>
