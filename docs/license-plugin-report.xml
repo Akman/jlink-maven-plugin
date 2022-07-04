@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<licensePluginReport goal="CHECK" timestamp="1656869534476">
-    <module artifactId="jlink-maven-plugin" groupId="com.github.akman" version="0.1.9"/>
+<licensePluginReport goal="CHECK" timestamp="1656966653611">
+    <module artifactId="jlink-maven-plugin" groupId="com.github.akman" version="0.1.10"/>
     <files>
         <file path="pom.xml" result="PRESENT"/>
         <file path="src\it\projects\base\pom.xml" result="PRESENT"/>
