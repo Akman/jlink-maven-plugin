@@ -120,17 +120,6 @@
           <version>@project.version@</version>
         </plugin>
         <plugin>
-          <artifactId>maven-toolchains-plugin</artifactId>
-          <version>3.0.0</version>
-          <configuration>
-            <toolchains>
-              <jdk>
-                <version>[${javaVersion},)</version>
-              </jdk>
-            </toolchains>
-          </configuration>
-        </plugin>
-        <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.2.0</version>
         </plugin>
@@ -161,16 +150,6 @@
       </plugins>
     </pluginManagement>
     <plugins>
-      <plugin>
-        <artifactId>maven-toolchains-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>      
       <plugin>
         <groupId>@project.groupId@</groupId>
         <artifactId>@project.artifactId@</artifactId>
