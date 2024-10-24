@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2020 - 2022 Alexander Kapitman
+  Copyright (C) 2020 - 2024 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,16 @@ package ru.akman.maven.plugins.jlink;
  * Byte order (endian).
  */
 public enum Endian {
+  /**
+   * Select native endian.
+   */
   NATIVE,
+  /**
+   * Select little endian.
+   */
   LITTLE,
+  /**
+   * Select big endian.
+   */
   BIG
 }

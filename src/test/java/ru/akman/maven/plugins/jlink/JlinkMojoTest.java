@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2020 - 2022 Alexander Kapitman
+  Copyright (C) 2020 - 2024 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -83,10 +83,10 @@ public class JlinkMojoTest {
    * JLink Mojo.
    */
   private JlinkMojo mojo;
-  
+
   /**
    * AbstractMojoTestCase wrapper.
-   * All protected methods of the TestCase are exhibited as public in the rule.
+   * All protected methods of the TestCase are exhibited as public in the 
    */
   @Rule
   public MojoRule rule = new MojoRule() {
@@ -1129,7 +1129,7 @@ public class JlinkMojoTest {
    * @throws Exception if any errors occurred
    */
   @Test
-  public void testMojoHasVM() throws Exception {
+  public void testMojoHasVm() throws Exception {
     final HotSpot vm =
         (HotSpot) rule.getVariableValueFromObject(mojo, "vm");
     assertEquals("vm",

@@ -51,13 +51,13 @@ matrix:
   include:
 
     - os: linux
-      dist: focal
+      dist: noble
       language: java
       jdk:
-        - openjdk18
+        - openjdk21
 
 before_install:
-  - mvn -N io.takari:maven:wrapper -Dmaven=3.8.6
+  - mvn wrapper:wrapper -Dmaven=3.9.9
   - chmod a+x ./mvnw
 
 install:

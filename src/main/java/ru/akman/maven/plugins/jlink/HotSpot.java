@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2020 - 2022 Alexander Kapitman
+  Copyright (C) 2020 - 2024 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,8 +20,20 @@ package ru.akman.maven.plugins.jlink;
  * HotSpot VM.
  */
 public enum HotSpot {
+  /**
+   * Select client VM in the output image.
+   */
   CLIENT,
+  /**
+   * Select server VM in the output image.
+   */
   SERVER,
+  /**
+   * Select minimal VM in the output image.
+   */
   MINIMAL,
+  /**
+   * Select all VM in the output image.
+   */
   ALL
 }

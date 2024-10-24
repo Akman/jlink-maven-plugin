@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2020 - 2022 Alexander Kapitman
+  Copyright (C) 2020 - 2024 Alexander Kapitman
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -37,7 +38,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
+// -import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
@@ -177,13 +178,13 @@ public abstract class BaseToolMojo extends AbstractMojo {
   /**
    * Toolchain manager.
    */
-  @Component
+  @Inject
   private ToolchainManager toolchainManager;
 
   /**
    * Build plugin manager.
    */
-  @Component
+  @Inject
   private BuildPluginManager pluginManager;
 
   /**
@@ -618,23 +619,31 @@ public abstract class BaseToolMojo extends AbstractMojo {
   private void logCommandLineExecution(final Commandline cmdLine,
       final int exitCode, final String stdout, final String stderr) {
     if (exitCode == 0) {
-      if (getLog().isDebugEnabled()) {
-        if (!StringUtils.isBlank(stdout)) {
+      if (!StringUtils.isBlank(stdout)) {
+        if (getLog().isDebugEnabled()) {
           getLog().debug(System.lineSeparator() + stdout);
         }
-        if (!StringUtils.isBlank(stderr)) {
+      }
+      if (!StringUtils.isBlank(stderr)) {
+        if (getLog().isDebugEnabled()) {
           getLog().debug(System.lineSeparator() + stderr);
         }
       }
     } else {
       if (getLog().isErrorEnabled()) {
         getLog().error(System.lineSeparator() + "Exit code: " + exitCode);
-        if (!StringUtils.isBlank(stdout)) {
+      }
+      if (!StringUtils.isBlank(stdout)) {
+        if (getLog().isErrorEnabled()) {
           getLog().error(System.lineSeparator() + stdout);
         }
-        if (!StringUtils.isBlank(stderr)) {
+      }
+      if (!StringUtils.isBlank(stderr)) {
+        if (getLog().isErrorEnabled()) {
           getLog().error(System.lineSeparator() + stderr);
         }
+      }
+      if (getLog().isErrorEnabled()) {
         getLog().error(System.lineSeparator()
             + "Command line was: "
             + CommandLineUtils.toString(cmdLine.getCommandline()));
