@@ -14,11 +14,14 @@
   limitations under the License.
 */
 
-module hello {
+/**
+ * This module provided application launcher.
+ */
+module ru.akman.launcher {
 
   // picocli
   requires info.picocli;
-  opens ru.akman.hello to info.picocli;
+  opens ru.akman.launcher to info.picocli;
 
   // slf4j + logback
   requires org.slf4j;
@@ -26,7 +29,14 @@ module hello {
   requires ch.qos.logback.classic;
 
   // javafx
+  requires javafx.base;
+  requires javafx.controls;
   requires javafx.graphics;
-  exports ru.akman.hello to javafx.graphics;
+  requires javafx.fxml;
+  requires javafx.swing;
+
+  exports ru.akman.gui to javafx.graphics;
+
+  opens ru.akman.gui to javafx.fxml;
 
 }

@@ -1,0 +1,262 @@
+## Velocity treats double hashes as comments, so $H can be used instead
+#set( $H = '#' )
+# jlink:jlink
+
+The jlink goal lets you create a custom runtime image with the jlink tool
+introduced in Java 9. It used to link a set of modules, along with their
+transitive dependences.
+The main idea is to avoid being tied to project artifacts and allow the user
+to fully control the process of creating an image. However, it is possible, of
+course, to customize the process using project artifacts.
+
+Available parameters:
+
+    addmodules
+      Specifies the modules names (names of root modules) to add to the runtime
+      image. Their transitive dependencies will add too.
+
+      <addmodules> <addmodule>java.base</addmodule>
+      <addmodule>org.example.rootmodule</addmodule> </addmodules>
+
+
+      The jlink CLI is: --add-modules module [, module...]
+
+    bindservices (Default: false)
+      Link service provider modules and their dependencies.
+      The jlink CLI is: --bind-services
+
+    compress
+      Compresses all resources in the output image. Specify compression {
+      NO_COMPRESSION | CONSTANT_STRING_SHARING | ZIP }. An optional pattern-list
+      filter can be specified to list the pattern of files to include.
+
+      <compress> <compression>ZIP</compression> <filters>
+      <filter>**/*-info.class</filter>
+      <filter>glob:**/module-info.class</filter>
+      <filter>regex:/java[a-z]+$</filter> <filter>@filename</filter> </filters>
+      </compress>
+
+
+      The jlink CLI is: --compress={0|1|2}[:filter=pattern-list]
+
+    deduplegalnotices (Default: false)
+      De-duplicate all legal notices. If true is specified then it will be an
+      error if two files of the same filename are different.
+      The jlink CLI is: --dedup-legal-notices=error-if-not-same-content
+
+    disableplugins
+      Disables the specified plug-ins. For a complete list of all available
+      plug-ins, run the command: jlink --list-plugins
+
+      <disableplugins> <disableplugin>compress</disableplugin>
+      <disableplugin>dedup-legal-notices</disableplugin> </disableplugins>
+
+
+      The jlink CLI is: --disable-plugin pluginname
+
+    endian (Default: NATIVE)
+      Specifies the byte order of the generated image: { NATIVE | LITTLE | BIG
+      }.
+      The jlink CLI is: --endian {little|big}
+
+    excludefiles
+      Specify files to exclude.
+
+      <excludefiles> <excludefile>**/*-info.class</excludefile>
+      <excludefile>glob:**/module-info.class</excludefile>
+      <excludefile>regex:/java[a-z]+$</excludefile>
+      <excludefile>@filename</excludefile> </excludefiles>
+
+
+      The jlink CLI is: --exclude-files=pattern-list
+
+    excludejmodsection
+      Specify a JMOD section to exclude { MAN | HEADERS }.
+      The jlink CLI is: --exclude-jmod-section={man|headers}
+
+    excluderesources
+      Specify resources to exclude.
+
+      <excluderesources> <excluderesource>**/*-info.class</excluderesource>
+      <excluderesource>glob:**/module-info.class</excluderesource>
+      <excluderesource>regex:/java[a-z]+$</excluderesource>
+      <excluderesource>@filename</excluderesource> </excluderesources>
+
+
+      The jlink CLI is: --order-resources=pattern-list
+
+    generatejliclasses
+      Specify a file listing the java.lang.invoke classes to pre-generate. By
+      default, this plugin may use a builtin list of classes to pre-generate. If
+      this plugin runs on a different runtime version than the image being
+      created then code generation will be disabled by default to guarantee
+      correctness add ignore-version=true to override this.
+      The jlink CLI is: --generate-jli-classes=@filename
+
+    ignoresigninginformation (Default: false)
+      Suppresses a fatal error when signed modular JARs are linked in the
+      runtime image. The signature-related files of the signed modular JARs
+      aren't copied to the runtime image.
+      The jlink CLI is: --ignore-signing-information
+
+    includelocales
+      Includes the list of locales where langtag is a BCP 47 language tag. This
+      option supports locale matching as defined in RFC 4647. CAUTION! Ensure
+      that you specified: add-modules jdk.localedata when using this property.
+
+      <includelocales> <includelocale>en</includelocale>
+      <includelocale>ja</includelocale> <includelocale>*-IN</includelocale>
+      </includelocales>
+
+
+      The jlink CLI is: --include-locales=langtag[,langtag ...]
+
+    launcher
+      Specifies the launcher command name for the module (and the main class).
+
+      <launcher> <command>mylauncher</command>
+      <mainmodule>mainModule</mainmodule> <mainclass>mainClass</mainclass>
+      </launcher>
+
+
+      The jlink CLI is: --launcher command=main-module[/main-class]
+
+    libsdir (Default: ${project.build.directory}/jlink/libs)
+      Specifies the location in which non modular dependencies will be copied.
+
+    limitmodules
+      Limits the universe of observable modules to those in the transitive
+      closure of the named modules, mod, plus the main module, if any, plus any
+      further modules specified in the "addmodules" property. It used to limit
+      resolve any services other than the selected services, if the property
+      "bindservices" set to true.
+
+      <limitmodules> <limitmodule>java.base</limitmodule>
+      <limitmodule>org.example.limitmodule</limitmodule> </limitmodules>
+
+
+      The jlink CLI is: --limit-modules module [, module...]
+
+    modsdir (Default: ${project.build.directory}/jlink/mods)
+      Specifies the location in which modular dependencies will be copied.
+
+    modulepath
+      Specifies the module path. The path where the jlink tool discovers
+      observable modules: modular JAR files, JMOD files, exploded modules. If
+      this option is not specified, then the default module path is
+      $JAVA_HOME/jmods. This directory contains the java.base module and the
+      other standard and JDK modules. If this option is specified but the
+      java.base module cannot be resolved from it, then the jlink command
+      appends $JAVA_HOME/jmods to the module path.
+      pathelements - passed to jlink as is filesets - sets of files (without
+      directories) dirsets - sets of directories (without files) dependencysets
+      - sets of dependencies with specified includes and excludes patterns
+      (glob: or regex:) for file names and regex patterns only for module names
+
+
+      <modulepath> <pathelements> <pathelement>mod.jar</pathelement>
+      <pathelement>mod.jmod</pathelement>
+      <pathelement>mods/exploded/mod</pathelement> </pathelements> <filesets>
+      <fileset> <directory>${project.build.directory}</directory> <includes>
+      <include>**/*</include> </includes> <excludes>
+      <exclude>**/*Empty.jar</exclude> </excludes>
+      <followSymlinks>false</followSymlinks> </fileset> </filesets> <dirsets>
+      <dirset> <directory>target</directory> <includes> <include>**/*</include>
+      </includes> <excludes> <exclude>**/*Test</exclude> </excludes>
+      <followSymlinks>true</followSymlinks> </dirset> </dirsets>
+      <dependencysets> <dependencyset> <includeoutput>false</includeoutput>
+      <excludeautomatic>false</excludeautomatic> <includes>
+      <include>glob:**/*.jar</include>
+      <include>regex:foo-(bar|baz)-.*?\.jar</include> </includes> <includenames>
+      <includename>.*</includename> </includenames> <excludes>
+      <exclude>glob:**/javafx.*Empty</exclude> </excludes> <excludenames>
+      <excludename>javafx\..+Empty</excludename> </excludenames>
+      </dependencyset> </dependencysets> </modulepath>
+
+
+      The jlink CLI is: --modulepath path
+
+    noheaderfiles (Default: false)
+      Excludes header files.
+      The jlink CLI is: --no-header-files
+
+    nomanpages (Default: false)
+      Excludes man pages.
+      The jlink CLI is: --no-man-pages
+
+    orderresources
+      Orders the specified paths in priority order.
+
+      <orderresources> <orderresource>**/*-info.class</orderresource>
+      <orderresource>glob:**/module-info.class</orderresource>
+      <orderresource>regex:/java[a-z]+$</orderresource>
+      <orderresource>@filename</orderresource> </orderresources>
+
+
+      The jlink CLI is: --order-resources=pattern-list
+
+    output (Default: ${project.build.directory}/jlink/image)
+      Specifies the location of the generated runtime image.
+      The jlink CLI is: --output path
+
+    postprocesspath
+      Post process an existing image.
+      The jlink CLI is: --post-process-path imagefile
+
+    releaseinfo
+      Load release properties from the supplied option file. - adds: is to add
+      properties to the release file. - dels: is to delete the list of keys in
+      release file. - Any number of key=value pairs can be passed.
+
+      <releaseinfo> <file>file</file> <adds> <key1>value1</key1>
+      <key2>value2</key2> </adds> <dells> <key1 /> <key2 /> </dells>
+      </releaseinfo>
+
+
+
+      The jlink CLI is:
+      --release-info=file|add:key1=value1:key2=value2:...|del:key-list
+
+    resourceslastsorter
+      The last plugin allowed to sort resources.
+      The jlink CLI is: --resources-last-sorter name
+
+    saveopts
+      Save jlink options in the given file.
+      The jlink CLI is: --save-opts filename
+
+    stripdebug (Default: false)
+      Strips debug information from the output image.
+      The jlink CLI is: --strip-debug
+
+    stripjavadebugattributes (Default: false)
+      Strip Java debug attributes from classes in the output image.
+      The jlink CLI is: --strip-java-debug-attributes
+
+    stripnativecommands (Default: false)
+      Exclude native commands (such as java/java.exe) from the image.
+      The jlink CLI is: --strip-native-commands
+
+    suggestproviders
+      Suggest providers that implement the given service types from the module
+      path.
+
+      <suggestproviders> <suggestprovider>provider.name</suggestprovider>
+      </suggestproviders>
+
+
+      The jlink CLI is: --suggest-providers [name, ...]
+
+    toolhome
+      Specifies the path to the JDK home directory providing the tool needed.
+
+    verbose (Default: false)
+      Enable verbose tracing.
+      The jlink CLI is: --verbose
+
+    vm
+      Select the HotSpot VM in the output image: { CLIENT | SERVER | MINIMAL |
+      ALL }.
+      Default is ALL.
+
+      The jlink CLI is: --vm={client|server|minimal|all}

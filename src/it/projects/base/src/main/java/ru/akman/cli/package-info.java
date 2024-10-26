@@ -14,31 +14,7 @@
   limitations under the License.
 */
 
-package ru.akman.hello;
-
-import org.slf4j.LoggerFactory;
-
 /**
- * Helper class for utilities
+ * This package provided CLI interface for application.
  */
-public final class Util {
-
-  /**
-   * Private constructor.
-   */
-  private Util() {
-    // not called
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Set logback classic root logger level to DEBUG.
-   */
-  public static void setRootLoggerLevelToDebug() {
-    ch.qos.logback.classic.Logger rootLogger =
-        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(
-            ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
-  }
-
-}
+package ru.akman.cli;

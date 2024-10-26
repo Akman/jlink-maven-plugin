@@ -48,7 +48,7 @@
 
     <!-- Tools -->
     <version.checkstyle>10.18.2</version.checkstyle>
-    <version.pmd>7.6.0</version.pmd>
+    <version.pmd>7.7.0</version.pmd>
     <version.spotbugs>4.8.6</version.spotbugs>
 
     <!-- Dependencies -->
@@ -361,10 +361,15 @@
                   <exclude>**/LICENSE</exclude>
                   <exclude>**/*.template</exclude>
                   <exclude>**/*.properties</exclude>
+                  <exclude>**/*.bak</exclude>
+                  <exclude>**/*.txt</exclude>
                   <exclude>**/*.md</exclude>
                   <exclude>**/*.md.vm</exclude>
                   <exclude>**/*.png</exclude>
                   <exclude>**/*.ico</exclude>
+                  <exclude>**/*.icns</exclude>
+                  <exclude>src/it/projects/*/LICENSE</exclude>
+                  <exclude>src/it/projects/*/NOTICE</exclude>
                 </excludes>
               </licenseSet>
             </licenseSets>
@@ -892,12 +897,13 @@
           <reportSet>
             <reports>
               <report>index</report>
+              <!--report>help</report-->
               <report>summary</report>
               <!--report>modules</report-->
               <report>dependency-management</report>
               <report>dependencies</report>
               <!--report>dependency-info</report-->
-              <!--report>dependency-convergence</report-->
+              <report>dependency-convergence</report>
               <report>plugin-management</report>
               <report>plugins</report>
               <report>distribution-management</report>

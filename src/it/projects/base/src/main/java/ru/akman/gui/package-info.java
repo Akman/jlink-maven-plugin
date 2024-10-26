@@ -14,20 +14,7 @@
   limitations under the License.
 */
 
-String runtimeDirName = "runtime-image"
-String libsDirName = "libs"
-String modsDirName = "mods"
-
-String platformName = "linux"
-
-File runtimeDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + runtimeDirName)
-assert runtimeDir.isDirectory()
-
-File libsDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + libsDirName)
-assert libsDir.isDirectory()
-
-File modsDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + modsDirName)
-assert modsDir.isDirectory()
+/**
+ * This package provided GUI interface for application.
+ */
+package ru.akman.gui;
