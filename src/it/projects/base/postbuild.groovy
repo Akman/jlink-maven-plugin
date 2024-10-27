@@ -14,20 +14,30 @@
   limitations under the License.
 */
 
+def getPlatformName() {
+    String name = System.properties['os.name'].toLowerCase()
+    if (name.contains('windows')) {
+        return 'windows'
+    } else if (name.contains('linux')) {
+        return 'linux'
+    } else if (name.contains('mac')) {
+        return 'mac'
+    }
+    assert false : "ERROR: Unknown platform: '${name}'!"
+}
+
+String platformName = getPlatformName()
+String pathPrefix = "target/jlink/${platformName}"
+
 String runtimeDirName = "runtime-image"
 String libsDirName = "libs"
 String modsDirName = "mods"
 
-String platformName = "linux"
-
-File runtimeDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + runtimeDirName)
+File runtimeDir = new File(basedir, "${pathPrefix}/${runtimeDirName}")
 assert runtimeDir.isDirectory()
 
-File libsDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + libsDirName)
+File libsDir = new File(basedir, "${pathPrefix}/${libsDirName}")
 assert libsDir.isDirectory()
 
-File modsDir = new File(basedir, "target/jlink/" + platformName
-    + "/" + modsDirName)
+File modsDir = new File(basedir, "${pathPrefix}/${modsDirName}")
 assert modsDir.isDirectory()

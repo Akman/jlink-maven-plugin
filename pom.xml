@@ -518,9 +518,7 @@
             <environmentVariables>
               <MAVEN_SKIP_RC>1</MAVEN_SKIP_RC>
             </environmentVariables>
-            <localRepositoryPath>
-              ${project.build.directory}/local-repo
-            </localRepositoryPath>
+            <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
             <debug>true</debug>
             <settingsFile>src/it/settings.xml</settingsFile>
             <projectsDirectory>src/it/projects</projectsDirectory>
